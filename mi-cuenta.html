@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+	<title>Mi Cuenta - FortunaBet</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+	<link rel="stylesheet" href="css/style.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<!-- Esto carga el CSS de forma asíncrona para no bloquear el renderizado -->
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="page-backdrop" class="page-backdrop"></div>
+    <div id="page-wrapper">
+        <div id="header-placeholder"></div>
+
+        <div class="body-container">
+            <div class="page-container">
+                <h1 class="page-title">Panel de Usuario</h1>
+                
+                <div class="account-dashboard-grid">
+                    
+<aside class="account-sidebar">
+    <nav>
+    <ul>
+        <li><a href="#" class="account-menu-link active" data-target="panel-principal"><i class="fa-solid fa-house-user"></i> Panel Principal</a></li>
+        <li><a href="#" class="account-menu-link" data-target="mis-datos"><i class="fa-solid fa-user-pen"></i> Mis Datos</a></li>
+        <li><a href="#" class="account-menu-link" data-target="seguridad"><i class="fa-solid fa-shield-halved"></i> Seguridad</a></li>
+        
+        <!-- El enlace de Promociones ahora es una pestaña interna -->
+        <li><a href="#" class="account-menu-link" data-target="promociones"><i class="fa-solid fa-tags"></i> Promociones</a></li>
+        
+        <li><a href="#" class="account-menu-link" data-target="historial-apuestas"><i class="fa-solid fa-receipt"></i> Historial de Apuestas</a></li>
+    </ul>
+    </nav>
+</aside>
+
+                    <main class="account-content">
+                        
+                        <section id="panel-principal" class="account-section active">
+                            <div class="account-grid">
+                                <div class="account-card">
+                                    <h3>Saldo Actual</h3>
+                                    <p class="balance">Bs. 0.00</p>
+                                    <div class="account-buttons">
+                                        <button class="btn btn-primary">Depositar</button>
+                                        <button class="btn btn-secondary">Retirar</button>
+                                    </div>
+                                </div>
+                                <div class="account-card">
+                                    <h3>Últimas Apuestas</h3>
+                                    <ul class="history-list">
+                                        <!-- JS llenará esto -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="mis-datos" class="account-section">
+                            <div class="account-card">
+                                <h3>Editar Información Personal</h3>
+                                <p class="card-subtitle">Mantén tus datos actualizados para una experiencia segura.</p>
+                                <form id="personal-info-form" class="auth-form">
+                                    <div class="form-grid">
+                                        <div class="form-group">
+    <label for="first-name">Nombre</label>
+    <input type="text" id="first-name" placeholder="Tu nombre" required>
+</div>
+<div class="form-group">
+    <label for="last-name">Apellido</label>
+    <input type="text" id="last-name" placeholder="Tu apellido" required>
+</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="birth-date">Fecha de Nacimiento</label>
+                                        <input type="date" id="birth-date" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="state">Estado</label>
+                                        <div class="select-wrapper">
+                                            <select id="state" required>
+                                                <option value="">Selecciona tu estado</option>
+                                                <option value="Distrito Capital">Distrito Capital</option>
+                                                <option value="Anzoátegui">Anzoátegui</option>
+                                                <option value="Apure">Apure</option>
+                                                <option value="Aragua">Aragua</option>
+                                                <option value="Barinas">Barinas</option>
+                                                <option value="Bolívar">Bolívar</option>
+                                                <option value="Carabobo">Carabobo</option>
+                                                <option value="Cojedes">Cojedes</option>
+                                                <option value="Delta Amacuro">Delta Amacuro</option>
+                                                <option value="Falcón">Falcón</option>
+                                                <option value="Guárico">Guárico</option>
+                                                <option value="Lara">Lara</option>
+                                                <option value="Mérida">Mérida</option>
+                                                <option value="Miranda">Miranda</option>
+                                                <option value="Monagas">Monagas</option>
+                                                <option value="Nueva Esparta">Nueva Esparta</option>
+                                                <option value="Portuguesa">Portuguesa</option>
+                                                <option value="Sucre">Sucre</option>
+                                                <option value="Táchira">Táchira</option>
+                                                <option value="Trujillo">Trujillo</option>
+                                                <option value="Vargas">La Guaira (Vargas)</option>
+                                                <option value="Yaracuy">Yaracuy</option>
+                                                <option value="Zulia">Zulia</option>
+                                                <option value="Amazonas">Amazonas</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="phone">Número de Teléfono</label>
+                                        <input type="tel" id="phone" placeholder="+58 414 123 4567">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-cta" style="width: auto;">Guardar Cambios</button>
+                                </form>
+                            </div>
+    
+                            <div class="account-card" style="margin-top: 30px;">
+                                <h3>Métodos de Retiro</h3>
+                                <p class="card-subtitle">Puedes añadir hasta 3 métodos para recibir tus ganancias.</p>
+                                
+                                <ul id="payout-method-list" class="payout-method-list">
+                                    <!-- JS llenará esta lista de métodos guardados -->
+                                </ul>
+
+                                <button id="add-payout-method-btn" class="btn btn-secondary" style="width: auto;">
+                                    <i class="fa-solid fa-plus"></i> Añadir Nuevo Método
+                                </button>
+
+                                <form id="payout-method-form" class="auth-form hidden" style="margin-top: 20px;">
+                                    <div class="form-group">
+                                        <label for="payout-method">Tipo de Cuenta</label>
+                                        <div class="select-wrapper">
+                                            <select id="payout-method" required>
+                                                <option value="pago-movil">Pago Móvil</option>
+                                                <option value="transferencia-bs">Transferencia en Bs.</option>
+                                                <option value="usdt-trc20">USDT (TRC20)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                        
+                                    <div class="payout-fields active" data-method="pago-movil">
+                                        <div class="form-group">
+                                            <label for="pm-phone">Teléfono</label>
+                                            <input type="tel" id="pm-phone" placeholder="0412-1234567">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="pm-ci">Cédula de Identidad</label>
+                                            <input type="text" id="pm-ci" placeholder="V-12345678">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="pm-bank">Banco</label>
+                                            <div class="select-wrapper">
+                                                <select id="pm-bank">
+                                                    <option value="">Selecciona un banco</option>
+                                                    <option value="0102">Banco de Venezuela</option>
+                                                    <option value="0104">Bancamiga</option>
+                                                    <option value="0105">Mercantil</option>
+                                                    <option value="0108">BBVA Provincial</option>
+                                                    <option value="0114">Bancaribe</option>
+                                                    <option value="0115">Banco Exterior</option>
+                                                    <option value="0128">Banco Caroní</option>
+                                                    <option value="0134">Banesco</option>
+                                                    <option value="0137">Banco Sofitasa</option>
+                                                    <option value="0138">Banco Plaza</option>
+                                                    <option value="0151">BFC Banco Fondo Común</option>
+                                                    <option value="0156">100% Banco</option>
+                                                    <option value="0157">DelSur</option>
+                                                    <option value="0163">Banco del Tesoro</option>
+                                                    <option value="0166">Banco Agrícola de Venezuela</option>
+                                                    <option value="0168">Bancrecer</option>
+                                                    <option value="0169">Mi Banco</option>
+                                                    <option value="0171">Banco Activo</option>
+                                                    <option value="0172">Bancamiga</option>
+                                                    <option value="0174">Banplus</option>
+                                                    <option value="0175">Banco Bicentenario del Pueblo</option>
+                                                    <option value="0177">Banfanb</option>
+                                                    <option value="0191">Banco Nacional de Crédito (BNC)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                        
+                                    <div class="payout-fields" data-method="transferencia-bs">
+                                        <div class="form-group">
+                                            <label for="tf-fullname">Nombre Completo del Titular</label>
+                                            <input type="text" id="tf-fullname" placeholder="Como aparece en el banco">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="tf-ci">Cédula o RIF del Titular</label>
+                                            <input type="text" id="tf-ci" placeholder="V-12345678">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="tf-account-number">Número de Cuenta (20 dígitos)</label>
+                                            <input type="text" id="tf-account-number" maxlength="20" placeholder="0102...">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="tf-bank">Banco</label>
+                                            <div class="select-wrapper">
+                                                <select id="tf-bank">
+                                                    <option value="">Selecciona un banco</option>
+                                                    <option value="0102">Banco de Venezuela</option>
+                                                    <option value="0104">Bancamiga</option>
+                                                    <option value="0105">Mercantil</option>
+                                                    <option value="0108">BBVA Provincial</option>
+                                                    <option value="0114">Bancaribe</option>
+                                                    <option value="0115">Banco Exterior</option>
+                                                    <option value="0128">Banco Caroní</option>
+                                                    <option value="0134">Banesco</option>
+                                                    <option value="0137">Banco Sofitasa</option>
+                                                    <option value="0138">Banco Plaza</option>
+                                                    <option value="0151">BFC Banco Fondo Común</option>
+                                                    <option value="0156">100% Banco</option>
+                                                    <option value="0157">DelSur</option>
+                                                    <option value="0163">Banco del Tesoro</option>
+                                                    <option value="0166">Banco Agrícola de Venezuela</option>
+                                                    <option value="0168">Bancrecer</option>
+                                                    <option value="0169">Mi Banco</option>
+                                                    <option value="0171">Banco Activo</option>
+                                                    <option value="0172">Bancamiga</option>
+                                                    <option value="0174">Banplus</option>
+                                                    <option value="0175">Banco Bicentenario del Pueblo</option>
+                                                    <option value="0177">Banfanb</option>
+                                                    <option value="0191">Banco Nacional de Crédito (BNC)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                        
+                                    <div class="payout-fields" data-method="usdt-trc20">
+                                        <div class="form-group">
+                                            <label for="usdt-wallet">Dirección de Billetera USDT (TRC20)</label>
+                                            <input type="text" id="usdt-wallet" placeholder="T...">
+                                        </div>
+                                    </div>
+                        
+                                    <button type="submit" class="btn btn-primary btn-cta" style="width: auto;">Guardar Método de Retiro</button>
+                                </form>
+                            </div>
+                        </section>
+
+                        <section id="seguridad" class="account-section">
+                            <div class="account-card">
+                                <h3>Cambiar Contraseña</h3>
+                                <p class="card-subtitle">Te recomendamos cambiar tu contraseña periódicamente.</p>
+                                <form id="password-change-form" class="auth-form">
+                                    <div class="form-group password-group">
+                                        <label for="current-password">Contraseña Actual</label>
+                                        <input type="password" id="current-password" required>
+                                        <button type="button" class="toggle-password-btn" aria-label="Mostrar contraseña">
+    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+</button>
+                                    </div>
+                                    <div class="form-group password-group">
+                                        <label for="new-password">Nueva Contraseña</label>
+                                        <input type="password" id="new-password" required>
+                                        <button type="button" class="toggle-password-btn" aria-label="Mostrar contraseña">
+    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+</button>
+                                    </div>
+                                     <div class="form-group password-group">
+                                        <label for="confirm-new-password">Confirmar Nueva Contraseña</label>
+                                        <input type="password" id="confirm-new-password" required>
+                                        <button type="button" class="toggle-password-btn" aria-label="Mostrar contraseña">
+    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+</button>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-cta" style="width: auto;">Actualizar Contraseña</button>
+                                </form>
+                            </div>
+    
+                            <div class="account-card" style="margin-top: 30px;">
+                                <h3>
+                                    Autenticación de Dos Factores (2FA)
+                                    <span class="tooltip-trigger" data-tooltip="El 2FA añade una capa extra de seguridad. Necesitarás un código de una app como Google Authenticator para iniciar sesión.">
+                                        <i class="fa-solid fa-circle-question"></i>
+                                    </span>
+                                </h3>
+                                <p class="card-subtitle">Añade una capa extra de seguridad a tu cuenta.</p>
+                                
+                                <div class="two-fa-container">
+                                    <div id="2fa-disabled">
+                                        <p>El 2FA está actualmente desactivado.</p>
+                                        <button id="enable-2fa-btn" class="btn btn-primary">Activar 2FA</button>
+                                    </div>
+                                    <div id="2fa-setup" class="hidden">
+                                        <p><strong>Paso 1:</strong> Escanea este código QR con tu app de autenticación (Google Authenticator, Authy, etc).</p>
+                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=otpauth://totp/FortunaBet:daniel@example.com?secret=JBSWY3DPEHPK3PXP&issuer=FortunaBet" alt="Código QR para 2FA" class="qr-code">
+                                        <p><strong>Paso 2:</strong> Ingresa el código de 6 dígitos generado por la app para verificar.</p>
+                                        <form id="verify-2fa-form" class="auth-form" style="max-width: 300px;">
+                                            <div class="form-group">
+                                                <label for="2fa-code">Código de Verificación</label>
+                                                <input type="text" id="2fa-code" maxlength="6" pattern="\d{6}" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Verificar y Activar</button>
+                                        </form>
+                                    </div>
+                                    <div id="2fa-enabled" class="hidden">
+                                         <p style="color: var(--color-success); font-weight: 600;">¡El 2FA está activado en tu cuenta!</p>
+                                         <button id="disable-2fa-btn" class="btn btn-secondary">Desactivar 2FA</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+<!-- ===== INICIO DE LA NUEVA SECCIÓN DE PROMOCIONES ===== -->
+<section id="promociones" class="account-section">
+    <div class="account-card">
+        <h3>Bonos Disponibles</h3>
+        <p class="card-subtitle">Aquí encontrarás las promociones activas que puedes reclamar.</p>
+        
+        <ul class="promo-list">
+            <li class="promo-item">
+                <div class="promo-item-info">
+                    <h4>Bono de Recarga Semanal</h4>
+                    <p>Obtén un 25% extra en tu primer depósito de la semana.</p>
+                </div>
+                <div class="promo-item-action">
+                    <button class="btn btn-secondary">Reclamar Bono</button>
+                </div>
+            </li>
+            <li class="promo-item">
+                <div class="promo-item-info">
+                    <h4>Apuesta Gratis de Champions</h4>
+                    <p>Apuesta $10 en cualquier partido de la Champions y recibe una apuesta gratis de $5.</p>
+                </div>
+                <div class="promo-item-action">
+                    <button class="btn btn-secondary">Más Detalles</button>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="account-card" style="margin-top: 30px;">
+        <h3>Historial de Bonos</h3>
+        <p class="card-subtitle">Un registro de todas las promociones que has utilizado.</p>
+        
+        <ul class="promo-list">
+            <li class="promo-item">
+                <div class="promo-item-info">
+                    <h4>Bono de Bienvenida</h4>
+                    <p>Duplicaste tu primer depósito hasta $100.</p>
+                </div>
+                <div class="promo-item-action">
+                    <span class="promo-status claimed">Reclamado</span>
+                </div>
+            </li>
+             <li class="promo-item">
+                <div class="promo-item-info">
+                    <h4>Giro Gratis Slot de la Semana</h4>
+                    <p>10 giros gratis en la tragamonedas "Book of Fortuna".</p>
+                </div>
+                <div class="promo-item-action">
+                    <span class="promo-status expired">Expirado</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+</section>
+<!-- ===== FIN DE LA NUEVA SECCIÓN DE PROMOCIONES ===== -->
+                        <section id="historial-apuestas" class="account-section">
+                            <div class="account-card">
+                                <h3>Historial Completo de Apuestas</h3>
+                                <ul class="history-list full-history">
+                                     <!-- JS llenará esto -->
+                                </ul>
+                            </div>
+                        </section>
+                    </main>
+                </div>
+            </div>
+        </div>
+        <div id="footer-placeholder"></div>
+    </div>
+
+    <div id="mobile-menu-placeholder"></div>
+    <div id="sports-panel-placeholder"></div>
+    <div id="modals-placeholder"></div>
+    <div id="help-widget-placeholder"></div>
+	<script src="js/main.js" type="module"></script>
+</body>
+</html>

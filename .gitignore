@@ -1,0 +1,23 @@
+# Dependencias
+node_modules/
+
+# Archivos de entorno - ¡MUY IMPORTANTE POR SEGURIDAD!
+.env
+.env.*
+
+# Archivos de logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Carpetas de build/distribución (si las usas en el futuro)
+dist/
+build/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de caché de editores de código
+.vscode/
+.idea/

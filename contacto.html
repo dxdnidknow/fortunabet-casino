@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+	<title>Contacto - FortunaBet</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+	<link rel="stylesheet" href="css/style.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="page-backdrop" class="page-backdrop"></div>
+    <div id="page-wrapper">
+        <div id="header-placeholder"></div>
+
+        <div class="body-container">
+            <div class="page-container">
+                <h1 class="page-title">Ponte en Contacto</h1>
+
+                <div class="auth-container">
+                    <div class="auth-header">
+                        <h2>¿Dudas o Sugerencias?</h2>
+                        <p>Rellena el formulario y nuestro equipo de soporte te responderá a la brevedad.</p>
+                    </div>
+                    <form id="contact-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="contact-name">Nombre Completo</label>
+                            <input type="text" id="contact-name" name="contact-name" placeholder="Escribe tu nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-email">Correo Electrónico</label>
+                            <input type="email" id="contact-email" name="contact-email" placeholder="tu@correo.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-subject">Asunto</label>
+                            <input type="text" id="contact-subject" name="contact-subject" placeholder="Ej: Problema con una apuesta" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-message">Mensaje</label>
+                            <textarea id="contact-message" name="contact-message" rows="6" placeholder="Describe tu consulta aquí..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-cta">Enviar Mensaje</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="footer-placeholder"></div>
+    </div>
+
+    <!-- Los elementos "overlay" van FUERA y DESPUÉS del wrapper -->
+<div id="mobile-menu-placeholder"></div>
+<div id="sports-panel-placeholder"></div><!-- AÑADE ESTO -->
+<div id="modals-placeholder"></div>
+<div id="help-widget-placeholder"></div>
+	<script src="js/main.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!-- Archivo: components/mobile-menu.html (COMPLETO Y CORREGIDO) -->
+<nav id="mobile-menu" class="mobile-menu">
+	<button class="close-menu-btn" aria-label="Cerrar menú">&times;</button>
+	
+	<!-- SECCIÓN DE AUTENTICACIÓN RESTAURADA -->
+	<div class="mobile-menu-auth">
+		<div class="auth-wrapper-mobile">
+			<div class="auth-buttons">
+				<button class="btn btn-secondary btn-cta" data-modal-trigger="login-modal">Iniciar Sesión</button>
+				<button class="btn btn-primary btn-cta" data-modal-trigger="register-modal">Registrarse</button>
+			</div>
+			<div class="user-info hidden">
+				<span class="welcome-message"></span>
+				<button class="btn btn-secondary btn-cta" id="logout-btn-mobile">Cerrar Sesión</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="mobile-menu-divider"></div>
+
+<div class="mobile-menu-links">
+    <a href="deportes.html"><i class="fa-solid fa-trophy"></i> Deportes</a>
+<a href="casino-en-vivo.html"><i class="fa-solid fa-dice"></i> Casino en Vivo</a>
+<a href="casino.html"><i class="fa-solid fa-gamepad"></i> Casino</a>
+    
+    <!-- Este enlace solo se muestra si el usuario NO ha iniciado sesión -->
+    <a href="promociones.html" class="logged-out-only"><i class="fa-solid fa-tags"></i> Promociones</a>
+    
+    <!-- Estos enlaces solo se muestran si el usuario SÍ ha iniciado sesión -->
+    <a href="mi-cuenta.html" class="logged-in-only"><i class="fa-solid fa-user"></i> Mi Cuenta</a>
+    <a href="resultados.html" class="logged-in-only"><i class="fa-solid fa-chart-line"></i> Resultados</a>
+</div>
+</nav>
