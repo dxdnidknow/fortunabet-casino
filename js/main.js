@@ -1,5 +1,5 @@
 // Archivo: js/main.js (VERSIÓN FINAL COMPLETA)
-
+import { API_BASE_URL } from './config.js';
 import { addBet, initBetSlip, subscribe, getBets } from './bet.js';
 import { initModals } from './modal.js';
 import { initSharedComponents } from './loader.js';
