@@ -217,7 +217,7 @@ async function initSportsNav() {
     const sportsNavDesktop = document.querySelector('.main-container .sports-nav');
     const sportsPanelNav = document.querySelector('.sports-panel__nav');
     try {
-        const response = await fetch('http://localhost:3001/api/sports');
+        const response = await fetch(`${API_BASE_URL}/sports`);
         if (!response.ok) throw new Error('Network response was not ok');
         const sports = await response.json();
         const sportsGrouped = sports.reduce((acc, sport) => {
