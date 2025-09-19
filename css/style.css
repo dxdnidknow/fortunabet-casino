@@ -207,10 +207,40 @@ a:hover { color: var(--color-primary-light); }
 .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2); }
 .error-message { color: var(--color-loss); font-size: 0.9rem; margin-top: 15px; min-height: 20px; text-align: center; }
 .auth-footer { margin-top: 25px; text-align: center; color: var(--color-text-secondary); }
-.password-group { position: relative; }
-.toggle-password { position: absolute; top: 70%; transform: translateY(-50%); right: 15px; color: var(--color-text-secondary); cursor: pointer; z-index: 2; transition: color 0.2s ease; }
-.toggle-password:hover { color: var(--color-primary); }
+
+.password-group {
+    position: relative;
+}
 .password-group input { padding-right: 45px; }
+
+/* REEMPLAZA tu regla .toggle-password con esta */
+.toggle-password {
+    position: absolute; /* Se posiciona relativo al .input-wrapper */
+    right: 0;
+    top: 50%; /* Lo posicionamos a la mitad */
+    transform: translateY(-50%); /* Centrado vertical perfecto */
+    width: 50px;
+    height: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.input-wrapper input {
+    flex-grow: 1; 
+}
+
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+
 .promo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
 .promo-card { background-color: var(--color-surface-1); border-radius: var(--border-radius-md); border: 1px solid var(--color-border); padding: 30px; transition: var(--main-transition); border-left: 4px solid var(--color-primary); }
 .promo-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.25); border-color: var(--color-primary); }

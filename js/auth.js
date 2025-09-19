@@ -1,13 +1,13 @@
-// --- ARCHIVO COMPLETO Y MEJORADO: js/auth.js ---
-
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
+import { openModal, closeModal } from './modal.js'; // Importamos las funciones de modal.js
+
 /**
  * Actualiza el estado visual de la interfaz de usuario para reflejar que el usuario ha iniciado sesión.
  * @param {string} username - El nombre de usuario a mostrar.
  */
 function updateLoginState(username) {
-    document.body.classList.add('user-logged-in'); // <-- AÑADE ESTA LÍNEA
+    document.body.classList.add('user-logged-in');
     document.querySelectorAll('.auth-buttons').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('.user-info').forEach(el => el.classList.remove('hidden'));
     document.querySelectorAll('.welcome-message').forEach(el => el.textContent = `Hola, ${username}`);
@@ -38,13 +38,10 @@ async function handleRegisterSubmit(event) {
         return;
     }
 
-    // --- INICIO DE LA LÓGICA REAL ---
     try {
         const response = await fetch(`${API_BASE_URL}/register`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 username: usernameInput.value,
                 email: emailInput.value,
@@ -53,16 +50,12 @@ async function handleRegisterSubmit(event) {
         });
 
         const data = await response.json();
-
         if (!response.ok) {
-            // Si el servidor responde con un error (ej: 409 - Conflicto), lo mostramos
             throw new Error(data.message || 'Ocurrió un error.');
         }
 
-        // Si todo fue bien (código 201), mostramos el mensaje de éxito
         const formContainer = document.getElementById('register-form-container');
         const successMessage = document.getElementById('success-message');
-
         if (formContainer) formContainer.classList.add('hidden');
         if (successMessage) successMessage.classList.remove('hidden');
 
@@ -70,6 +63,7 @@ async function handleRegisterSubmit(event) {
         errorMessageEl.textContent = error.message;
     }
 }
+
 /**
  * Maneja el envío del formulario de inicio de sesión.
  * @param {Event} event - El objeto de evento del formulario.
@@ -77,46 +71,123 @@ async function handleRegisterSubmit(event) {
 async function handleLoginSubmit(event) {
     event.preventDefault();
     const form = event.target;
-    const emailInput = form.querySelector('#login-email');
+    const identifierInput = form.querySelector('#login-identifier');
     const passwordInput = form.querySelector('#login-password');
     const errorMessageEl = form.querySelector('#login-error-message');
-
+    
     errorMessageEl.textContent = '';
 
     try {
         const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                email: emailInput.value,
+                identifier: identifierInput.value,
                 password: passwordInput.value
             })
         });
 
         const data = await response.json();
-
         if (!response.ok) {
             throw new Error(data.message || 'Error al iniciar sesión.');
         }
 
-        // Si el inicio de sesión fue exitoso, el servidor nos devuelve el username
-        const username = data.username;
-
-        // Cerramos el modal de login
         const loginModal = document.getElementById('login-modal');
         if (loginModal) {
-            loginModal.classList.remove('active');
-            document.body.classList.remove('modal-open');
+            closeModal(loginModal);
         }
 
-        // Actualizamos la UI para reflejar el inicio de sesión
-        updateLoginState(username);
-        showToast(`¡Hola de nuevo, ${username}!`);
+        updateLoginState(data.username);
+        localStorage.setItem('fortunaUserEmail', data.email);
+        showToast(`¡Hola de nuevo, ${data.username}!`);
 
     } catch (error) {
         errorMessageEl.textContent = error.message;
+    }
+}
+
+/**
+ * Maneja el envío del formulario de "olvidé mi contraseña".
+ * @param {Event} event - El objeto de evento del formulario.
+ */
+async function handleForgotPasswordSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const emailInput = form.querySelector('#forgot-email');
+    const errorMessageEl = form.querySelector('#forgot-error-message');
+    const formContainer = document.getElementById('forgot-form-container');
+    const successMessage = document.getElementById('forgot-success-message');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    errorMessageEl.textContent = '';
+    submitButton.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: emailInput.value })
+        });
+        
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Ocurrió un error.');
+        }
+
+        formContainer.classList.add('hidden');
+        successMessage.classList.remove('hidden');
+
+    } catch (error) {
+        errorMessageEl.textContent = error.message;
+        submitButton.disabled = false;
+    }
+}
+
+/**
+ * Maneja el envío del formulario para restablecer la contraseña.
+ * @param {Event} event - El objeto de evento del formulario.
+ */
+async function handleResetPasswordSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const passwordInput = form.querySelector('#reset-password');
+    const confirmPasswordInput = form.querySelector('#reset-confirm-password');
+    const errorMessageEl = form.querySelector('#reset-error-message');
+    const modal = form.closest('#reset-password-modal');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    errorMessageEl.textContent = '';
+
+    if (passwordInput.value !== confirmPasswordInput.value) {
+        errorMessageEl.textContent = 'Las contraseñas no coinciden.';
+        return;
+    }
+    if (passwordInput.value.length < 8) {
+        errorMessageEl.textContent = 'La contraseña debe tener al menos 8 caracteres.';
+        return;
+    }
+
+    const { id, token } = modal.dataset;
+    submitButton.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, token, password: passwordInput.value })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Error al actualizar la contraseña.');
+        }
+
+        document.getElementById('reset-form-container').classList.add('hidden');
+        document.getElementById('reset-success-message').classList.remove('hidden');
+
+    } catch (error) {
+        errorMessageEl.textContent = error.message;
+        submitButton.disabled = false;
     }
 }
 
@@ -125,12 +196,12 @@ async function handleLoginSubmit(event) {
  */
 function handleLogout() {
     localStorage.removeItem('fortunaUser');
-    document.body.classList.remove('user-logged-in'); // <-- AÑADE ESTA LÍNEA
+    localStorage.removeItem('fortunaUserEmail');
+    document.body.classList.remove('user-logged-in');
     document.querySelectorAll('.auth-buttons').forEach(el => el.classList.remove('hidden'));
     document.querySelectorAll('.user-info').forEach(el => el.classList.add('hidden'));
     showToast('Has cerrado sesión.');
 
-    // Si estamos en "Mi Cuenta", redirige al inicio para resetear todo
     if (window.location.pathname.includes('mi-cuenta.html')) {
         window.location.href = 'index.html';
     }
@@ -140,43 +211,43 @@ function handleLogout() {
  * Función principal que inicializa toda la lógica de autenticación.
  */
 export function initAuth() {
-    // 1. Comprueba si ya existe una sesión al cargar la página
     const loggedInUser = localStorage.getItem('fortunaUser');
     if (loggedInUser) {
         updateLoginState(loggedInUser);
     }
 
-    // 2. Usa delegación de eventos para manejar los envíos de formularios de forma eficiente
     document.body.addEventListener('submit', (event) => {
-        if (event.target.id === 'register-form') {
-            handleRegisterSubmit(event);
-        }
-        if (event.target.id === 'login-form') {
-            handleLoginSubmit(event);
-        }
+        if (event.target.id === 'register-form') handleRegisterSubmit(event);
+        if (event.target.id === 'login-form') handleLoginSubmit(event);
+        if (event.target.id === 'forgot-password-form') handleForgotPasswordSubmit(event);
+        if (event.target.id === 'reset-password-form') handleResetPasswordSubmit(event);
     });
 
-    // 3. Usa delegación de eventos para manejar clics en botones de logout y toggles de contraseña
     document.body.addEventListener('click', (event) => {
-        
-        // Lógica para cerrar sesión (funciona para botones de escritorio y móvil)
+        const forgotPasswordLink = event.target.closest('.forgot-password');
+        if (forgotPasswordLink) {
+            event.preventDefault();
+            const loginModal = document.getElementById('login-modal');
+            const forgotModal = document.getElementById('forgot-password-modal');
+            
+            if (loginModal) closeModal(loginModal); 
+            if (forgotModal) openModal(forgotModal);
+        }
+
         if (event.target.id === 'logout-btn' || event.target.id === 'logout-btn-mobile') {
             handleLogout();
         }
 
-        // Lógica robusta para mostrar/ocultar la contraseña
         const toggleIcon = event.target.closest('.toggle-password');
         if (toggleIcon) {
-            const passwordGroup = toggleIcon.closest('.password-group');
-            if (passwordGroup) {
-                const input = passwordGroup.querySelector('input');
-                if (input) {
-                    // Cambia el tipo del input entre 'password' y 'text'
+            const wrapper = toggleIcon.closest('.input-wrapper');
+            if (wrapper) {
+                const input = wrapper.querySelector('input');
+                const icon = toggleIcon.querySelector('i');
+                if (input && icon) {
                     input.type = input.type === 'password' ? 'text' : 'password';
-                    
-                    // Cambia el ícono entre ojo abierto y ojo cerrado
-                    toggleIcon.classList.toggle('fa-eye');
-                    toggleIcon.classList.toggle('fa-eye-slash');
+                    icon.classList.toggle('fa-eye');
+                    icon.classList.toggle('fa-eye-slash');
                 }
             }
         }

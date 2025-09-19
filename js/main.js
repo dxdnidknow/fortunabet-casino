@@ -554,6 +554,27 @@ async function main() {
     document.body.classList.remove('modal-open', 'panel-open');
     await initSharedComponents();
     
+     const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    const userId = urlParams.get('id');
+    const token = urlParams.get('token');
+
+    if (action === 'reset' && userId && token) {
+        const resetModal = document.getElementById('reset-password-modal');
+        if (resetModal) {
+            // Guardamos el id y el token en el modal para usarlos después al enviar el formulario
+            resetModal.dataset.id = userId;
+            resetModal.dataset.token = token;
+            
+            // Abrimos el modal automáticamente
+            resetModal.classList.add('active');
+            document.body.classList.add('modal-open');
+
+            // Limpiamos la URL para que no se quede el token visible
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }
+
     initModals();
     initAuth();
     handleActiveNav();

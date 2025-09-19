@@ -1,18 +1,14 @@
-// --- ARCHIVO FINAL COMPLETO Y CORREGIDO: js/modal.js ---
+// --- ARCHIVO COMPLETO Y CORREGIDO: js/modal.js ---
 
 let activeModal = null;
 let lastActiveElement = null;
 
-/**
- * Cierra el menú móvil si está abierto. Se usa para evitar que el menú
- * y un modal estén abiertos al mismo tiempo.
- */
 function closeMobileMenu() {
     const mobileMenu = document.getElementById('mobile-menu');
     const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
     if (mobileMenu && mobileMenu.classList.contains('is-open')) {
         mobileMenu.classList.remove('is-open');
-        document.body.classList.remove('panel-open'); // Usa la clase genérica
+        document.body.classList.remove('panel-open');
         if (mobileMenuToggle) {
             mobileMenuToggle.classList.remove('is-active');
             mobileMenuToggle.setAttribute('aria-expanded', 'false');
@@ -20,10 +16,6 @@ function closeMobileMenu() {
     }
 }
 
-/**
- * Atrapa el foco del teclado dentro del modal activo, mejorando la accesibilidad.
- * @param {KeyboardEvent} e - El evento de teclado.
- */
 const focusTrap = (e) => {
     if (!activeModal || e.key !== 'Tab') return;
 
@@ -37,12 +29,12 @@ const focusTrap = (e) => {
     const firstFocusableEl = focusableElements[0];
     const lastFocusableEl = focusableElements[focusableElements.length - 1];
 
-    if (e.shiftKey) { // Si se presiona Shift + Tab
+    if (e.shiftKey) {
         if (document.activeElement === firstFocusableEl) {
             lastFocusableEl.focus();
             e.preventDefault();
         }
-    } else { // Si se presiona solo Tab
+    } else {
         if (document.activeElement === lastFocusableEl) {
             firstFocusableEl.focus();
             e.preventDefault();
@@ -54,17 +46,16 @@ const focusTrap = (e) => {
  * Abre un modal específico.
  * @param {HTMLElement} modal - El elemento del modal a abrir.
  */
-function openModal(modal) {
+export function openModal(modal) { // <-- EXPORTADO
     if (!modal) return;
     
     closeMobileMenu();
 
     lastActiveElement = document.activeElement;
-    document.body.classList.add('modal-open'); // Clase para blur y scroll
+    document.body.classList.add('modal-open');
     modal.classList.add('active');
     activeModal = modal;
     
-    // Enfoca el primer elemento interactivo del modal
     const firstFocusable = modal.querySelector('input, button');
     if (firstFocusable) {
         firstFocusable.focus();
@@ -73,10 +64,6 @@ function openModal(modal) {
     document.addEventListener('keydown', focusTrap);
 }
 
-/**
- * Reinicia los formularios dentro de un modal a su estado inicial.
- * @param {HTMLElement} modal - El modal que contiene los formularios.
- */
 function resetModalForms(modal) {
     if (modal.id === 'register-modal') {
         const formContainer = modal.querySelector('#register-form-container');
@@ -89,7 +76,6 @@ function resetModalForms(modal) {
         if (form) form.reset();
         if (errorMessage) errorMessage.textContent = '';
     }
-    // Puedes añadir lógica para reiniciar el formulario de login aquí si es necesario
     const loginForm = modal.querySelector('#login-form');
     if (loginForm) {
         loginForm.reset();
@@ -102,23 +88,22 @@ function resetModalForms(modal) {
  * Cierra un modal específico.
  * @param {HTMLElement} modal - El elemento del modal a cerrar.
  */
-function closeModal(modal) {
+export function closeModal(modal) { // <-- EXPORTADO
     if (!modal) return;
     
-    document.body.classList.remove('modal-open'); // Asegura que el blur se quite
+    document.body.classList.remove('modal-open');
 
     modal.classList.remove('active');
     activeModal = null;
         if (modal.id === 'game-modal') {
         const gameIframe = modal.querySelector('#game-iframe');
         if (gameIframe) {
-            gameIframe.src = ''; // Limpiar el src detiene la ejecución del iframe
+            gameIframe.src = '';
         }
     }
     resetModalForms(modal);
     document.removeEventListener('keydown', focusTrap);
     
-    // Devuelve el foco al elemento que estaba activo antes de abrir el modal
     if (lastActiveElement) {
         lastActiveElement.focus();
     }
@@ -128,9 +113,7 @@ function closeModal(modal) {
  * Inicializa todos los listeners de eventos para los modales.
  */
 export function initModals() {
-    // Listener de clic delegado al body para máxima eficiencia
     document.body.addEventListener('click', (event) => {
-        // Abrir modal
         const trigger = event.target.closest('[data-modal-trigger]');
         if (trigger) {
             const modal = document.getElementById(trigger.dataset.modalTrigger);
@@ -138,14 +121,12 @@ export function initModals() {
             return;
         }
 
-        // Cerrar con el botón 'X'
         const closeBtn = event.target.closest('.close-modal');
         if (closeBtn) {
             closeModal(closeBtn.closest('.modal-overlay'));
             return;
         }
 
-        // Cambiar entre modales (ej: de registro a login)
         const switcher = event.target.closest('[data-modal-switch]');
         if (switcher) {
             event.preventDefault();
@@ -157,13 +138,11 @@ export function initModals() {
             return;
         }
 
-        // Cerrar al hacer clic en el fondo del overlay
         if (event.target.classList.contains('modal-overlay')) {
             closeModal(event.target);
         }
     });
 
-    // Listener de teclado para cerrar con la tecla 'Escape'
     window.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && activeModal) {
             closeModal(activeModal);
