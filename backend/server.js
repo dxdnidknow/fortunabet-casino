@@ -164,9 +164,8 @@ app.post('/api/register', authLimiter, async (req, res) => {
 app.post('/api/login', authLimiter, async (req, res) => {
     try {
         const { identifier, password } = req.body;
-        if (!identifier || !password) {
-            return res.status(400).json({ message: 'El identificador y la contraseña son obligatorios.' });
-        }
+        if (!identifier || !password) return res.status(400).json({ message: 'El identificador y la contraseña son obligatorios.' });
+
         const usersCollection = db.collection('users');
         const user = await usersCollection.findOne({ 
             $or: [
@@ -193,14 +192,12 @@ app.post('/api/forgot-password', authLimiter, async (req, res) => {
     try {
         const user = await db.collection('users').findOne({ email: email.toLowerCase() });
         if (!user) {
-            // Por seguridad, no revelamos si el correo existe o no.
             return res.status(200).json({ message: 'Si tu correo está registrado, recibirás un enlace para restablecer tu contraseña.' });
         }
 
         const secret = process.env.JWT_SECRET + user.password;
         const token = jwt.sign({ email: user.email, id: user._id.toString() }, secret, { expiresIn: '15m' });
         
-        // CORRECCIÓN: Usamos la URL de Netlify y el parámetro 'action' que el frontend espera
         const resetLink = `https://earnest-alfajores-9754f3.netlify.app/index.html?action=reset&id=${user._id}&token=${token}`;
 
         await transporter.sendMail({
@@ -226,7 +223,6 @@ app.post('/api/reset-password', authLimiter, async (req, res) => {
         if (!user) return res.status(400).json({ message: 'Usuario no válido.' });
 
         const secret = process.env.JWT_SECRET + user.password;
-        // jwt.verify lanzará un error si el token es inválido o ha expirado.
         jwt.verify(token, secret);
 
         const salt = await bcrypt.genSalt(10);
@@ -238,6 +234,85 @@ app.post('/api/reset-password', authLimiter, async (req, res) => {
     } catch (error) {
         console.error('[ERROR] en reset-password:', error);
         res.status(400).json({ message: 'El enlace no es válido o ha expirado.' });
+    }
+});
+
+app.post('/api/request-password-change-code', authLimiter, async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await db.collection('users').findOne({ email: email.toLowerCase() });
+
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+        
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiration = new Date(Date.now() + 10 * 60 * 1000); 
+
+        await db.collection('users').updateOne(
+            { _id: user._id },
+            { $set: { passwordChangeCode: code, passwordChangeCodeExpires: expiration } }
+        );
+
+        await transporter.sendMail({
+            from: `"FortunaBet Soporte" <${process.env.EMAIL_USER}>`,
+            to: user.email,
+            subject: 'Tu código de confirmación para cambiar la contraseña',
+            html: `<p>Hola ${user.username},</p><p>Tu código de confirmación es: <strong>${code}</strong></p><p>Este código expirará en 10 minutos.</p>`,
+        });
+
+        res.status(200).json({ message: 'Se ha enviado un código de confirmación a tu correo.' });
+
+    } catch (error) {
+        console.error('[ERROR] en request-password-change-code:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+app.post('/api/change-password', authLimiter, async (req, res) => {
+    try {
+        const { email, currentPassword, newPassword, code } = req.body;
+        if (!email || !currentPassword || !newPassword || !code) {
+            return res.status(400).json({ message: 'Todos los campos son obligatorios, incluyendo el código de confirmación.' });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 8 caracteres.' });
+        }
+
+        const usersCollection = db.collection('users');
+        const user = await usersCollection.findOne({ email: email.toLowerCase() });
+        
+        if (!user) {
+            return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
+        }
+
+        if (user.passwordChangeCode !== code || new Date() > user.passwordChangeCodeExpires) {
+            await usersCollection.updateOne({ _id: user._id }, { $unset: { passwordChangeCode: "", passwordChangeCodeExpires: "" } });
+            return res.status(400).json({ message: 'El código es incorrecto o ha expirado.' });
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        await usersCollection.updateOne(
+            { _id: user._id },
+            { 
+                $set: { password: hashedPassword },
+                $unset: { passwordChangeCode: "", passwordChangeCodeExpires: "" }
+            }
+        );
+        
+        res.status(200).json({ message: 'Contraseña actualizada con éxito.' });
+        
+    } catch (error) {
+        console.error('[ERROR] en change-password:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
 
@@ -264,4 +339,4 @@ connectDB().then(() => {
         console.log(`   URL Local: http://localhost:${port}`);
         console.log('-------------------------------------------');
     });
-}); 
+});

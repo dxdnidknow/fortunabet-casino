@@ -1,7 +1,7 @@
 // Archivo: js/main.js (VERSIÓN FINAL COMPLETA)
 import { API_BASE_URL } from './config.js';
 import { addBet, initBetSlip, subscribe, getBets } from './bet.js';
-import { initModals } from './modal.js';
+import { initModals, openModal } from './modal.js';
 import { initSharedComponents } from './loader.js';
 import { fetchLiveEvents, fetchEventDetails } from './api.js';
 import { initAuth } from './auth.js';
@@ -453,11 +453,33 @@ if (mobileMenuLink) {
             return;
         }
         
-        const oddsButton = target.closest('.odds-button');
-        if (oddsButton) {
+const oddsButton = target.closest('.odds-button');
+if (oddsButton) {
+    // 1. Verificamos si el botón está en la sección de destacados de la página de inicio
+    const isFeaturedEvent = oddsButton.closest('#featured-events-container');
+
+    if (isFeaturedEvent) {
+        // Lógica especial para la página de inicio
+        const isLoggedIn = localStorage.getItem('fortunaUser');
+
+        if (isLoggedIn) {
+            // Si el usuario TIENE sesión: añade la apuesta y redirige
             addBet({ team: oddsButton.dataset.team, odds: parseFloat(oddsButton.dataset.odds), id: `${oddsButton.dataset.team}-${oddsButton.dataset.odds}` });
-            return;
+            window.location.href = 'deportes.html';
+        } else {
+            // Si el usuario NO TIENE sesión: abre el modal de registro
+            const registerModal = document.getElementById('register-modal');
+            if (registerModal) {
+                openModal(registerModal);
+            }
         }
+    } else {
+        // Lógica normal para cualquier otra página (ej: deportes.html)
+        // Simplemente añade la apuesta al cupón, sin redirigir.
+        addBet({ team: oddsButton.dataset.team, odds: parseFloat(oddsButton.dataset.odds), id: `${oddsButton.dataset.team}-${oddsButton.dataset.odds}` });
+    }
+    return;
+}
 
         const accordion = target.closest('.accordion');
         if (accordion) {
