@@ -164,8 +164,9 @@ app.post('/api/register', authLimiter, async (req, res) => {
 app.post('/api/login', authLimiter, async (req, res) => {
     try {
         const { identifier, password } = req.body;
-        if (!identifier || !password) return res.status(400).json({ message: 'El identificador y la contraseña son obligatorios.' });
-
+        if (!identifier || !password) {
+            return res.status(400).json({ message: 'El identificador y la contraseña son obligatorios.' });
+        }
         const usersCollection = db.collection('users');
         const user = await usersCollection.findOne({ 
             $or: [
@@ -263,4 +264,4 @@ connectDB().then(() => {
         console.log(`   URL Local: http://localhost:${port}`);
         console.log('-------------------------------------------');
     });
-});
+}); 
