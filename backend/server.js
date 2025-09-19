@@ -320,6 +320,33 @@ app.post('/api/change-password', authLimiter, async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
+// En backend/server.js, dentro de la sección de autenticación
+
+app.post('/api/validate-current-password', authLimiter, async (req, res) => {
+    try {
+        const { email, currentPassword } = req.body;
+        if (!email || !currentPassword) {
+            return res.status(400).json({ message: 'Email y contraseña actual son requeridos.' });
+        }
+
+        const user = await db.collection('users').findOne({ email: email.toLowerCase() });
+        if (!user) {
+            return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
+        }
+
+        // Si todo es correcto, simplemente devolvemos un éxito.
+        res.status(200).json({ message: 'Validación exitosa.' });
+
+    } catch (error) {
+        console.error('[ERROR] en validate-current-password:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
 
 // =======================================================================
 //  FUNCIÓN AUXILIAR PARA MANEJO DE ERRORES

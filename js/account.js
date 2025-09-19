@@ -112,80 +112,106 @@ export function initAccountDashboard() {
         });
     }
 
-    const passwordChangeForm = document.getElementById('password-change-form');
-    if (passwordChangeForm) {
-        let isCodeStep = false; 
-        const submitButton = passwordChangeForm.querySelector('button[type="submit"]');
-        const confirmationGroup = document.getElementById('confirmation-code-group');
+const passwordChangeForm = document.getElementById('password-change-form');
+if (passwordChangeForm) {
+    let isCodeStep = false;
+    const submitButton = passwordChangeForm.querySelector('button[type="submit"]');
+    const confirmationGroup = document.getElementById('confirmation-code-group');
 
-        passwordChangeForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            submitButton.disabled = true;
+    passwordChangeForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        submitButton.disabled = true;
 
-            const userEmail = localStorage.getItem('fortunaUserEmail');
-            if (!userEmail) {
-                showToast('Error de sesión. Por favor, vuelve a iniciar sesión.', 'error');
+        const userEmail = localStorage.getItem('fortunaUserEmail');
+        if (!userEmail) {
+            showToast('Error de sesión. Por favor, vuelve a iniciar sesión.', 'error');
+            submitButton.disabled = false;
+            return;
+        }
+
+        const currentPassword = document.getElementById('current-password').value;
+        const newPassword = document.getElementById('new-password').value;
+        const confirmNewPassword = document.getElementById('confirm-new-password').value;
+
+        if (!isCodeStep) {
+            // --- ETAPA 1: VALIDAR y luego solicitar el código ---
+
+            // 1. Validaciones del lado del cliente primero
+            if (newPassword !== confirmNewPassword) {
+                showToast('Las nuevas contraseñas no coinciden.', 'error');
+                submitButton.disabled = false;
+                return;
+            }
+             if (currentPassword === newPassword) {
+                showToast('La nueva contraseña no puede ser la misma que la actual.', 'error');
+                submitButton.disabled = false;
+                return;
+            }
+            if (newPassword.length < 8) {
+                showToast('La nueva contraseña debe tener al menos 8 caracteres.', 'error');
                 submitButton.disabled = false;
                 return;
             }
 
-            if (!isCodeStep) {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/request-password-change-code`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: userEmail })
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.message);
+            try {
+                // 2. Pre-validación de la contraseña actual en el backend
+                const validationResponse = await fetch(`${API_BASE_URL}/validate-current-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userEmail, currentPassword: currentPassword })
+                });
+                const validationData = await validationResponse.json();
+                if (!validationResponse.ok) throw new Error(validationData.message);
 
-                    showToast(data.message, 'success');
-                    confirmationGroup.classList.remove('hidden');
-                    isCodeStep = true;
-                } catch (error) {
-                    showToast(error.message, 'error');
-                } finally {
-                    submitButton.disabled = false;
-                }
+                // 3. Si la validación es exitosa, AHORA SÍ pedimos el código
+                const codeResponse = await fetch(`${API_BASE_URL}/request-password-change-code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userEmail })
+                });
+                const codeData = await codeResponse.json();
+                if (!codeResponse.ok) throw new Error(codeData.message);
 
-            } else {
-                const currentPassword = document.getElementById('current-password').value;
-                const newPassword = document.getElementById('new-password').value;
-                const confirmNewPassword = document.getElementById('confirm-new-password').value;
-                const code = document.getElementById('confirmation-code').value;
+                showToast(codeData.message, 'success');
+                confirmationGroup.classList.remove('hidden');
+                isCodeStep = true;
 
-                if (newPassword !== confirmNewPassword) {
-                    showToast('Las nuevas contraseñas no coinciden.', 'error');
-                    submitButton.disabled = false;
-                    return;
-                }
-                
-                try {
-                    const response = await fetch(`${API_BASE_URL}/change-password`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            email: userEmail,
-                            currentPassword,
-                            newPassword,
-                            code
-                        })
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.message);
-
-                    showToast(data.message, 'success');
-                    passwordChangeForm.reset();
-                    confirmationGroup.classList.add('hidden');
-                    isCodeStep = false;
-                } catch (error) {
-                    showToast(error.message, 'error');
-                } finally {
-                    submitButton.disabled = false;
-                }
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                submitButton.disabled = false;
             }
-        });
-    }
+
+        } else {
+            // --- ETAPA 2: Cambiar la contraseña con el código ---
+            const code = document.getElementById('confirmation-code').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/change-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: userEmail,
+                        currentPassword,
+                        newPassword,
+                        code
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                showToast(data.message, 'success');
+                passwordChangeForm.reset();
+                confirmationGroup.classList.add('hidden');
+                isCodeStep = false;
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                submitButton.disabled = false;
+            }
+        }
+    });
+}
 
     handlePayoutMethodChange();
     handle2FASetup();
