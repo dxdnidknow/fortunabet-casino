@@ -272,10 +272,10 @@ app.post('/api/request-password-change-code', authLimiter, async (req, res) => {
 app.post('/api/change-password', authLimiter, async (req, res) => {
     try {
         const { email, currentPassword, newPassword, code } = req.body;
+        
         if (!email || !currentPassword || !newPassword || !code) {
-            return res.status(400).json({ message: 'Todos los campos son obligatorios, incluyendo el código de confirmación.' });
+            return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
         }
-
         if (newPassword.length < 8) {
             return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 8 caracteres.' });
         }
@@ -284,7 +284,7 @@ app.post('/api/change-password', authLimiter, async (req, res) => {
         const user = await usersCollection.findOne({ email: email.toLowerCase() });
         
         if (!user) {
-            return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
         }
 
         if (user.passwordChangeCode !== code || new Date() > user.passwordChangeCodeExpires) {
@@ -292,11 +292,16 @@ app.post('/api/change-password', authLimiter, async (req, res) => {
             return res.status(400).json({ message: 'El código es incorrecto o ha expirado.' });
         }
 
-        const isMatch = await bcrypt.compare(currentPassword, user.password);
-        if (!isMatch) {
+        const isCurrentPasswordMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isCurrentPasswordMatch) {
             return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
         }
 
+        const isNewPasswordSameAsOld = await bcrypt.compare(newPassword, user.password);
+        if (isNewPasswordSameAsOld) {
+            return res.status(400).json({ message: 'La nueva contraseña no puede ser la misma que la actual.' });
+        }
+        
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
