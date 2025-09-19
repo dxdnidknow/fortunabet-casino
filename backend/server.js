@@ -134,7 +134,11 @@ app.post('/api/register', authLimiter, async (req, res) => {
     try {
         const { username, email, password } = req.body;
         if (!username || !email || !password) return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
-        
+
+        const usernameRegex = /^[a-zA-Z]{4,}$/;
+if (!usernameRegex.test(username)) {
+    return res.status(400).json({ message: 'El usuario debe tener al menos 4 letras y no contener números ni espacios.' });
+}
         const usersCollection = db.collection('users');
         const existingUser = await usersCollection.findOne({ $or: [{ email: email.toLowerCase() }, { username }] });
         if (existingUser) return res.status(409).json({ message: 'El correo electrónico o el nombre de usuario ya están en uso.' });
@@ -344,6 +348,86 @@ app.post('/api/validate-current-password', authLimiter, async (req, res) => {
 
     } catch (error) {
         console.error('[ERROR] en validate-current-password:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+// En server.js, dentro de los endpoints de autenticación
+
+app.post('/api/change-username', authLimiter, async (req, res) => {
+    try {
+        const { email, newUsername } = req.body;
+
+        // 1. Validar el formato del nuevo nombre de usuario
+        const usernameRegex = /^[a-zA-Z]{4,}$/;
+        if (!usernameRegex.test(newUsername)) {
+            return res.status(400).json({ message: 'El usuario debe tener al menos 4 letras y no contener números ni espacios.' });
+        }
+
+        const usersCollection = db.collection('users');
+
+        // 2. Verificar si el nuevo nombre de usuario ya está en uso por otra persona
+        const existingUser = await usersCollection.findOne({ username: newUsername });
+        if (existingUser) {
+            return res.status(409).json({ message: 'Ese nombre de usuario ya está en uso. Por favor, elige otro.' });
+        }
+        
+        const currentUser = await usersCollection.findOne({ email: email.toLowerCase() });
+        if (!currentUser) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+
+        // 3. Verificar la restricción de tiempo (14 días)
+        if (currentUser.lastUsernameChange) {
+            const lastChangeDate = new Date(currentUser.lastUsernameChange);
+            const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+
+            if (lastChangeDate > fourteenDaysAgo) {
+                // Todavía no han pasado 14 días
+                const nextAvailableDate = new Date(lastChangeDate.getTime() + 14 * 24 * 60 * 60 * 1000);
+                return res.status(429).json({ 
+                    message: `Solo puedes cambiar tu nombre de usuario una vez cada 14 días. Próximo cambio disponible el ${nextAvailableDate.toLocaleDateString('es-ES')}.`
+                });
+            }
+        }
+
+        // Si todas las validaciones pasan, actualizamos el nombre y la fecha del cambio
+        await usersCollection.updateOne(
+            { _id: currentUser._id },
+            { $set: { username: newUsername, lastUsernameChange: new Date() } }
+        );
+
+        res.status(200).json({ message: 'Nombre de usuario actualizado con éxito.', newUsername: newUsername });
+
+    } catch (error) {
+        console.error('[ERROR] en change-username:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+// En server.js, dentro de la sección // --- ENDPOINTS DE AUTENTICACIÓN ---
+
+app.get('/api/user-data', async (req, res) => {
+    try {
+        const { email } = req.query; // Recibimos el email como parámetro de la URL
+        if (!email) {
+            return res.status(400).json({ message: 'El email es requerido.' });
+        }
+
+        const usersCollection = db.collection('users');
+        const user = await usersCollection.findOne(
+            { email: email.toLowerCase() },
+            // Usamos 'projection' para devolver solo los campos que necesitamos (más seguro y eficiente)
+            { projection: { username: 1, lastUsernameChange: 1, _id: 0 } }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+
+        res.status(200).json(user);
+
+    } catch (error) {
+        console.error('[ERROR] en user-data:', error);
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });

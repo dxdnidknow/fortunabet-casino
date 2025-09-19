@@ -28,7 +28,12 @@ async function handleRegisterSubmit(event) {
     const errorMessageEl = form.querySelector('#error-message');
 
     errorMessageEl.textContent = '';
-
+    
+const usernameRegex = /^[a-zA-Z]{4,}$/;
+if (!usernameRegex.test(usernameInput.value)) {
+    errorMessageEl.textContent = 'El usuario debe tener al menos 4 letras y no contener números ni espacios.';
+    return;
+}
     if (passwordInput.value !== confirmPasswordInput.value) {
         errorMessageEl.textContent = 'Las contraseñas no coinciden.';
         return;

@@ -231,6 +231,7 @@ a:hover { color: var(--color-primary-light); }
 }
 .input-wrapper input {
     flex-grow: 1; 
+    padding-right: 50px; 
 }
 
 
@@ -746,10 +747,32 @@ body.user-logged-in .mobile-menu-links .logged-in-only {
 .payout-method-item span { display: block; color: var(--color-text-secondary); font-size: 0.9rem; }
 .remove-method-btn { background: none; border: none; color: var(--color-text-secondary); font-size: 1.5rem; cursor: pointer; }
 .remove-method-btn:hover { color: var(--color-loss); }
-.tooltip-trigger {
-    position: relative;
+/* En style.css */
+
+/* NUEVA REGLA para el contenedor del label y el tooltip */
+
+.input-wrapper .tooltip-trigger {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 50px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary); /* Color base del icono */
     cursor: help;
-    color: var(--color-text-secondary);
+    pointer-events: none; /* Hacemos que los clics "atraviesen" el icono y lleguen al input */
+}
+.input-wrapper .tooltip-trigger i {
+    pointer-events: all; /* Pero el icono en sí mismo SÍ debe ser interactivo para el tooltip */
+    cursor: help; /* Mantenemos el cursor de ayuda */
+}
+
+/* Le decimos al tooltip que aparezca cuando el <i> es hovereado */
+.input-wrapper .tooltip-trigger i:hover + .tooltip-text { /* Si usas una clase separada para el tooltip */
+  opacity: 1;
+  visibility: visible;
 }
 .tooltip-trigger::after {
     content: attr(data-tooltip);
