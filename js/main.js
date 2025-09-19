@@ -427,6 +427,22 @@ function setupEventListeners() {
             return;
         }
 
+        const mobileMenuLink = target.closest('#mobile-menu a');
+if (mobileMenuLink) {
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileMenu && mobileMenu.classList.contains('is-open')) {
+        // Cierra el menú explícitamente antes de que la página navegue
+        mobileMenu.classList.remove('is-open');
+        document.body.classList.remove('panel-open');
+        const toggleBtn = document.getElementById('mobile-menu-toggle');
+        if (toggleBtn) {
+            toggleBtn.classList.remove('is-active');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+        }
+    }
+    // No necesitamos event.preventDefault(), dejamos que el enlace funcione normalmente.
+    return; 
+}
         const tabLink = target.closest('.tab-link');
         if (tabLink) {
             if (tabLink.classList.contains('active')) return;
@@ -535,6 +551,7 @@ function setupEventListeners() {
 }
 
 async function main() {
+    document.body.classList.remove('modal-open', 'panel-open');
     await initSharedComponents();
     
     initModals();
@@ -579,3 +596,8 @@ async function main() {
 }
 
 document.addEventListener('DOMContentLoaded', main);
+window.addEventListener('beforeunload', () => {
+    // Forzamos la limpieza del body justo antes de abandonar la página.
+    // Esto previene que las clases "sucias" se transfieran a la siguiente carga.
+    document.body.classList.remove('modal-open', 'panel-open');
+});
