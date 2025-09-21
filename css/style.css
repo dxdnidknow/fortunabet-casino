@@ -752,12 +752,12 @@ body.user-logged-in .mobile-menu-links .logged-in-only {
 /* NUEVA REGLA para el contenedor del label y el tooltip */
 
 .input-wrapper .tooltip-trigger {
-    position: absolute;
+    position: relative;
     right: 0;
     top: 0;
     width: 50px;
     height: 100%;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     color: var(--color-text-secondary); /* Color base del icono */
@@ -786,11 +786,12 @@ body.user-logged-in .mobile-menu-links .logged-in-only {
     border-radius: var(--border-radius-sm);
     font-size: 0.85rem;
     font-weight: 400;
+    line-height: 1.5;
     width: 250px;
     text-align: center;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
     z-index: 10;
 }
 .tooltip-trigger:hover::after {

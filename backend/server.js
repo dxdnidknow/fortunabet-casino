@@ -431,6 +431,40 @@ app.get('/api/user-data', async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
+// En server.js
+
+app.post('/api/update-personal-info', authLimiter, async (req, res) => {
+    try {
+        const { email, firstName, lastName, birthDate, state, phone } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: 'El email del usuario es requerido.' });
+        }
+
+        const usersCollection = db.collection('users');
+        const result = await usersCollection.updateOne(
+            { email: email.toLowerCase() },
+            { 
+                $set: {
+                    'personalInfo.firstName': firstName,
+                    'personalInfo.lastName': lastName,
+                    'personalInfo.birthDate': birthDate,
+                    'personalInfo.state': state,
+                    'personalInfo.phone': phone,
+                }
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+        
+        res.status(200).json({ message: 'Información personal actualizada con éxito.' });
+
+    } catch (error) {
+        console.error('[ERROR] en update-personal-info:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
 
 // =======================================================================
 //  FUNCIÓN AUXILIAR PARA MANEJO DE ERRORES

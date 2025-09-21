@@ -16,6 +16,8 @@ async function fetchUserData() {
     return data;
 }
 
+// En js/account.js, REEMPLAZA esta función completa
+
 async function handleUsernameChange(event) {
     event.preventDefault();
     const form = event.target;
@@ -25,26 +27,29 @@ async function handleUsernameChange(event) {
     submitButton.disabled = true;
 
     try {
-        const userEmail = localStorage.getItem('fortunaUserEmail');
+         const userEmail = localStorage.getItem('fortunaUserEmail');
         const response = await fetch(`${API_BASE_URL}/change-username`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: userEmail, newUsername: newUsernameInput.value })
         });
 
-        const data = await response.json();
+         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
         
         showToast(data.message, 'success');
         
+        // Actualizamos el nombre de usuario en todas partes
         localStorage.setItem('fortunaUser', data.newUsername);
         document.querySelectorAll('.welcome-message').forEach(el => el.textContent = `Hola, ${data.newUsername}`);
         
-        await renderUsernameChangeUI();
-
     } catch (error) {
         showToast(error.message, 'error');
-        submitButton.disabled = false;
+    } finally {
+        // --- LA CLAVE ESTÁ AQUÍ ---
+        // Volvemos a renderizar la UI para mostrar el estado más reciente,
+        // ya sea el nuevo nombre o el mensaje de espera de 14 días.
+        await renderUsernameChangeUI(); 
     }
 }
 
@@ -96,13 +101,18 @@ async function renderUsernameChangeUI() {
             </form>
         `;
         
-        if (canChange) {
-            document.getElementById('username-change-form').addEventListener('submit', handleUsernameChange);
+ if (canChange) {
+        // Buscamos el formulario DENTRO del 'container' que acabamos de llenar
+        const usernameForm = container.querySelector('#username-change-form');
+        if (usernameForm) { // Añadimos una comprobación para estar 100% seguros
+            usernameForm.addEventListener('submit', handleUsernameChange);
         }
-
-    } catch (error) {
-        container.innerHTML = `<p class="error-message">${error.message}</p>`;
     }
+    // === FIN DE LA CORRECCIÓN ===
+
+} catch (error) {
+    container.innerHTML = `<p class="error-message">${error.message}</p>`;
+}
 }
 
 function handlePayoutMethodChange() {
@@ -309,6 +319,79 @@ export function initAccountDashboard() {
                 }
             }
         });
+
+         const personalInfoForm = document.getElementById('personal-info-form');
+    if (personalInfoForm) {
+        personalInfoForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const submitButton = personalInfoForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+
+            const formData = {
+                email: localStorage.getItem('fortunaUserEmail'),
+                firstName: document.getElementById('first-name').value,
+                lastName: document.getElementById('last-name').value,
+                birthDate: document.getElementById('birth-date').value,
+                state: document.getElementById('state').value,
+                phone: document.getElementById('phone').value,
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/update-personal-info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+                
+                showToast(data.message, 'success');
+
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+
+            const personalInfoForm = document.getElementById('personal-info-form');
+    if (personalInfoForm) {
+        personalInfoForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const submitButton = personalInfoForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+
+            const formData = {
+                email: localStorage.getItem('fortunaUserEmail'),
+                firstName: document.getElementById('first-name').value,
+                lastName: document.getElementById('last-name').value,
+                birthDate: document.getElementById('birth-date').value,
+                state: document.getElementById('state').value,
+                phone: document.getElementById('phone').value,
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/update-personal-info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+                
+                showToast(data.message, 'success');
+
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+    }
+    }
+    
     }
 
     renderUsernameChangeUI();
