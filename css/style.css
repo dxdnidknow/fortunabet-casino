@@ -1207,3 +1207,47 @@ body.user-logged-in .logged-out-only {
     }
     .close-game-btn { top: 15px; right: 15px; }
 }
+/* En style.css */
+.phone-input-group {
+    display: flex;
+    align-items: center;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    transition: var(--main-transition);
+    overflow: hidden; /* Evita que los bordes internos se salgan */
+}
+.phone-input-group:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+}
+
+.phone-prefix {
+    padding: 12px 10px 12px 15px; /* Ajustamos padding */
+    color: var(--color-text-primary); /* Hacemos el texto más brillante */
+    font-weight: 500;
+    background-color: var(--color-surface-2); /* Damos un fondo sutil para diferenciar */
+    border-right: 1px solid var(--color-border);
+}
+
+.phone-input-group input[type="tel"] {
+    border: none;
+    background: none;
+    box-shadow: none;
+    padding: 12px 15px; /* Padding consistente */
+    flex-grow: 1;
+    width: 100%; /* Asegura que ocupe el espacio */
+    color: var(--color-text-primary); /* Color del texto que escribe el usuario */
+    font-size: 1rem; /* Mismo tamaño de fuente que otros inputs */
+}
+
+/* ESTA ES LA REGLA MÁGICA PARA EL PLACEHOLDER */
+.phone-input-group input[type="tel"]::placeholder {
+    color: var(--color-text-secondary); /* Mismo color que los otros placeholders */
+    opacity: 1; /* Necesario en algunos navegadores */
+}
+
+.phone-input-group input[type="tel"]:focus {
+    box-shadow: none;
+    outline: none; /* Quitamos el outline individual */
+}

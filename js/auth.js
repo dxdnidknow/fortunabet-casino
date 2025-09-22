@@ -1,11 +1,17 @@
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
-import { openModal, closeModal } from './modal.js'; // Importamos las funciones de modal.js
+import { openModal, closeModal } from './modal.js';
 
-/**
- * Actualiza el estado visual de la interfaz de usuario para reflejar que el usuario ha iniciado sesión.
- * @param {string} username - El nombre de usuario a mostrar.
- */
+function validatePasswordStrength(password) {
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+    if (regex.test(password)) {
+        return { isValid: true, message: '' };
+    } else {
+        let message = 'La contraseña debe tener al menos 8 caracteres, e incluir una mayúscula, una minúscula, un número y un carácter especial.';
+        return { isValid: false, message: message };
+    }
+}
+
 function updateLoginState(username) {
     document.body.classList.add('user-logged-in');
     document.querySelectorAll('.auth-buttons').forEach(el => el.classList.add('hidden'));
@@ -14,32 +20,25 @@ function updateLoginState(username) {
     localStorage.setItem('fortunaUser', username);
 }
 
-/**
- * Maneja el envío del formulario de registro.
- * @param {Event} event - El objeto de evento del formulario.
- */
 async function handleRegisterSubmit(event) {
     event.preventDefault();
     const form = event.target;
     const usernameInput = form.querySelector('#username');
     const emailInput = form.querySelector('#email');
-    const passwordInput = form.querySelector('#password');
-    const confirmPasswordInput = form.querySelector('#confirm-password');
+     const passwordInput = form.querySelector('#register-password'); // Usa el nuevo ID
+    const confirmPasswordInput = form.querySelector('#register-confirm-password');
     const errorMessageEl = form.querySelector('#error-message');
 
     errorMessageEl.textContent = '';
-    
-const usernameRegex = /^[a-zA-Z]{4,}$/;
-if (!usernameRegex.test(usernameInput.value)) {
-    errorMessageEl.textContent = 'El usuario debe tener al menos 4 letras y no contener números ni espacios.';
-    return;
-}
-    if (passwordInput.value !== confirmPasswordInput.value) {
-        errorMessageEl.textContent = 'Las contraseñas no coinciden.';
+
+    const passwordValidation = validatePasswordStrength(passwordInput.value);
+    if (!passwordValidation.isValid) {
+        errorMessageEl.textContent = passwordValidation.message;
         return;
     }
-    if (passwordInput.value.length < 8) {
-        errorMessageEl.textContent = 'La contraseña debe tener al menos 8 caracteres.';
+
+    if (passwordInput.value !== confirmPasswordInput.value) {
+        errorMessageEl.textContent = 'Las contraseñas no coinciden.';
         return;
     }
 
@@ -69,10 +68,6 @@ if (!usernameRegex.test(usernameInput.value)) {
     }
 }
 
-/**
- * Maneja el envío del formulario de inicio de sesión.
- * @param {Event} event - El objeto de evento del formulario.
- */
 async function handleLoginSubmit(event) {
     event.preventDefault();
     const form = event.target;
@@ -111,10 +106,6 @@ async function handleLoginSubmit(event) {
     }
 }
 
-/**
- * Maneja el envío del formulario de "olvidé mi contraseña".
- * @param {Event} event - El objeto de evento del formulario.
- */
 async function handleForgotPasswordSubmit(event) {
     event.preventDefault();
     const form = event.target;
@@ -148,10 +139,6 @@ async function handleForgotPasswordSubmit(event) {
     }
 }
 
-/**
- * Maneja el envío del formulario para restablecer la contraseña.
- * @param {Event} event - El objeto de evento del formulario.
- */
 async function handleResetPasswordSubmit(event) {
     event.preventDefault();
     const form = event.target;
@@ -163,12 +150,14 @@ async function handleResetPasswordSubmit(event) {
 
     errorMessageEl.textContent = '';
 
-    if (passwordInput.value !== confirmPasswordInput.value) {
-        errorMessageEl.textContent = 'Las contraseñas no coinciden.';
+    const passwordValidation = validatePasswordStrength(passwordInput.value);
+    if (!passwordValidation.isValid) {
+        errorMessageEl.textContent = passwordValidation.message;
         return;
     }
-    if (passwordInput.value.length < 8) {
-        errorMessageEl.textContent = 'La contraseña debe tener al menos 8 caracteres.';
+
+    if (passwordInput.value !== confirmPasswordInput.value) {
+        errorMessageEl.textContent = 'Las contraseñas no coinciden.';
         return;
     }
 
@@ -196,9 +185,6 @@ async function handleResetPasswordSubmit(event) {
     }
 }
 
-/**
- * Maneja el cierre de sesión del usuario.
- */
 function handleLogout() {
     localStorage.removeItem('fortunaUser');
     localStorage.removeItem('fortunaUserEmail');
@@ -212,9 +198,6 @@ function handleLogout() {
     }
 }
 
-/**
- * Función principal que inicializa toda la lógica de autenticación.
- */
 export function initAuth() {
     const loggedInUser = localStorage.getItem('fortunaUser');
     if (loggedInUser) {

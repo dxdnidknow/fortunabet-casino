@@ -629,8 +629,8 @@ async function main() {
             }, 100);
 
         } else {
-            initAccountDashboard();
-            renderBetHistory();
+            await initAccountDashboard(); 
+        renderBetHistory();
         }
     }
     if (document.getElementById('featured-events-container')) {

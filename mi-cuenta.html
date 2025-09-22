@@ -57,23 +57,22 @@
 
                         <section id="mis-datos" class="account-section">
                             <div class="account-card">
+
+                                <div id="username-change-container" style="margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid var(--color-border);">
+                                    <!-- El JavaScript llenará esta sección con el formulario de cambio de nombre -->
+                                </div>
+
                                 <h3>Editar Información Personal</h3>
                                 <p class="card-subtitle">Mantén tus datos actualizados para una experiencia segura.</p>
                                 <form id="personal-info-form" class="auth-form">
-                                     <div class="account-card" style="background-color: var(--color-background); padding: 20px; margin-bottom: 30px;">
-        <h3>Cambiar Nombre de Usuario</h3>
-        <div id="username-change-container">
-                        <!-- El JS llenará esta sección -->
-        </div>
-    </div>
                                     <div class="form-grid">
                                         <div class="form-group">
                                             <label for="first-name">Nombre</label>
-                                            <input type="text" id="first-name" placeholder="Tu nombre" required>
+                                            <input type="text" id="first-name" placeholder="Tu nombre" required maxlength="25">
                                         </div>
                                         <div class="form-group">
                                             <label for="last-name">Apellido</label>
-                                            <input type="text" id="last-name" placeholder="Tu apellido" required>
+                                            <input type="text" id="last-name" placeholder="Tu apellido" required maxlength="25">
                                         </div>
                                     </div>
                                     <div class="form-group">
@@ -113,8 +112,11 @@
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="phone">Número de Teléfono</label>
-                                        <input type="tel" id="phone" placeholder="+58 414 123 4567">
+                                        <label for="phone-number">Número de Teléfono</label>
+                                        <div class="phone-input-group">
+                                            <span class="phone-prefix">+58</span>
+                                            <input type="tel" id="phone-number" placeholder="414 123 4567" maxlength="13" pattern="[0-9\-]{10,13}" title="Ej: 414-123-45-67">
+                                        </div>
                                     </div>
                                     <button type="submit" class="btn btn-primary btn-cta" style="width: auto;">Guardar Cambios</button>
                                 </form>
@@ -276,16 +278,12 @@
                                             </button>
                                         </div>
                                     </div>
-
-                                    <!-- INICIO DE LA CORRECCIÓN -->
                                     <div class="form-group hidden" id="confirmation-code-group">
                                         <label for="confirmation-code">Código de Confirmación</label>
                                         <p class="card-subtitle" style="margin-top:0; margin-bottom:10px;">Revisa tu correo para obtener el código.</p>
                                         <input type="text" id="confirmation-code" placeholder="123456" pattern="\d{6}">
                                     </div>
-                                
                                     <button type="submit" class="btn btn-primary btn-cta" style="width: auto;">Actualizar Contraseña</button>
-                                    <!-- FIN DE LA CORRECCIÓN -->
                                 </form>
                             </div>
     
