@@ -102,8 +102,12 @@ async function handleLoginSubmit(event) {
     const identifierInput = form.querySelector('#login-identifier');
     const passwordInput = form.querySelector('#login-password');
     const errorMessageEl = form.querySelector('#login-error-message');
+    const submitButton = form.querySelector('button[type="submit"]');
     
     errorMessageEl.textContent = '';
+    const originalButtonText = submitButton.innerHTML;
+    submitButton.innerHTML = '<span class="spinner-sm"></span>';
+    submitButton.disabled = true;
 
     try {
         const response = await fetch(`${API_BASE_URL}/login`, {
@@ -117,13 +121,23 @@ async function handleLoginSubmit(event) {
 
         const data = await response.json();
         
-        // --- VALIDACIÓN CRUCIAL AÑADIDA ---
-        // Antes de continuar, nos aseguramos que la respuesta del servidor es la que esperamos.
-        if (!response.ok || !data.token || !data.user) {
-            throw new Error(data.message || 'La respuesta del servidor no es válida.');
+        // --- INICIO DE LA LÓGICA CORREGIDA ---
+
+        // 1. Primero, revisamos si la petición falló (ej: 401 Credenciales inválidas)
+        if (!response.ok) {
+            throw new Error(data.message || 'Error en el inicio de sesión.');
         }
 
-        // Ahora que sabemos que data.token y data.user existen, podemos guardarlos de forma segura.
+        // 2. Si la petición fue exitosa (200 OK), revisamos que el contenido sea el esperado.
+        if (!data.token || !data.user) {
+            // Si falta el token o el usuario, es un error del cliente o del servidor,
+            // pero NO usamos el "mensaje de éxito" como error.
+            throw new Error('Respuesta del servidor incompleta. Inténtalo de nuevo.');
+        }
+        
+        // --- FIN DE LA LÓGICA CORREGIDA ---
+
+        // Si todo está bien, continuamos como antes:
         localStorage.setItem('fortunaToken', data.token);
         localStorage.setItem('fortunaUser', JSON.stringify(data.user));
 
@@ -137,6 +151,9 @@ async function handleLoginSubmit(event) {
 
     } catch (error) {
         errorMessageEl.textContent = error.message;
+    } finally {
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
     }
 }
 

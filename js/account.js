@@ -288,13 +288,13 @@ export function renderBetHistory() {
     const userString = localStorage.getItem('fortunaUser');
     if (!userString) return;
     
-    // Primero parseamos el objeto
+    // 1. Convertimos la cadena de vuelta a un objeto
     const currentUser = JSON.parse(userString); 
-    // Luego usamos solo el nombre de usuario como clave, que es lo que se guarda en el historial
+    // 2. Extraemos solo el nombre de usuario
     const username = currentUser.username; 
 
     const allHistories = JSON.parse(localStorage.getItem('fortunaAllHistories')) || {};
-    // Usamos la variable `username` para buscar el historial correcto
+    // 3. Usamos el nombre de usuario como clave para buscar el historial
     const betHistory = allHistories[username] || []; 
     
     historyLists.forEach(list => {
