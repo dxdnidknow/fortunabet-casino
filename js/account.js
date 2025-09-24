@@ -1,3 +1,5 @@
+// --- ARCHIVO COMPLETO Y FINAL: js/account.js ---
+
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
 
@@ -175,7 +177,7 @@ function handle2FASetup() {
     });
 }
 
-export function renderBetHistory() {
+export function renderBetHistory() { // <--- CORRECCIÓN AQUÍ
     const historyLists = document.querySelectorAll('.history-list');
     if (historyLists.length === 0) return;
 

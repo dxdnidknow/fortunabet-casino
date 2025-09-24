@@ -1251,3 +1251,15 @@ body.user-logged-in .logged-out-only {
     box-shadow: none;
     outline: none; /* Quitamos el outline individual */
 }
+.phone-input-container { display: flex; align-items: center; gap: 15px; }
+.phone-input-container .phone-input-group { flex-grow: 1; }
+
+#phone-verification-status .status-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+#phone-verification-status .unverified { color: var(--color-pending); }
+#phone-verification-status .verified { color: var(--color-success); }

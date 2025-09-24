@@ -12,7 +12,7 @@ const rateLimit = require('express-rate-limit');
 const NodeCache = require('node-cache');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
-
+const twilio = require('twilio');   
 const app = express();
 const port = 3001;
 
@@ -89,6 +89,8 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID; 
 // =======================================================================
 //  MIDDLEWARES DE SEGURIDAD
 // =======================================================================
@@ -248,18 +250,22 @@ app.post('/api/update-personal-info', authLimiter, async (req, res) => {
         }
 
         const usersCollection = db.collection('users');
-        const result = await usersCollection.updateOne(
-            { email: email.toLowerCase() },
-            { 
-                $set: {
-                    'personalInfo.firstName': firstName,
-                    'personalInfo.lastName': lastName,
-                    'personalInfo.birthDate': birthDate,
-                    'personalInfo.state': state,
-                    'personalInfo.phone': phone,
-                }
-            }
-        );
+        const currentUser = await usersCollection.findOne({ email: email.toLowerCase() });
+
+        // --- LÓGICA MODIFICADA PARA EL TELÉFONO ---
+        let updateData = {
+            'personalInfo.firstName': firstName,
+            'personalInfo.lastName': lastName,
+            'personalInfo.birthDate': birthDate,
+            'personalInfo.state': state,
+        };
+        // Si el número de teléfono ha cambiado, reseteamos su estado de verificación
+        if (phone && currentUser.personalInfo.phone !== phone) {
+            updateData['personalInfo.phone'] = phone;
+            updateData['personalInfo.phoneVerified'] = false; // Marcar como no verificado
+        }
+
+        const result = await usersCollection.updateOne({ _id: currentUser._id }, { $set: updateData });
 
         if (result.matchedCount === 0) {
             return res.status(404).json({ message: 'Usuario no encontrado.' });
@@ -268,6 +274,10 @@ app.post('/api/update-personal-info', authLimiter, async (req, res) => {
         res.status(200).json({ message: 'Información personal actualizada con éxito.' });
 
     } catch (error) {
+        // Manejar el error de número duplicado
+        if (error.code === 11000) {
+            return res.status(409).json({ message: 'Este número de teléfono ya está en uso por otra cuenta.' });
+        }
         console.error('[ERROR] en update-personal-info:', error);
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
@@ -302,6 +312,55 @@ app.get('/api/user-data', async (req, res) => {
     } catch (error) {
         console.error('[ERROR] en user-data:', error);
         res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+app.post('/api/request-phone-verification', authLimiter, async (req, res) => {
+    const { email } = req.body;
+    try {
+        const user = await db.collection('users').findOne({ email: email.toLowerCase() });
+        const phone = user?.personalInfo?.phone;
+
+        if (!phone) {
+            return res.status(400).json({ message: "Añade un número de teléfono en 'Mis Datos' primero." });
+        }
+
+        await twilioClient.verify.v2.services(verifyServiceSid)
+            .verifications.create({ to: phone, channel: 'sms' });
+            
+        res.status(200).json({ message: `Se ha enviado un código de verificación a ${phone}.` });
+
+    } catch (error) {
+        console.error("Twilio send error:", error);
+        res.status(500).json({ message: "No se pudo enviar el código. Verifica que el número sea válido." });
+    }
+});
+
+app.post('/api/verify-phone-code', authLimiter, async (req, res) => {
+    const { email, code } = req.body;
+    try {
+        const user = await db.collection('users').findOne({ email: email.toLowerCase() });
+        const phone = user?.personalInfo?.phone;
+
+        if (!phone || !code) {
+            return res.status(400).json({ message: "Falta información para verificar." });
+        }
+
+        const verification_check = await twilioClient.verify.v2.services(verifyServiceSid)
+            .verificationChecks.create({ to: phone, code: code });
+
+        if (verification_check.status === 'approved') {
+            await db.collection('users').updateOne(
+                { _id: user._id },
+                { $set: { 'personalInfo.phoneVerified': true } }
+            );
+            res.status(200).json({ message: "¡Teléfono verificado con éxito!" });
+        } else {
+            res.status(400).json({ message: "El código de verificación es incorrecto." });
+        }
+    } catch (error) {
+        console.error("Twilio check error:", error);
+        res.status(500).json({ message: "Error al verificar el código." });
     }
 });
 

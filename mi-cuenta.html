@@ -113,9 +113,14 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="phone-number">Número de Teléfono</label>
-                                        <div class="phone-input-group">
-                                            <span class="phone-prefix">+58</span>
-                                            <input type="tel" id="phone-number" placeholder="414 123 4567" maxlength="13" pattern="[0-9\-]{10,13}" title="Ej: 414-123-45-67">
+                                        <div class="phone-input-container">
+                                            <div class="phone-input-group">
+                                                <span class="phone-prefix">+58</span>
+                                                <input type="tel" id="phone-number" placeholder="414 123 4567" maxlength="13" pattern="[0-9\-]{10,13}" title="Ej: 414-123-45-67">
+                                            </div>
+                                            <div id="phone-verification-status">
+                                                <!-- El JS llenará el estado de verificación aquí -->
+                                            </div>
                                         </div>
                                     </div>
                                     <button type="submit" class="btn btn-primary btn-cta" style="width: auto;">Guardar Cambios</button>
