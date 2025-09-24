@@ -7,6 +7,7 @@ import { fetchLiveEvents, fetchEventDetails } from './api.js';
 import { initAuth } from './auth.js';
 import { initAccountDashboard, renderBetHistory } from './account.js';
 import { sportTranslations } from './translations.js';
+import { initPaymentModals } from './payments.js'; 
 import { initHelpWidget } from './help-widget.js';
 
 let favorites = JSON.parse(localStorage.getItem('fortunaFavorites')) || [];
@@ -603,6 +604,7 @@ async function main() {
     initGameSlider();
     initBetSlip();
     initHelpWidget();
+    initPaymentModals();    
     
     await initSportsNav();
     setupEventListeners();

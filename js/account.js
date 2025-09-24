@@ -321,6 +321,17 @@ export function renderBetHistory() {
         });
     });
 }
+function renderBalance(balance) {
+    const balanceEl = document.querySelector('.account-card .balance');
+    if (balanceEl) {
+        // Usamos toLocaleString para formatear el número con separadores
+        const formattedBalance = (balance || 0).toLocaleString('es-ES', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        balanceEl.textContent = `Bs. ${formattedBalance}`;
+    }
+}
 
 export async function initAccountDashboard() {
     const menuLinks = document.querySelectorAll('.account-menu-link');
@@ -343,8 +354,11 @@ export async function initAccountDashboard() {
     if (phoneVerificationForm) phoneVerificationForm.addEventListener('submit', handlePhoneVerificationSubmit);
 
     try {
-        const userData = await fetchUserData();
-        if (userData.personalInfo) populatePersonalInfoForm(userData.personalInfo);
+        const userData = await fetchUserData();     
+        renderBalance(userData.balance); // Llama a la nueva función para el saldo
+        if (userData.personalInfo) {
+            populatePersonalInfoForm(userData.personalInfo);
+        }
     } catch (error) {
         console.error("No se pudo cargar la información del usuario:", error);
         showToast(error.message, "error");

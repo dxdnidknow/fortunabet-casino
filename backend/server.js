@@ -333,7 +333,6 @@ app.get('/api/user-data', authenticateToken, async (req, res) => {
             { 
                 projection: { 
                     password: 0, // Nunca devolver la contraseña
-                    balance: 0, // No exponer el balance aquí, crear un endpoint específico si es necesario
                     payoutMethods: 0,
                     passwordChangeCode: 0,
                     passwordChangeCodeExpires: 0
