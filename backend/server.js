@@ -1,7 +1,7 @@
 // =======================================================================
 //  CONFIGURACIÓN INICIAL Y DEPENDENCIAS
 // =======================================================================
-require('dotenv').config();
+require('dotenv').config(); // Debe ser la primera línea
 
 const express = require('express');
 const axios = require('axios');
@@ -13,6 +13,7 @@ const NodeCache = require('node-cache');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const twilio = require('twilio');   
+
 const app = express();
 const port = 3001;
 
@@ -20,10 +21,17 @@ app.use(cors());
 app.use(express.json());
 
 // =======================================================================
-//  CONSTANTES DE VALIDACIÓN
+//  CONSTANTES DE VALIDACIÓN Y SECRETOS
 // =======================================================================
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 const usernameRegex = /^[a-zA-Z]{4,20}$/;
+
+// --- NUEVO: Cargar secretos desde .env con validación ---
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    console.error("❌ Error: La variable de entorno JWT_SECRET no está definida. Es crucial para la seguridad.");
+    process.exit(1);
+}
 
 // =======================================================================
 //  CONEXIÓN A LA BASE DE DATOS (MONGODB ATLAS)
@@ -33,15 +41,7 @@ if (!dbUrl) {
     console.error("❌ Error: La variable de entorno DATABASE_URL no se ha cargado. Revisa tu archivo .env");
     process.exit(1);
 }
-
-const client = new MongoClient(dbUrl, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
-});
-
+const client = new MongoClient(dbUrl, { serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true }});
 let db;
 async function connectDB() {
   try {
@@ -74,43 +74,56 @@ function isOver18(dateString) {
 //  CONFIGURACIÓN DE SERVICIOS EXTERNOS (API DEPORTES Y EMAIL)
 // =======================================================================
 const API_KEY = process.env.ODDS_API_KEY;
-if (!API_KEY) {
-    console.error('❌ Error: La variable de entorno ODDS_API_KEY no está definida.');
-    process.exit(1);
-}
-
+if (!API_KEY) { console.error('❌ Error: La variable de entorno ODDS_API_KEY no está definida.'); process.exit(1); }
 const eventsCache = new NodeCache({ stdTTL: 600 });
-
 const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
 });
-
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID; 
+const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+
 // =======================================================================
 //  MIDDLEWARES DE SEGURIDAD
 // =======================================================================
+
+// --- Middleware para limitar peticiones en endpoints sensibles ---
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 20,
     message: { message: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo en 15 minutos.' }
 });
 
+// --- NUEVO: Middleware de Autenticación para proteger rutas ---
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Formato esperado: "Bearer TOKEN"
+
+    if (token == null) {
+        return res.status(401).json({ message: 'Acceso no autorizado. Token no proporcionado.' });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            // Si el token es inválido (mal formado, firma incorrecta, expirado)
+            return res.status(403).json({ message: 'Token no válido o expirado. Por favor, inicia sesión de nuevo.' });
+        }
+        // Si el token es válido, adjuntamos el payload del usuario (id, username, email) al objeto `req`
+        req.user = user;
+        next(); // Continuamos a la ruta solicitada
+    });
+}
+
 // =======================================================================
 //  ENDPOINTS DE LA API
 // =======================================================================
 
-// --- ENDPOINTS DE DEPORTES ---
+// --- ENDPOINTS PÚBLICOS DE DEPORTES ---
 app.get('/api/events/:sportKey', async (req, res) => {
     try {
         const { sportKey } = req.params;
         const cachedEvents = eventsCache.get(sportKey);
         if (cachedEvents) { return res.json(cachedEvents); }
-
         const response = await axios.get(`https://api.the-odds-api.com/v4/sports/${sportKey}/odds`, {
             params: { apiKey: API_KEY, regions: 'us,eu,uk', markets: 'h2h,totals', oddsFormat: 'decimal' }
         });
@@ -122,44 +135,39 @@ app.get('/api/events/:sportKey', async (req, res) => {
 app.get('/api/sports', async (req, res) => {
     try {
         const cachedSports = eventsCache.get('sportsList');
-        if (cachedSports) {
-            return res.json(cachedSports);
-        }
+        if (cachedSports) { return res.json(cachedSports); }
         const response = await axios.get('https://api.the-odds-api.com/v4/sports', { params: { apiKey: API_KEY } });
         eventsCache.set('sportsList', response.data, 3600);
         res.json(response.data);
     } catch (error) { handleApiError(error, res); }
 });
 
+// --- CORREGIDO: Eliminada la ruta duplicada ---
 app.get('/api/event/:sportKey/:eventId', (req, res) => {
     const { sportKey, eventId } = req.params;
     const sportEventsList = eventsCache.get(sportKey);
-    
     if (sportEventsList) {
         const event = sportEventsList.find(e => e.id === eventId);
-        if (event) {
-            return res.json(event);
-        }
+        if (event) { return res.json(event); }
     }
     res.status(404).json({ message: 'Evento no encontrado o caché expirado.' });
 });
 
-// --- ENDPOINTS DE AUTENTICACIÓN Y USUARIO ---
+
+// --- ENDPOINTS PÚBLICOS DE AUTENTICACIÓN ---
 app.post('/api/register', authLimiter, async (req, res) => {
     try {
         const { username, email, password } = req.body;
         if (!username || !email || !password) return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
-        
-        if (!usernameRegex.test(username)) {
-            return res.status(400).json({ message: 'El usuario debe tener entre 4 y 20 letras, sin números ni espacios.' });
-        }
-        if (!passwordRegex.test(password)) {
-            return res.status(400).json({ message: 'La contraseña no cumple con los requisitos de seguridad.' });
-        }
+        if (!usernameRegex.test(username)) return res.status(400).json({ message: 'El usuario debe tener entre 4 y 20 letras, sin números ni espacios.' });
+        if (!passwordRegex.test(password)) return res.status(400).json({ message: 'La contraseña no cumple con los requisitos de seguridad.' });
 
         const usersCollection = db.collection('users');
-        const existingUser = await usersCollection.findOne({ $or: [{ email: email.toLowerCase() }, { username }] });
-        if (existingUser) return res.status(409).json({ message: 'El correo electrónico o el nombre de usuario ya están en uso.' });
+        const existingUser = await usersCollection.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
+        if (existingUser) return res.status(409).json({ message: 'El nombre de usuario ya está en uso.' });
+        
+        const existingEmail = await usersCollection.findOne({ email: email.toLowerCase() });
+        if (existingEmail) return res.status(409).json({ message: 'El correo electrónico ya está en uso.' });
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -169,45 +177,77 @@ app.post('/api/register', authLimiter, async (req, res) => {
         
         res.status(201).json({ message: '¡Usuario registrado con éxito!' });
     } catch (error) {
+        if (error.code === 11000) {
+            return res.status(409).json({ message: 'El nombre de usuario o el correo ya están en uso.' });
+        }
         console.error('[ERROR] en el registro de usuario:', error);
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
 
+// --- MODIFICADO: Login ahora genera y devuelve un JWT ---
 app.post('/api/login', authLimiter, async (req, res) => {
     try {
         const { identifier, password } = req.body;
         if (!identifier || !password) return res.status(400).json({ message: 'El identificador y la contraseña son obligatorios.' });
 
         const usersCollection = db.collection('users');
-        const user = await usersCollection.findOne({ $or: [{ email: identifier.toLowerCase() }, { username: identifier }] });
+        const user = await usersCollection.findOne({ 
+            $or: [{ email: identifier.toLowerCase() }, { username: { $regex: new RegExp(`^${identifier}$`, 'i') } }] 
+        });
         if (!user) return res.status(401).json({ message: 'Credenciales inválidas.' });
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(401).json({ message: 'Credenciales inválidas.' });
         
-        res.status(200).json({ message: 'Inicio de sesión exitoso.', username: user.username, email: user.email });
+        // --- LÓGICA DE JWT AÑADIDA ---
+        // 1. Crear el payload (la información que guardaremos en el token)
+        const payload = {
+            id: user._id,
+            username: user.username,
+            email: user.email
+        };
+
+        // 2. Firmar el token con el secreto y establecer una expiración
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' }); // Expira en 1 día
+
+        // 3. Enviar el token y los datos del usuario al cliente
+        res.status(200).json({ 
+            message: 'Inicio de sesión exitoso.',
+            token: token,
+            user: {
+                username: user.username,
+                email: user.email
+            }
+        });
     } catch (error) {
         console.error('[ERROR] en el inicio de sesión:', error);
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
 
-app.post('/api/change-username', authLimiter, async (req, res) => {
+
+// --- ENDPOINTS PROTEGIDOS DE USUARIO (Requieren Token) ---
+
+app.post('/api/change-username', authLimiter, authenticateToken, async (req, res) => {
     try {
-        const { email, newUsername } = req.body;
+        // --- MODIFICADO: No se usa el email del body. El usuario se identifica por el token. ---
+        const userId = req.user.id; 
+        const { newUsername } = req.body;
 
         if (!usernameRegex.test(newUsername)) {
             return res.status(400).json({ message: 'El usuario debe tener entre 4 y 20 letras, sin números ni espacios.' });
         }
 
         const usersCollection = db.collection('users');
-        const existingUser = await usersCollection.findOne({ username: newUsername });
+        // --- CORREGIDO: Se busca el `newUsername` para ver si ya existe. ---
+        const existingUser = await usersCollection.findOne({ username: { $regex: new RegExp(`^${newUsername}$`, 'i') } });
         if (existingUser) {
-            return res.status(409).json({ message: 'Ese nombre de usuario ya está en uso. Por favor, elige otro.' });
+            return res.status(409).json({ message: 'El nombre de usuario ya está en uso.' });
         }
         
-        const currentUser = await usersCollection.findOne({ email: email.toLowerCase() });
+        // --- MODIFICADO: Se busca al usuario actual por el ID del token, que es seguro. ---
+        const currentUser = await usersCollection.findOne({ _id: new ObjectId(userId) });
         if (!currentUser) {
             return res.status(404).json({ message: 'Usuario no encontrado.' });
         }
@@ -236,12 +276,13 @@ app.post('/api/change-username', authLimiter, async (req, res) => {
     }
 });
 
-app.post('/api/update-personal-info', authLimiter, async (req, res) => {
+
+app.post('/api/update-personal-info', authLimiter, authenticateToken, async (req, res) => {
     try {
-        const { email, firstName, lastName, birthDate, state, phone } = req.body;
-        if (!email) {
-            return res.status(400).json({ message: 'El email del usuario es requerido.' });
-        }
+        // --- MODIFICADO: Se identifica al usuario por el token. ---
+        const userId = req.user.id;
+        const { firstName, lastName, birthDate, state, phone } = req.body;
+
         if ((firstName && firstName.length > 25) || (lastName && lastName.length > 25)) {
             return res.status(400).json({ message: 'El nombre y el apellido no pueden tener más de 25 caracteres.' });
         }
@@ -250,31 +291,28 @@ app.post('/api/update-personal-info', authLimiter, async (req, res) => {
         }
 
         const usersCollection = db.collection('users');
-        const currentUser = await usersCollection.findOne({ email: email.toLowerCase() });
+        const currentUser = await usersCollection.findOne({ _id: new ObjectId(userId) });
 
-        // --- LÓGICA MODIFICADA PARA EL TELÉFONO ---
+        if (!currentUser) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+
         let updateData = {
             'personalInfo.firstName': firstName,
             'personalInfo.lastName': lastName,
             'personalInfo.birthDate': birthDate,
             'personalInfo.state': state,
         };
-        // Si el número de teléfono ha cambiado, reseteamos su estado de verificación
         if (phone && currentUser.personalInfo.phone !== phone) {
             updateData['personalInfo.phone'] = phone;
-            updateData['personalInfo.phoneVerified'] = false; // Marcar como no verificado
+            updateData['personalInfo.phoneVerified'] = false;
         }
 
         const result = await usersCollection.updateOne({ _id: currentUser._id }, { $set: updateData });
-
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ message: 'Usuario no encontrado.' });
-        }
         
         res.status(200).json({ message: 'Información personal actualizada con éxito.' });
 
     } catch (error) {
-        // Manejar el error de número duplicado
         if (error.code === 11000) {
             return res.status(409).json({ message: 'Este número de teléfono ya está en uso por otra cuenta.' });
         }
@@ -283,22 +321,22 @@ app.post('/api/update-personal-info', authLimiter, async (req, res) => {
     }
 });
 
-app.get('/api/user-data', async (req, res) => {
+
+app.get('/api/user-data', authenticateToken, async (req, res) => {
     try {
-        const { email } = req.query;
-        if (!email) {
-            return res.status(400).json({ message: 'El email es requerido.' });
-        }
+        // --- MODIFICADO: El email ya no es necesario, se usa el ID del token. ---
+        const userId = req.user.id;
 
         const usersCollection = db.collection('users');
         const user = await usersCollection.findOne(
-            { email: email.toLowerCase() },
+            { _id: new ObjectId(userId) },
             { 
                 projection: { 
-                    username: 1, 
-                    lastUsernameChange: 1, 
-                    personalInfo: 1,
-                    _id: 0 
+                    password: 0, // Nunca devolver la contraseña
+                    balance: 0, // No exponer el balance aquí, crear un endpoint específico si es necesario
+                    payoutMethods: 0,
+                    passwordChangeCode: 0,
+                    passwordChangeCodeExpires: 0
                 } 
             }
         );
@@ -315,45 +353,34 @@ app.get('/api/user-data', async (req, res) => {
     }
 });
 
-app.post('/api/request-phone-verification', authLimiter, async (req, res) => {
-    const { email } = req.body;
+app.post('/api/request-phone-verification', authLimiter, authenticateToken, async (req, res) => {
+    // --- MODIFICADO: Se identifica al usuario por el token. ---
+    const userId = req.user.id;
     try {
-        const user = await db.collection('users').findOne({ email: email.toLowerCase() });
+        const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
         const phone = user?.personalInfo?.phone;
-
-        if (!phone) {
-            return res.status(400).json({ message: "Añade un número de teléfono en 'Mis Datos' primero." });
-        }
-
-        await twilioClient.verify.v2.services(verifyServiceSid)
-            .verifications.create({ to: phone, channel: 'sms' });
-            
+        if (!phone) return res.status(400).json({ message: "Añade un número de teléfono en 'Mis Datos' primero." });
+        
+        await twilioClient.verify.v2.services(verifyServiceSid).verifications.create({ to: phone, channel: 'sms' });
         res.status(200).json({ message: `Se ha enviado un código de verificación a ${phone}.` });
-
     } catch (error) {
         console.error("Twilio send error:", error);
         res.status(500).json({ message: "No se pudo enviar el código. Verifica que el número sea válido." });
     }
 });
 
-app.post('/api/verify-phone-code', authLimiter, async (req, res) => {
-    const { email, code } = req.body;
+app.post('/api/verify-phone-code', authLimiter, authenticateToken, async (req, res) => {
+    // --- MODIFICADO: Se identifica al usuario por el token. ---
+    const userId = req.user.id;
+    const { code } = req.body;
     try {
-        const user = await db.collection('users').findOne({ email: email.toLowerCase() });
+        const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
         const phone = user?.personalInfo?.phone;
+        if (!phone || !code) return res.status(400).json({ message: "Falta información para verificar." });
 
-        if (!phone || !code) {
-            return res.status(400).json({ message: "Falta información para verificar." });
-        }
-
-        const verification_check = await twilioClient.verify.v2.services(verifyServiceSid)
-            .verificationChecks.create({ to: phone, code: code });
-
+        const verification_check = await twilioClient.verify.v2.services(verifyServiceSid).verificationChecks.create({ to: phone, code: code });
         if (verification_check.status === 'approved') {
-            await db.collection('users').updateOne(
-                { _id: user._id },
-                { $set: { 'personalInfo.phoneVerified': true } }
-            );
+            await db.collection('users').updateOne({ _id: user._id }, { $set: { 'personalInfo.phoneVerified': true } });
             res.status(200).json({ message: "¡Teléfono verificado con éxito!" });
         } else {
             res.status(400).json({ message: "El código de verificación es incorrecto." });
@@ -364,15 +391,18 @@ app.post('/api/verify-phone-code', authLimiter, async (req, res) => {
     }
 });
 
-app.post('/api/validate-current-password', authLimiter, async (req, res) => {
+app.post('/api/validate-current-password', authLimiter, authenticateToken, async (req, res) => {
     try {
-        const { email, currentPassword } = req.body;
-        if (!email || !currentPassword) {
-            return res.status(400).json({ message: 'Email y contraseña actual son requeridos.' });
+        // --- MODIFICADO: Se identifica al usuario por el token. ---
+        const userId = req.user.id;
+        const { currentPassword } = req.body;
+        if (!currentPassword) {
+            return res.status(400).json({ message: 'La contraseña actual es requerida.' });
         }
 
-        const user = await db.collection('users').findOne({ email: email.toLowerCase() });
+        const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
         if (!user) {
+            // Este caso es improbable si el token es válido, pero es una buena práctica de seguridad
             return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
         }
 
@@ -389,10 +419,11 @@ app.post('/api/validate-current-password', authLimiter, async (req, res) => {
     }
 });
 
-app.post('/api/request-password-change-code', authLimiter, async (req, res) => {
+app.post('/api/request-password-change-code', authLimiter, authenticateToken, async (req, res) => {
     try {
-        const { email } = req.body;
-        const user = await db.collection('users').findOne({ email: email.toLowerCase() });
+        // --- MODIFICADO: Se identifica al usuario por el token. ---
+        const userId = req.user.id;
+        const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
         if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
         
         const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -414,17 +445,19 @@ app.post('/api/request-password-change-code', authLimiter, async (req, res) => {
     }
 });
 
-app.post('/api/change-password', authLimiter, async (req, res) => {
+app.post('/api/change-password', authLimiter, authenticateToken, async (req, res) => {
     try {
-        const { email, currentPassword, newPassword, code } = req.body;
-        if (!email || !currentPassword || !newPassword || !code) return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+        // --- MODIFICADO: Se identifica al usuario por el token. ---
+        const userId = req.user.id;
+        const { currentPassword, newPassword, code } = req.body;
+        if (!currentPassword || !newPassword || !code) return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
         
         if (!passwordRegex.test(newPassword)) {
             return res.status(400).json({ message: 'La nueva contraseña no cumple con los requisitos de seguridad.' });
         }
 
         const usersCollection = db.collection('users');
-        const user = await usersCollection.findOne({ email: email.toLowerCase() });
+        const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
         if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
 
         if (user.passwordChangeCode !== code || new Date() > user.passwordChangeCodeExpires) {
@@ -453,18 +486,22 @@ app.post('/api/change-password', authLimiter, async (req, res) => {
     }
 });
 
+// --- ENDPOINTS PÚBLICOS PARA RECUPERACIÓN DE CUENTA ---
+
 app.post('/api/forgot-password', authLimiter, async (req, res) => {
     const { email } = req.body;
     try {
         const user = await db.collection('users').findOne({ email: email.toLowerCase() });
         if (!user) {
+            // ¡Importante! No reveles si el email existe o no para evitar enumeración de usuarios.
             return res.status(200).json({ message: 'Si tu correo está registrado, recibirás un enlace para restablecer tu contraseña.' });
         }
 
-        const secret = process.env.JWT_SECRET + user.password;
+        const secret = JWT_SECRET + user.password; // El token depende de la contraseña actual, si se cambia, el token se invalida.
         const token = jwt.sign({ email: user.email, id: user._id.toString() }, secret, { expiresIn: '15m' });
         
-        const resetLink = `https://earnest-alfajores-9754f3.netlify.app/index.html?action=reset&id=${user._id}&token=${token}`;
+        // --- MEJORADO: Usar variable de entorno para la URL del frontend ---
+        const resetLink = `${process.env.FRONTEND_URL}/index.html?action=reset&id=${user._id}&token=${token}`;
 
         await transporter.sendMail({
             from: `"FortunaBet Soporte" <${process.env.EMAIL_USER}>`,
@@ -492,8 +529,8 @@ app.post('/api/reset-password', authLimiter, async (req, res) => {
         const user = await db.collection('users').findOne({ _id: new ObjectId(id) });
         if (!user) return res.status(400).json({ message: 'Usuario no válido.' });
 
-        const secret = process.env.JWT_SECRET + user.password;
-        jwt.verify(token, secret);
+        const secret = JWT_SECRET + user.password;
+        jwt.verify(token, secret); // Si esto falla, el catch lo manejará.
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);

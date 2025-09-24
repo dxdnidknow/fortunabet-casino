@@ -297,3 +297,25 @@
 		<iframe id="game-iframe" src="" frameborder="0" allowfullscreen></iframe>
 	</div>
 </div>
+<!-- EN components/modals.html, AÑADE ESTO AL FINAL DEL ARCHIVO -->
+
+<!-- ======================================================================= -->
+<!--             MODAL DE VERIFICACIÓN DE CÓDIGO TELEFÓNICO                -->
+<!-- ======================================================================= -->
+<div id="phone-verification-modal" class="modal-overlay">
+	<div class="auth-container">
+		<button class="close-modal" aria-label="Cerrar">&times;</button>
+		<div class="auth-header">
+			<h2>Verificar Teléfono</h2>
+			<p>Ingresa el código de 6 dígitos que enviamos a tu número.</p>
+		</div>
+		<form id="phone-verification-form" class="auth-form">
+			<div class="form-group">
+				<label for="verification-code-input">Código de Verificación</label>
+				<input type="text" id="verification-code-input" name="verification-code" placeholder="123456" required maxlength="6" pattern="\d{6}">
+			</div>
+			<p id="phone-verification-error" class="error-message" aria-live="polite"></p>
+			<button type="submit" class="btn btn-primary btn-cta">Confirmar Código</button>
+		</form>
+	</div>
+</div>

@@ -2,6 +2,30 @@ import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
 import { openModal, closeModal } from './modal.js';
 
+function getToken() {
+    return localStorage.getItem('fortunaToken');
+}
+
+// --- VERSIÓN MEJORADA Y A PRUEBA DE ERRORES ---
+function getUser() {
+    const userString = localStorage.getItem('fortunaUser');
+    if (!userString) {
+        return null; // No hay usuario guardado, todo bien.
+    }
+    
+    try {
+        // Intenta "traducir" el texto a un objeto JSON.
+        return JSON.parse(userString);
+    } catch (error) {
+        // ¡FALLÓ! El dato guardado no es un JSON válido (ej: "undefined" o un nombre de usuario simple).
+        console.error("Error al leer datos del usuario. Limpiando localStorage corrupto:", error);
+        // Limpia los datos incorrectos para evitar futuros errores.
+        localStorage.removeItem('fortunaUser');
+        localStorage.removeItem('fortunaToken');
+        return null; // Actúa como si el usuario no tuviera sesión.
+    }
+}
+
 function validatePasswordStrength(password) {
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
     if (regex.test(password)) {
@@ -12,12 +36,15 @@ function validatePasswordStrength(password) {
     }
 }
 
-function updateLoginState(username) {
+function updateLoginState(user) {
+    if (!user || !user.username) {
+        console.error("Intento de actualizar el estado de login sin un usuario válido.");
+        return;
+    }
     document.body.classList.add('user-logged-in');
     document.querySelectorAll('.auth-buttons').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('.user-info').forEach(el => el.classList.remove('hidden'));
-    document.querySelectorAll('.welcome-message').forEach(el => el.textContent = `Hola, ${username}`);
-    localStorage.setItem('fortunaUser', username);
+    document.querySelectorAll('.welcome-message').forEach(el => el.textContent = `Hola, ${user.username}`);
 }
 
 async function handleRegisterSubmit(event) {
@@ -25,7 +52,7 @@ async function handleRegisterSubmit(event) {
     const form = event.target;
     const usernameInput = form.querySelector('#username');
     const emailInput = form.querySelector('#email');
-     const passwordInput = form.querySelector('#register-password'); // Usa el nuevo ID
+    const passwordInput = form.querySelector('#register-password');
     const confirmPasswordInput = form.querySelector('#register-confirm-password');
     const errorMessageEl = form.querySelector('#error-message');
 
@@ -68,6 +95,7 @@ async function handleRegisterSubmit(event) {
     }
 }
 
+// --- VERSIÓN MEJORADA CON VALIDACIÓN DE RESPUESTA ---
 async function handleLoginSubmit(event) {
     event.preventDefault();
     const form = event.target;
@@ -88,18 +116,24 @@ async function handleLoginSubmit(event) {
         });
 
         const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'Error al iniciar sesión.');
+        
+        // --- VALIDACIÓN CRUCIAL AÑADIDA ---
+        // Antes de continuar, nos aseguramos que la respuesta del servidor es la que esperamos.
+        if (!response.ok || !data.token || !data.user) {
+            throw new Error(data.message || 'La respuesta del servidor no es válida.');
         }
+
+        // Ahora que sabemos que data.token y data.user existen, podemos guardarlos de forma segura.
+        localStorage.setItem('fortunaToken', data.token);
+        localStorage.setItem('fortunaUser', JSON.stringify(data.user));
 
         const loginModal = document.getElementById('login-modal');
         if (loginModal) {
             closeModal(loginModal);
         }
 
-        updateLoginState(data.username);
-        localStorage.setItem('fortunaUserEmail', data.email);
-        showToast(`¡Hola de nuevo, ${data.username}!`);
+        updateLoginState(data.user);
+        showToast(`¡Hola de nuevo, ${data.user.username}!`);
 
     } catch (error) {
         errorMessageEl.textContent = error.message;
@@ -186,8 +220,9 @@ async function handleResetPasswordSubmit(event) {
 }
 
 function handleLogout() {
+    localStorage.removeItem('fortunaToken');
     localStorage.removeItem('fortunaUser');
-    localStorage.removeItem('fortunaUserEmail');
+    
     document.body.classList.remove('user-logged-in');
     document.querySelectorAll('.auth-buttons').forEach(el => el.classList.remove('hidden'));
     document.querySelectorAll('.user-info').forEach(el => el.classList.add('hidden'));
@@ -198,10 +233,39 @@ function handleLogout() {
     }
 }
 
+export async function fetchWithAuth(url, options = {}) {
+    const token = getToken();
+
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+    };
+
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, {
+        ...options,
+        headers,
+    });
+
+    if (response.status === 401 || response.status === 403) {
+        handleLogout();
+        const loginModal = document.getElementById('login-modal');
+        if (loginModal) {
+            openModal(loginModal);
+        }
+        throw new Error('Sesión expirada. Por favor, inicia sesión de nuevo.');
+    }
+
+    return response;
+}
+
 export function initAuth() {
-    const loggedInUser = localStorage.getItem('fortunaUser');
-    if (loggedInUser) {
-        updateLoginState(loggedInUser);
+    const currentUser = getUser();
+    if (currentUser) {
+        updateLoginState(currentUser);
     }
 
     document.body.addEventListener('submit', (event) => {

@@ -1,7 +1,12 @@
-// --- ARCHIVO COMPLETO Y FINAL: js/account.js ---
-
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
+import { openModal, closeModal } from './modal.js';
+// --- NUEVO: Importamos la función segura para hacer llamadas a la API ---
+import { fetchWithAuth } from './auth.js';
+
+// =======================================================================
+//  FUNCIONES DE AYUDA Y VALIDACIÓN
+// =======================================================================
 
 function isOver18(dateString) {
     if (!dateString) return false;
@@ -33,12 +38,23 @@ function formatPhoneNumber(event) {
     input.value = formattedValue;
 }
 
-async function fetchUserData() {
-    const userEmail = localStorage.getItem('fortunaUserEmail');
-    if (!userEmail) {
-        throw new Error('No se pudo encontrar el email del usuario. Por favor, inicie sesión de nuevo.');
+function validatePasswordStrength(password) {
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+    if (regex.test(password)) {
+        return { isValid: true, message: '' };
+    } else {
+        let message = 'La contraseña debe tener al menos 8 caracteres, e incluir una mayúscula, una minúscula, un número y un carácter especial.';
+        return { isValid: false, message: message };
     }
-    const response = await fetch(`${API_BASE_URL}/user-data?email=${encodeURIComponent(userEmail)}`);
+}
+
+// =======================================================================
+//  COMUNICACIÓN SEGURA CON EL BACKEND
+// =======================================================================
+
+// --- MODIFICADO: Ahora usa `fetchWithAuth` y ya no necesita enviar el email. ---
+async function fetchUserData() {
+    const response = await fetchWithAuth(`${API_BASE_URL}/user-data`);
     const data = await response.json();
     if (!response.ok) {
         throw new Error(data.message || 'Error al obtener los datos del usuario.');
@@ -46,6 +62,11 @@ async function fetchUserData() {
     return data;
 }
 
+// =======================================================================
+//  LÓGICA PARA RENDERIZAR Y MANEJAR COMPONENTES DE LA PÁGINA
+// =======================================================================
+
+// --- MODIFICADO: Usa `fetchWithAuth` y ya no envía el email. ---
 async function handleUsernameChange(event) {
     event.preventDefault();
     const form = event.target;
@@ -54,17 +75,21 @@ async function handleUsernameChange(event) {
     submitButton.disabled = true;
 
     try {
-        const userEmail = localStorage.getItem('fortunaUserEmail');
-        const response = await fetch(`${API_BASE_URL}/change-username`, {
+        const response = await fetchWithAuth(`${API_BASE_URL}/change-username`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: userEmail, newUsername: newUsernameInput.value })
+            body: JSON.stringify({ newUsername: newUsernameInput.value })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
         
         showToast(data.message, 'success');
-        localStorage.setItem('fortunaUser', data.newUsername);
+        
+        const currentUser = JSON.parse(localStorage.getItem('fortunaUser'));
+        if (currentUser) {
+            currentUser.username = data.newUsername;
+            localStorage.setItem('fortunaUser', JSON.stringify(currentUser));
+        }
+        
         document.querySelectorAll('.welcome-message').forEach(el => el.textContent = `Hola, ${data.newUsername}`);
     } catch (error) {
         showToast(error.message, 'error');
@@ -114,13 +139,31 @@ async function renderUsernameChangeUI() {
         `;
         
         if (canChange) {
-            const usernameForm = container.querySelector('#username-change-form');
-            if (usernameForm) {
-                usernameForm.addEventListener('submit', handleUsernameChange);
-            }
+            container.querySelector('#username-change-form')?.addEventListener('submit', handleUsernameChange);
         }
     } catch (error) {
         container.innerHTML = `<p class="error-message">${error.message}</p>`;
+    }
+}
+
+function renderPhoneVerificationStatus(isVerified, phone) {
+    const statusContainer = document.getElementById('phone-verification-status');
+    if (!statusContainer) return;
+    
+    const hasPhone = phone && phone.replace('+58', '').trim().length > 0;
+
+    if (!hasPhone) {
+        statusContainer.innerHTML = '';
+        return;
+    }
+
+    if (isVerified) {
+        statusContainer.innerHTML = `<span class="status-icon verified"><i class="fa-solid fa-check-circle"></i> Verificado</span>`;
+    } else {
+        statusContainer.innerHTML = `
+            <span class="status-icon unverified"><i class="fa-solid fa-exclamation-circle"></i> No verificado</span>
+            <button class="btn btn-secondary" id="verify-phone-btn" style="padding: 8px 12px; font-size: 0.8rem;">Verificar</button>
+        `;
     }
 }
 
@@ -133,6 +176,62 @@ function populatePersonalInfoForm(personalInfo = {}) {
     const phoneInput = document.getElementById('phone-number');
     if (phoneInput) {
         phoneInput.value = fullPhone.replace(/^\+58\s*/, '');
+        formatPhoneNumber({ target: phoneInput });
+    }
+    renderPhoneVerificationStatus(personalInfo.phoneVerified, personalInfo.phone);
+}
+
+// --- LÓGICA DE VERIFICACIÓN DE TELÉFONO (MODIFICADA) ---
+// --- MODIFICADO: Usa `fetchWithAuth` y el body está vacío. ---
+async function requestPhoneVerification() {
+    const btn = document.getElementById('verify-phone-btn');
+    if (btn) btn.disabled = true;
+    showToast('Enviando código de verificación...');
+    
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/request-phone-verification`, {
+            method: 'POST',
+            body: JSON.stringify({}) // El body va vacío, el token identifica al usuario
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+
+        showToast(data.message, 'success');
+        openModal(document.getElementById('phone-verification-modal'));
+    } catch (error) {
+        showToast(error.message, 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+// --- MODIFICADO: Usa `fetchWithAuth` y no envía el email. ---
+async function handlePhoneVerificationSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const codeInput = form.querySelector('#verification-code-input');
+    const errorEl = form.querySelector('#phone-verification-error');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    errorEl.textContent = '';
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/verify-phone-code`, {
+            method: 'POST',
+            body: JSON.stringify({ code: codeInput.value }) // Solo enviamos el código
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+
+        showToast(data.message, 'success');
+        closeModal(document.getElementById('phone-verification-modal'));
+        form.reset();
+        renderPhoneVerificationStatus(true, true);
+    } catch (error) {
+        errorEl.textContent = error.message;
+    } finally {
+        submitBtn.disabled = false;
     }
 }
 
@@ -177,15 +276,26 @@ function handle2FASetup() {
     });
 }
 
-export function renderBetHistory() { // <--- CORRECCIÓN AQUÍ
+// =======================================================================
+//  FUNCIONES EXPORTADAS
+// =======================================================================
+
+export function renderBetHistory() {
     const historyLists = document.querySelectorAll('.history-list');
     if (historyLists.length === 0) return;
 
-    const currentUser = localStorage.getItem('fortunaUser');
-    if (!currentUser) return;
+    // --- CORRECCIÓN: Obtenemos el objeto de usuario y luego extraemos el username ---
+    const userString = localStorage.getItem('fortunaUser');
+    if (!userString) return;
+    
+    // Primero parseamos el objeto
+    const currentUser = JSON.parse(userString); 
+    // Luego usamos solo el nombre de usuario como clave, que es lo que se guarda en el historial
+    const username = currentUser.username; 
 
     const allHistories = JSON.parse(localStorage.getItem('fortunaAllHistories')) || {};
-    const betHistory = allHistories[currentUser] || [];
+    // Usamos la variable `username` para buscar el historial correcto
+    const betHistory = allHistories[username] || []; 
     
     historyLists.forEach(list => {
         list.innerHTML = '';
@@ -220,45 +330,45 @@ export async function initAccountDashboard() {
     const personalInfoForm = document.getElementById('personal-info-form');
     const passwordChangeForm = document.getElementById('password-change-form');
     const phoneInput = document.getElementById('phone-number');
+    const phoneVerificationForm = document.getElementById('phone-verification-form');
 
-    if (phoneInput) {
-        phoneInput.addEventListener('input', formatPhoneNumber);
-    }
+    if (phoneInput) phoneInput.addEventListener('input', formatPhoneNumber);
+    
+    document.body.addEventListener('click', (event) => {
+        if (event.target && event.target.id === 'verify-phone-btn') {
+            requestPhoneVerification();
+        }
+    });
+
+    if (phoneVerificationForm) phoneVerificationForm.addEventListener('submit', handlePhoneVerificationSubmit);
 
     try {
         const userData = await fetchUserData();
-        if (userData.personalInfo) {
-            populatePersonalInfoForm(userData.personalInfo);
-        }
+        if (userData.personalInfo) populatePersonalInfoForm(userData.personalInfo);
     } catch (error) {
         console.error("No se pudo cargar la información del usuario:", error);
-        showToast("No se pudo cargar tu información.", "error");
+        showToast(error.message, "error");
     }
 
-    if (menuLinks.length === 0) return;
-
-    menuLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            menuLinks.forEach(l => l.classList.remove('active'));
-            sections.forEach(s => s.classList.remove('active'));
-            
-            const targetId = link.dataset.target;
-            const targetSection = document.getElementById(targetId);
-
-            link.classList.add('active');
-            if (targetSection) {
-                targetSection.classList.add('active');
-            }
+    if (menuLinks.length > 0) {
+        menuLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                menuLinks.forEach(l => l.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active'));
+                const targetId = link.dataset.target;
+                const targetSection = document.getElementById(targetId);
+                link.classList.add('active');
+                if (targetSection) targetSection.classList.add('active');
+            });
         });
-    });
+    }
 
     if (addMethodBtn && payoutForm) {
-        addMethodBtn.addEventListener('click', () => {
-            payoutForm.classList.toggle('hidden');
-        });
+        addMethodBtn.addEventListener('click', () => payoutForm.classList.toggle('hidden'));
     }
 
+    // --- MODIFICADO: Listener para el formulario de información personal ---
     if (personalInfoForm) {
         personalInfoForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -274,23 +384,23 @@ export async function initAccountDashboard() {
 
             const phoneNumberRaw = document.getElementById('phone-number').value.replace(/\D/g, '');
             const formData = {
-                email: localStorage.getItem('fortunaUserEmail'),
                 firstName: document.getElementById('first-name').value,
                 lastName: document.getElementById('last-name').value,
                 birthDate: birthDateValue,
                 state: document.getElementById('state').value,
-                phone: `+58 ${phoneNumberRaw}`,
+                phone: phoneNumberRaw ? `+58${phoneNumberRaw}` : '',
             };
 
             try {
-                const response = await fetch(`${API_BASE_URL}/update-personal-info`, {
+                const response = await fetchWithAuth(`${API_BASE_URL}/update-personal-info`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.message);
                 showToast(data.message, 'success');
+                const updatedUserData = await fetchUserData();
+                populatePersonalInfoForm(updatedUserData.personalInfo);
             } catch (error) {
                 showToast(error.message, 'error');
             } finally {
@@ -298,7 +408,8 @@ export async function initAccountDashboard() {
             }
         });
     }
-
+    
+    // --- MODIFICADO: Listener para el formulario de cambio de contraseña ---
     if (passwordChangeForm) {
         let isCodeStep = false;
         const submitButton = passwordChangeForm.querySelector('button[type="submit"]');
@@ -308,47 +419,30 @@ export async function initAccountDashboard() {
             event.preventDefault();
             submitButton.disabled = true;
 
-            const userEmail = localStorage.getItem('fortunaUserEmail');
-            if (!userEmail) {
-                showToast('Error de sesión. Por favor, vuelve a iniciar sesión.', 'error');
-                submitButton.disabled = false;
-                return;
-            }
-
             const currentPassword = document.getElementById('current-password').value;
             const newPassword = document.getElementById('new-password').value;
             const confirmNewPassword = document.getElementById('confirm-new-password').value;
 
             if (!isCodeStep) {
+                const passwordValidation = validatePasswordStrength(newPassword);
+                if (!passwordValidation.isValid) {
+                    showToast(passwordValidation.message, 'error'); submitButton.disabled = false; return;
+                }
                 if (newPassword !== confirmNewPassword) {
-                    showToast('Las nuevas contraseñas no coinciden.', 'error');
-                    submitButton.disabled = false;
-                    return;
+                    showToast('Las nuevas contraseñas no coinciden.', 'error'); submitButton.disabled = false; return;
                 }
                  if (currentPassword === newPassword) {
-                    showToast('La nueva contraseña no puede ser la misma que la actual.', 'error');
-                    submitButton.disabled = false;
-                    return;
-                }
-                if (newPassword.length < 8) {
-                    showToast('La nueva contraseña debe tener al menos 8 caracteres.', 'error');
-                    submitButton.disabled = false;
-                    return;
+                    showToast('La nueva contraseña no puede ser la misma que la actual.', 'error'); submitButton.disabled = false; return;
                 }
 
                 try {
-                    const validationResponse = await fetch(`${API_BASE_URL}/validate-current-password`, {
+                    await fetchWithAuth(`${API_BASE_URL}/validate-current-password`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: userEmail, currentPassword: currentPassword })
+                        body: JSON.stringify({ currentPassword })
                     });
-                    const validationData = await validationResponse.json();
-                    if (!validationResponse.ok) throw new Error(validationData.message);
-
-                    const codeResponse = await fetch(`${API_BASE_URL}/request-password-change-code`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: userEmail })
+                    
+                    const codeResponse = await fetchWithAuth(`${API_BASE_URL}/request-password-change-code`, {
+                        method: 'POST', body: JSON.stringify({})
                     });
                     const codeData = await codeResponse.json();
                     if (!codeResponse.ok) throw new Error(codeData.message);
@@ -356,26 +450,17 @@ export async function initAccountDashboard() {
                     showToast(codeData.message, 'success');
                     confirmationGroup.classList.remove('hidden');
                     isCodeStep = true;
-
                 } catch (error) {
                     showToast(error.message, 'error');
                 } finally {
                     submitButton.disabled = false;
                 }
-
             } else {
                 const code = document.getElementById('confirmation-code').value;
-                
                 try {
-                    const response = await fetch(`${API_BASE_URL}/change-password`, {
+                    const response = await fetchWithAuth(`${API_BASE_URL}/change-password`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            email: userEmail,
-                            currentPassword,
-                            newPassword,
-                            code
-                        })
+                        body: JSON.stringify({ currentPassword, newPassword, code })
                     });
                     const data = await response.json();
                     if (!response.ok) throw new Error(data.message);
@@ -400,8 +485,6 @@ export async function initAccountDashboard() {
     if (window.location.hash) {
         const targetId = window.location.hash.substring(1);
         const targetLink = document.querySelector(`.account-menu-link[data-target="${targetId}"]`);
-        if (targetLink) {
-            targetLink.click();
-        }
+        if (targetLink) targetLink.click();
     }
 }
