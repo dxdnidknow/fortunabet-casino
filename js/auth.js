@@ -55,6 +55,7 @@ async function handleRegisterSubmit(event) {
     const passwordInput = form.querySelector('#register-password');
     const confirmPasswordInput = form.querySelector('#register-confirm-password');
     const errorMessageEl = form.querySelector('#error-message');
+    const submitButton = form.querySelector('button[type="submit"]');
 
     errorMessageEl.textContent = '';
 
@@ -68,6 +69,9 @@ async function handleRegisterSubmit(event) {
         errorMessageEl.textContent = 'Las contraseñas no coinciden.';
         return;
     }
+
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner-sm"></span>';
 
     try {
         const response = await fetch(`${API_BASE_URL}/register`, {
@@ -85,13 +89,72 @@ async function handleRegisterSubmit(event) {
             throw new Error(data.message || 'Ocurrió un error.');
         }
 
-        const formContainer = document.getElementById('register-form-container');
-        const successMessage = document.getElementById('success-message');
-        if (formContainer) formContainer.classList.add('hidden');
-        if (successMessage) successMessage.classList.remove('hidden');
+        // Flujo de éxito: cierra el modal de registro y abre el de OTP
+        const registerModal = document.getElementById('register-modal');
+        const otpModal = document.getElementById('email-verification-modal');
+
+        if (registerModal) closeModal(registerModal);
+        
+        if (otpModal) {
+            // Pasamos el email al nuevo modal para usarlo después
+            otpModal.querySelector('#email-for-verification').value = emailInput.value;
+            otpModal.querySelector('#email-display').textContent = emailInput.value;
+            openModal(otpModal);
+        }
 
     } catch (error) {
         errorMessageEl.textContent = error.message;
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Crear Cuenta';
+    }
+}
+// En js/auth.js, AÑADE esta nueva función
+
+async function handleOtpSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const email = form.querySelector('#email-for-verification').value;
+    const otp = form.querySelector('#otp-code-input').value;
+    const errorMessageEl = form.querySelector('#email-verification-error');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    errorMessageEl.textContent = '';
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner-sm"></span>';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/verify-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Error al verificar.');
+        }
+
+        // Verificación exitosa
+        const otpModal = document.getElementById('email-verification-modal');
+        const registerModal = document.getElementById('register-modal');
+        
+        if (otpModal) closeModal(otpModal);
+
+        // Reutilizamos el mensaje de éxito original del modal de registro
+        if (registerModal) {
+            const formContainer = registerModal.querySelector('#register-form-container');
+            const successMessage = registerModal.querySelector('#success-message');
+            if (formContainer) formContainer.classList.add('hidden');
+            if (successMessage) successMessage.classList.remove('hidden');
+            openModal(registerModal); // Lo reabrimos para mostrar el mensaje de éxito final
+        }
+
+    } catch (error) {
+        errorMessageEl.textContent = error.message;
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Confirmar y Activar Cuenta';
     }
 }
 
@@ -250,6 +313,45 @@ function handleLogout() {
     }
 }
 
+// En js/auth.js, AÑADE esta nueva función
+
+async function handleResendOtp(event) {
+    event.preventDefault();
+    const link = event.target;
+    const email = document.getElementById('email-for-verification').value;
+
+    if (!email || link.dataset.disabled === 'true') {
+        return;
+    }
+
+    // Deshabilita el enlace para prevenir spam
+    link.dataset.disabled = 'true';
+    link.style.opacity = '0.5';
+    link.style.cursor = 'not-allowed';
+    showToast('Reenviando código...');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/resend-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
+        showToast(data.message, 'success');
+
+    } catch (error) {
+        showToast(error.message, 'error');
+    } finally {
+        // Rehabilita el enlace después de 30 segundos
+        setTimeout(() => {
+            link.dataset.disabled = 'false';
+            link.style.opacity = '1';
+            link.style.cursor = 'pointer';
+        }, 30000);
+    }
+}
 export async function fetchWithAuth(url, options = {}) {
     const token = getToken();
 
@@ -290,6 +392,7 @@ export function initAuth() {
         if (event.target.id === 'login-form') handleLoginSubmit(event);
         if (event.target.id === 'forgot-password-form') handleForgotPasswordSubmit(event);
         if (event.target.id === 'reset-password-form') handleResetPasswordSubmit(event);
+        if (event.target.id === 'email-verification-form') handleOtpSubmit(event); 
     });
 
     document.body.addEventListener('click', (event) => {
@@ -319,6 +422,10 @@ export function initAuth() {
                     icon.classList.toggle('fa-eye-slash');
                 }
             }
+        }
+        const resendLink = event.target.closest('#resend-otp-link');
+        if (resendLink) {
+            handleResendOtp(event);
         }
     });
 }

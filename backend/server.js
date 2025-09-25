@@ -158,29 +158,141 @@ app.get('/api/event/:sportKey/:eventId', (req, res) => {
 app.post('/api/register', authLimiter, async (req, res) => {
     try {
         const { username, email, password } = req.body;
+        // ... (tus validaciones de siempre)
         if (!username || !email || !password) return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
         if (!usernameRegex.test(username)) return res.status(400).json({ message: 'El usuario debe tener entre 4 y 20 letras, sin números ni espacios.' });
         if (!passwordRegex.test(password)) return res.status(400).json({ message: 'La contraseña no cumple con los requisitos de seguridad.' });
 
+        // Comprueba si ya está verificado
         const usersCollection = db.collection('users');
-        const existingUser = await usersCollection.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
-        if (existingUser) return res.status(409).json({ message: 'El nombre de usuario ya está en uso.' });
-        
-        const existingEmail = await usersCollection.findOne({ email: email.toLowerCase() });
-        if (existingEmail) return res.status(409).json({ message: 'El correo electrónico ya está en uso.' });
+        const existingVerifiedUser = await usersCollection.findOne({ email: email.toLowerCase() });
+        if (existingVerifiedUser) {
+            return res.status(409).json({ message: 'Este correo electrónico ya está registrado y verificado.' });
+        }
 
+        const unverifiedUsersCollection = db.collection('unverified_users');
+        const existingUnverifiedUser = await unverifiedUsersCollection.findOne({ email: email.toLowerCase() });
+
+        // Si el usuario ya existe pero no está verificado, solo le reenviamos un nuevo código.
+        if (existingUnverifiedUser) {
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
+            await unverifiedUsersCollection.updateOne(
+                { email: email.toLowerCase() },
+                { $set: { otp, otpExpires } }
+            );
+            await transporter.sendMail({ /* ... (mismo contenido de correo que en resend-otp) ... */ });
+            return res.status(200).json({ message: 'Ya tienes un registro pendiente. Te hemos enviado un nuevo código.' });
+        }
+
+        // Si es un usuario completamente nuevo, procede con el registro normal
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+        await unverifiedUsersCollection.insertOne({
+            username,
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            otp,
+            otpExpires,
+            createdAt: new Date()
+        });
         
-        const newUser = { username, email: email.toLowerCase(), password: hashedPassword, createdAt: new Date(), balance: 0, personalInfo: {}, payoutMethods: [] };
-        await usersCollection.insertOne(newUser);
+        await transporter.sendMail({ /* ... (mismo contenido de correo que en el registro original) ... */ });
         
-        res.status(201).json({ message: '¡Usuario registrado con éxito!' });
+        res.status(200).json({ message: 'Se ha enviado un código de verificación a tu correo.' });
+
     } catch (error) {
-        if (error.code === 11000) {
-            return res.status(409).json({ message: 'El nombre de usuario o el correo ya están en uso.' });
-        }
         console.error('[ERROR] en el registro de usuario:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+// En server.js, AÑADE ESTE NUEVO ENDPOINT
+
+app.post('/api/resend-otp', authLimiter, async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: 'El correo es obligatorio.' });
+        }
+
+        const unverifiedUsersCollection = db.collection('unverified_users');
+        const unverifiedUser = await unverifiedUsersCollection.findOne({ email: email.toLowerCase() });
+
+        if (!unverifiedUser) {
+            return res.status(404).json({ message: 'No se encontró una solicitud de registro para este correo.' });
+        }
+        
+        // Genera un nuevo código y actualiza la expiración
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+
+        await unverifiedUsersCollection.updateOne(
+            { email: email.toLowerCase() },
+            { $set: { otp, otpExpires } }
+        );
+
+        // Reenvía el correo
+        await transporter.sendMail({
+            from: `"FortunaBet Soporte" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Tu nuevo código de verificación para FortunaBet',
+            html: `<p>Hola de nuevo,</p><p>Tu nuevo código de verificación es:</p><h2 style="text-align:center;">${otp}</h2><p>Este código expirará en 15 minutos.</p>`,
+        });
+
+        res.status(200).json({ message: 'Se ha reenviado un nuevo código a tu correo.' });
+
+    } catch (error) {
+        console.error('[ERROR] al reenviar OTP:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
+app.post('/api/verify-email', authLimiter, async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        if (!email || !otp) {
+            return res.status(400).json({ message: 'El correo y el código son obligatorios.' });
+        }
+
+        const unverifiedUsersCollection = db.collection('unverified_users');
+        const unverifiedUser = await unverifiedUsersCollection.findOne({ email: email.toLowerCase() });
+
+        if (!unverifiedUser) {
+            return res.status(404).json({ message: 'No se encontró una solicitud de registro para este correo.' });
+        }
+
+        if (unverifiedUser.otp !== otp) {
+            return res.status(400).json({ message: 'El código de verificación es incorrecto.' });
+        }
+        
+        if (new Date() > unverifiedUser.otpExpires) {
+            return res.status(400).json({ message: 'El código de verificación ha expirado. Por favor, regístrate de nuevo.' });
+        }
+
+        // ¡Verificación exitosa! Movemos el usuario a la colección principal
+        const usersCollection = db.collection('users');
+        await usersCollection.insertOne({
+            username: unverifiedUser.username,
+            email: unverifiedUser.email,
+            password: unverifiedUser.password,
+            createdAt: new Date(),
+            isVerified: true,
+            balance: 0,
+            personalInfo: {},
+            payoutMethods: []
+        });
+
+        // Eliminamos el registro temporal
+        await unverifiedUsersCollection.deleteOne({ email: email.toLowerCase() });
+
+        res.status(201).json({ message: '¡Cuenta verificada y creada con éxito!' });
+
+    } catch (error) {
+        console.error('[ERROR] en la verificación de email:', error);
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
