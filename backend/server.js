@@ -13,6 +13,7 @@ const NodeCache = require('node-cache');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const twilio = require('twilio');   
+const sgMail = require('@sendgrid/mail');
 
 const app = express();
 const port = 3001;
@@ -75,19 +76,13 @@ function isOver18(dateString) {
 const API_KEY = process.env.ODDS_API_KEY;
 if (!API_KEY) { console.error('❌ Error: La variable de entorno ODDS_API_KEY no está definida.'); process.exit(1); }
 const eventsCache = new NodeCache({ stdTTL: 600 });
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', // El servidor SMTP de Gmail
-    port: 587,              // El puerto para TLS/STARTTLS
-    secure: false,          // `true` para el puerto 465, `false` para otros puertos
-    auth: {
-        user: process.env.EMAIL_USER, // Tu correo de Gmail
-        pass: process.env.EMAIL_PASS  // Tu CONTRASEÑA DE APLICACIÓN de 16 caracteres
-    },
-    tls: {
-        // No fallar en certificados inválidos (aunque con Gmail no debería pasar)
-        rejectUnauthorized: false
-    }
-});
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+if (!process.env.SENDGRID_API_KEY || !process.env.VERIFIED_SENDER_EMAIL) {
+    console.error("❌ Error: Faltan las variables de entorno de SendGrid (SENDGRID_API_KEY o VERIFIED_SENDER_EMAIL).");
+    process.exit(1);
+}
+
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
 
@@ -103,15 +98,9 @@ const authLimiter = rateLimit({
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-
-    if (token == null) {
-        return res.status(401).json({ message: 'Acceso no autorizado. Token no proporcionado.' });
-    }
-
+    if (token == null) return res.status(401).json({ message: 'Acceso no autorizado.' });
     jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ message: 'Token no válido o expirado. Por favor, inicia sesión de nuevo.' });
-        }
+        if (err) return res.status(403).json({ message: 'Token no válido o expirado.' });
         req.user = user;
         next();
     });
@@ -165,7 +154,6 @@ app.post('/api/register', authLimiter, async (req, res) => {
         if (!usernameRegex.test(username)) return res.status(400).json({ message: 'El usuario debe tener entre 4 y 20 letras, sin números ni espacios.' });
         if (!passwordRegex.test(password)) return res.status(400).json({ message: 'La contraseña no cumple con los requisitos de seguridad.' });
 
-        // Comprueba si ya está verificado
         const usersCollection = db.collection('users');
         const existingVerifiedUser = await usersCollection.findOne({ email: email.toLowerCase() });
         if (existingVerifiedUser) {
@@ -174,53 +162,30 @@ app.post('/api/register', authLimiter, async (req, res) => {
 
         const unverifiedUsersCollection = db.collection('unverified_users');
         const existingUnverifiedUser = await unverifiedUsersCollection.findOne({ email: email.toLowerCase() });
-
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+        const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
+        const mailOptions = {
+            to: email,
+            from: process.env.VERIFIED_SENDER_EMAIL,
+            subject: 'Tu código de verificación para FortunaBet',
+            html: `<p>Hola ${username},</p><p>Tu código de verificación es:</p><h2 style="text-align:center; letter-spacing: 5px; font-size: 36px;">${otp}</h2><p>Este código expirará en 15 minutos.</p>`,
+        };
 
-        // Si el usuario ya existe pero no está verificado, solo le reenviamos un nuevo código.
         if (existingUnverifiedUser) {
-            await unverifiedUsersCollection.updateOne(
-                { email: email.toLowerCase() },
-                { $set: { otp, otpExpires } }
-            );
-            await transporter.sendMail({
-                from: `"FortunaBet Soporte" <${process.env.EMAIL_USER}>`,
-                to: email,
-                subject: 'Tu nuevo código de verificación para FortunaBet',
-                html: `<p>Hola de nuevo,</p><p>Tu nuevo código de verificación es:</p><h2 style="text-align:center;letter-spacing: 5px; font-size: 36px;">${otp}</h2><p>Este código expirará en 15 minutos.</p>`,
-            });
+            await unverifiedUsersCollection.updateOne({ email: email.toLowerCase() }, { $set: { otp, otpExpires } });
+            await sgMail.send(mailOptions);
             return res.status(200).json({ message: 'Ya tienes un registro pendiente. Te hemos enviado un nuevo código.' });
         }
 
-        // Si es un usuario completamente nuevo, procede con el registro
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        
-        await unverifiedUsersCollection.insertOne({
-            username,
-            email: email.toLowerCase(),
-            password: hashedPassword,
-            otp,
-            otpExpires,
-            createdAt: new Date()
-        });
-        
-        await transporter.sendMail({
-            from: `"FortunaBet Soporte" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: 'Tu código de verificación para FortunaBet',
-            html: `<p>Hola ${username},</p>
-                   <p>Gracias por registrarte. Tu código de verificación es:</p>
-                   <h2 style="text-align:center; letter-spacing: 5px; font-size: 36px;">${otp}</h2>
-                   <p>Este código expirará en 15 minutos.</p>`,
-        });
-        
+        await unverifiedUsersCollection.insertOne({ username, email: email.toLowerCase(), password: hashedPassword, otp, otpExpires, createdAt: new Date() });
+        await sgMail.send(mailOptions);
         res.status(200).json({ message: 'Se ha enviado un código de verificación a tu correo.' });
-
     } catch (error) {
         console.error('[ERROR] en el registro de usuario:', error);
-        res.status(500).json({ message: 'Error interno del servidor.' });
+        if (error.response) console.error(error.response.body); // Log de SendGrid
+        res.status(500).json({ message: 'Error interno del servidor al registrar.' });
     }
 });
 
@@ -271,37 +236,29 @@ app.post('/api/verify-email', authLimiter, async (req, res) => {
 app.post('/api/resend-otp', authLimiter, async (req, res) => {
     try {
         const { email } = req.body;
-        if (!email) {
-            return res.status(400).json({ message: 'El correo es obligatorio.' });
-        }
+        if (!email) return res.status(400).json({ message: 'El correo es obligatorio.' });
 
         const unverifiedUsersCollection = db.collection('unverified_users');
         const unverifiedUser = await unverifiedUsersCollection.findOne({ email: email.toLowerCase() });
-
-        if (!unverifiedUser) {
-            return res.status(404).json({ message: 'No se encontró una solicitud de registro para este correo.' });
-        }
+        if (!unverifiedUser) return res.status(404).json({ message: 'No se encontró solicitud de registro.' });
         
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
 
-        await unverifiedUsersCollection.updateOne(
-            { email: email.toLowerCase() },
-            { $set: { otp, otpExpires } }
-        );
+        await unverifiedUsersCollection.updateOne({ email: email.toLowerCase() }, { $set: { otp, otpExpires } });
 
-        await transporter.sendMail({
-            from: `"FortunaBet Soporte" <${process.env.EMAIL_USER}>`,
+        const msg = {
             to: email,
+            from: process.env.VERIFIED_SENDER_EMAIL,
             subject: 'Tu nuevo código de verificación para FortunaBet',
-            html: `<p>Hola de nuevo,</p><p>Tu nuevo código de verificación es:</p><h2 style="text-align:center;letter-spacing: 5px; font-size: 36px;">${otp}</h2><p>Este código expirará en 15 minutos.</p>`,
-        });
-
+            html: `<p>Hola de nuevo,</p><p>Tu nuevo código de verificación es:</p><h2 style="text-align:center;">${otp}</h2><p>Este código expirará en 15 minutos.</p>`,
+        };
+        await sgMail.send(msg);
         res.status(200).json({ message: 'Se ha reenviado un nuevo código a tu correo.' });
-
     } catch (error) {
         console.error('[ERROR] al reenviar OTP:', error);
-        res.status(500).json({ message: 'Error interno del servidor.' });
+        if (error.response) console.error(error.response.body); // Log de SendGrid
+        res.status(500).json({ message: 'Error interno del servidor al reenviar.' });
     }
 });
 
@@ -596,28 +553,27 @@ app.post('/api/change-password', authLimiter, authenticateToken, async (req, res
 // --- ENDPOINTS PÚBLICOS PARA RECUPERACIÓN DE CUENTA ---
 
 app.post('/api/forgot-password', authLimiter, async (req, res) => {
-    const { email } = req.body;
     try {
+        const { email } = req.body;
         const user = await db.collection('users').findOne({ email: email.toLowerCase() });
         if (!user) {
-            return res.status(200).json({ message: 'Si tu correo está registrado, recibirás un enlace para restablecer tu contraseña.' });
+            return res.status(200).json({ message: 'Si tu correo está registrado, recibirás un enlace.' });
         }
-
         const secret = JWT_SECRET + user.password;
         const token = jwt.sign({ email: user.email, id: user._id.toString() }, secret, { expiresIn: '15m' });
-        
         const resetLink = `${process.env.FRONTEND_URL}/index.html?action=reset&id=${user._id}&token=${token}`;
 
-        await transporter.sendMail({
-            from: `"FortunaBet Soporte" <${process.env.EMAIL_USER}>`,
+        const msg = {
             to: user.email,
+            from: process.env.VERIFIED_SENDER_EMAIL,
             subject: 'Restablece tu contraseña de FortunaBet',
             html: `<p>Hola ${user.username},</p><p>Haz clic en el siguiente enlace para restablecer tu contraseña. El enlace es válido por 15 minutos:</p><a href="${resetLink}" style="padding:10px 20px; background-color:#2ECC71; color:#000; text-decoration:none; border-radius:5px;">Restablecer Contraseña</a>`,
-        });
-
-        res.status(200).json({ message: 'Si tu correo está registrado, recibirás un enlace para restablecer tu contraseña.' });
+        };
+        await sgMail.send(msg);
+        res.status(200).json({ message: 'Si tu correo está registrado, recibirás un enlace.' });
     } catch (error) {
         console.error('[ERROR] en forgot-password:', error);
+        if (error.response) console.error(error.response.body); // Log de SendGrid
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
