@@ -26,7 +26,6 @@ app.use(express.json());
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 const usernameRegex = /^[a-zA-Z]{4,20}$/;
 
-// --- NUEVO: Cargar secretos desde .env con validación ---
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
     console.error("❌ Error: La variable de entorno JWT_SECRET no está definida. Es crucial para la seguridad.");
@@ -86,18 +85,15 @@ const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
 // =======================================================================
 //  MIDDLEWARES DE SEGURIDAD
 // =======================================================================
-
-// --- Middleware para limitar peticiones en endpoints sensibles ---
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 20,
     message: { message: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo en 15 minutos.' }
 });
 
-// --- NUEVO: Middleware de Autenticación para proteger rutas ---
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Formato esperado: "Bearer TOKEN"
+    const token = authHeader && authHeader.split(' ')[1];
 
     if (token == null) {
         return res.status(401).json({ message: 'Acceso no autorizado. Token no proporcionado.' });
@@ -105,12 +101,10 @@ function authenticateToken(req, res, next) {
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
-            // Si el token es inválido (mal formado, firma incorrecta, expirado)
             return res.status(403).json({ message: 'Token no válido o expirado. Por favor, inicia sesión de nuevo.' });
         }
-        // Si el token es válido, adjuntamos el payload del usuario (id, username, email) al objeto `req`
         req.user = user;
-        next(); // Continuamos a la ruta solicitada
+        next();
     });
 }
 
@@ -142,7 +136,6 @@ app.get('/api/sports', async (req, res) => {
     } catch (error) { handleApiError(error, res); }
 });
 
-// --- CORREGIDO: Eliminada la ruta duplicada ---
 app.get('/api/event/:sportKey/:eventId', (req, res) => {
     const { sportKey, eventId } = req.params;
     const sportEventsList = eventsCache.get(sportKey);
@@ -155,10 +148,10 @@ app.get('/api/event/:sportKey/:eventId', (req, res) => {
 
 
 // --- ENDPOINTS PÚBLICOS DE AUTENTICACIÓN ---
+
 app.post('/api/register', authLimiter, async (req, res) => {
     try {
         const { username, email, password } = req.body;
-        // ... (tus validaciones de siempre)
         if (!username || !email || !password) return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
         if (!usernameRegex.test(username)) return res.status(400).json({ message: 'El usuario debe tener entre 4 y 20 letras, sin números ni espacios.' });
         if (!passwordRegex.test(password)) return res.status(400).json({ message: 'La contraseña no cumple con los requisitos de seguridad.' });
@@ -173,24 +166,28 @@ app.post('/api/register', authLimiter, async (req, res) => {
         const unverifiedUsersCollection = db.collection('unverified_users');
         const existingUnverifiedUser = await unverifiedUsersCollection.findOne({ email: email.toLowerCase() });
 
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+
         // Si el usuario ya existe pero no está verificado, solo le reenviamos un nuevo código.
         if (existingUnverifiedUser) {
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
-            const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
             await unverifiedUsersCollection.updateOne(
                 { email: email.toLowerCase() },
                 { $set: { otp, otpExpires } }
             );
-            await transporter.sendMail({ /* ... (mismo contenido de correo que en resend-otp) ... */ });
+            await transporter.sendMail({
+                from: `"FortunaBet Soporte" <${process.env.EMAIL_USER}>`,
+                to: email,
+                subject: 'Tu nuevo código de verificación para FortunaBet',
+                html: `<p>Hola de nuevo,</p><p>Tu nuevo código de verificación es:</p><h2 style="text-align:center;letter-spacing: 5px; font-size: 36px;">${otp}</h2><p>Este código expirará en 15 minutos.</p>`,
+            });
             return res.status(200).json({ message: 'Ya tienes un registro pendiente. Te hemos enviado un nuevo código.' });
         }
 
-        // Si es un usuario completamente nuevo, procede con el registro normal
+        // Si es un usuario completamente nuevo, procede con el registro
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
-
+        
         await unverifiedUsersCollection.insertOne({
             username,
             email: email.toLowerCase(),
@@ -200,53 +197,20 @@ app.post('/api/register', authLimiter, async (req, res) => {
             createdAt: new Date()
         });
         
-        await transporter.sendMail({ /* ... (mismo contenido de correo que en el registro original) ... */ });
+        await transporter.sendMail({
+            from: `"FortunaBet Soporte" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Tu código de verificación para FortunaBet',
+            html: `<p>Hola ${username},</p>
+                   <p>Gracias por registrarte. Tu código de verificación es:</p>
+                   <h2 style="text-align:center; letter-spacing: 5px; font-size: 36px;">${otp}</h2>
+                   <p>Este código expirará en 15 minutos.</p>`,
+        });
         
         res.status(200).json({ message: 'Se ha enviado un código de verificación a tu correo.' });
 
     } catch (error) {
         console.error('[ERROR] en el registro de usuario:', error);
-        res.status(500).json({ message: 'Error interno del servidor.' });
-    }
-});
-
-// En server.js, AÑADE ESTE NUEVO ENDPOINT
-
-app.post('/api/resend-otp', authLimiter, async (req, res) => {
-    try {
-        const { email } = req.body;
-        if (!email) {
-            return res.status(400).json({ message: 'El correo es obligatorio.' });
-        }
-
-        const unverifiedUsersCollection = db.collection('unverified_users');
-        const unverifiedUser = await unverifiedUsersCollection.findOne({ email: email.toLowerCase() });
-
-        if (!unverifiedUser) {
-            return res.status(404).json({ message: 'No se encontró una solicitud de registro para este correo.' });
-        }
-        
-        // Genera un nuevo código y actualiza la expiración
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
-
-        await unverifiedUsersCollection.updateOne(
-            { email: email.toLowerCase() },
-            { $set: { otp, otpExpires } }
-        );
-
-        // Reenvía el correo
-        await transporter.sendMail({
-            from: `"FortunaBet Soporte" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: 'Tu nuevo código de verificación para FortunaBet',
-            html: `<p>Hola de nuevo,</p><p>Tu nuevo código de verificación es:</p><h2 style="text-align:center;">${otp}</h2><p>Este código expirará en 15 minutos.</p>`,
-        });
-
-        res.status(200).json({ message: 'Se ha reenviado un nuevo código a tu correo.' });
-
-    } catch (error) {
-        console.error('[ERROR] al reenviar OTP:', error);
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
@@ -273,7 +237,6 @@ app.post('/api/verify-email', authLimiter, async (req, res) => {
             return res.status(400).json({ message: 'El código de verificación ha expirado. Por favor, regístrate de nuevo.' });
         }
 
-        // ¡Verificación exitosa! Movemos el usuario a la colección principal
         const usersCollection = db.collection('users');
         await usersCollection.insertOne({
             username: unverifiedUser.username,
@@ -286,7 +249,6 @@ app.post('/api/verify-email', authLimiter, async (req, res) => {
             payoutMethods: []
         });
 
-        // Eliminamos el registro temporal
         await unverifiedUsersCollection.deleteOne({ email: email.toLowerCase() });
 
         res.status(201).json({ message: '¡Cuenta verificada y creada con éxito!' });
@@ -297,7 +259,43 @@ app.post('/api/verify-email', authLimiter, async (req, res) => {
     }
 });
 
-// --- MODIFICADO: Login ahora genera y devuelve un JWT ---
+app.post('/api/resend-otp', authLimiter, async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: 'El correo es obligatorio.' });
+        }
+
+        const unverifiedUsersCollection = db.collection('unverified_users');
+        const unverifiedUser = await unverifiedUsersCollection.findOne({ email: email.toLowerCase() });
+
+        if (!unverifiedUser) {
+            return res.status(404).json({ message: 'No se encontró una solicitud de registro para este correo.' });
+        }
+        
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+        await unverifiedUsersCollection.updateOne(
+            { email: email.toLowerCase() },
+            { $set: { otp, otpExpires } }
+        );
+
+        await transporter.sendMail({
+            from: `"FortunaBet Soporte" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Tu nuevo código de verificación para FortunaBet',
+            html: `<p>Hola de nuevo,</p><p>Tu nuevo código de verificación es:</p><h2 style="text-align:center;letter-spacing: 5px; font-size: 36px;">${otp}</h2><p>Este código expirará en 15 minutos.</p>`,
+        });
+
+        res.status(200).json({ message: 'Se ha reenviado un nuevo código a tu correo.' });
+
+    } catch (error) {
+        console.error('[ERROR] al reenviar OTP:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+});
+
 app.post('/api/login', authLimiter, async (req, res) => {
     try {
         const { identifier, password } = req.body;
@@ -312,18 +310,18 @@ app.post('/api/login', authLimiter, async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(401).json({ message: 'Credenciales inválidas.' });
         
-        // --- LÓGICA DE JWT AÑADIDA ---
-        // 1. Crear el payload (la información que guardaremos en el token)
         const payload = {
             id: user._id,
             username: user.username,
             email: user.email
         };
 
-        // 2. Firmar el token con el secreto y establecer una expiración
-        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' }); // Expira en 1 día
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
+        
+        console.log('JWT_SECRET está definido:', !!JWT_SECRET);
+        console.log('Token generado:', token); 
+        console.log('Usuario a enviar:', { username: user.username, email: user.email });
 
-        // 3. Enviar el token y los datos del usuario al cliente
         res.status(200).json({ 
             message: 'Inicio de sesión exitoso.',
             token: token,
@@ -343,7 +341,6 @@ app.post('/api/login', authLimiter, async (req, res) => {
 
 app.post('/api/change-username', authLimiter, authenticateToken, async (req, res) => {
     try {
-        // --- MODIFICADO: No se usa el email del body. El usuario se identifica por el token. ---
         const userId = req.user.id; 
         const { newUsername } = req.body;
 
@@ -352,13 +349,11 @@ app.post('/api/change-username', authLimiter, authenticateToken, async (req, res
         }
 
         const usersCollection = db.collection('users');
-        // --- CORREGIDO: Se busca el `newUsername` para ver si ya existe. ---
         const existingUser = await usersCollection.findOne({ username: { $regex: new RegExp(`^${newUsername}$`, 'i') } });
         if (existingUser) {
             return res.status(409).json({ message: 'El nombre de usuario ya está en uso.' });
         }
         
-        // --- MODIFICADO: Se busca al usuario actual por el ID del token, que es seguro. ---
         const currentUser = await usersCollection.findOne({ _id: new ObjectId(userId) });
         if (!currentUser) {
             return res.status(404).json({ message: 'Usuario no encontrado.' });
@@ -391,7 +386,6 @@ app.post('/api/change-username', authLimiter, authenticateToken, async (req, res
 
 app.post('/api/update-personal-info', authLimiter, authenticateToken, async (req, res) => {
     try {
-        // --- MODIFICADO: Se identifica al usuario por el token. ---
         const userId = req.user.id;
         const { firstName, lastName, birthDate, state, phone } = req.body;
 
@@ -420,7 +414,7 @@ app.post('/api/update-personal-info', authLimiter, authenticateToken, async (req
             updateData['personalInfo.phoneVerified'] = false;
         }
 
-        const result = await usersCollection.updateOne({ _id: currentUser._id }, { $set: updateData });
+        await usersCollection.updateOne({ _id: currentUser._id }, { $set: updateData });
         
         res.status(200).json({ message: 'Información personal actualizada con éxito.' });
 
@@ -436,7 +430,6 @@ app.post('/api/update-personal-info', authLimiter, authenticateToken, async (req
 
 app.get('/api/user-data', authenticateToken, async (req, res) => {
     try {
-        // --- MODIFICADO: El email ya no es necesario, se usa el ID del token. ---
         const userId = req.user.id;
 
         const usersCollection = db.collection('users');
@@ -444,7 +437,7 @@ app.get('/api/user-data', authenticateToken, async (req, res) => {
             { _id: new ObjectId(userId) },
             { 
                 projection: { 
-                    password: 0, // Nunca devolver la contraseña
+                    password: 0,
                     payoutMethods: 0,
                     passwordChangeCode: 0,
                     passwordChangeCodeExpires: 0
@@ -465,7 +458,6 @@ app.get('/api/user-data', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/request-phone-verification', authLimiter, authenticateToken, async (req, res) => {
-    // --- MODIFICADO: Se identifica al usuario por el token. ---
     const userId = req.user.id;
     try {
         const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
@@ -481,7 +473,6 @@ app.post('/api/request-phone-verification', authLimiter, authenticateToken, asyn
 });
 
 app.post('/api/verify-phone-code', authLimiter, authenticateToken, async (req, res) => {
-    // --- MODIFICADO: Se identifica al usuario por el token. ---
     const userId = req.user.id;
     const { code } = req.body;
     try {
@@ -504,7 +495,6 @@ app.post('/api/verify-phone-code', authLimiter, authenticateToken, async (req, r
 
 app.post('/api/validate-current-password', authLimiter, authenticateToken, async (req, res) => {
     try {
-        // --- MODIFICADO: Se identifica al usuario por el token. ---
         const userId = req.user.id;
         const { currentPassword } = req.body;
         if (!currentPassword) {
@@ -513,7 +503,6 @@ app.post('/api/validate-current-password', authLimiter, authenticateToken, async
 
         const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
         if (!user) {
-            // Este caso es improbable si el token es válido, pero es una buena práctica de seguridad
             return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
         }
 
@@ -532,7 +521,6 @@ app.post('/api/validate-current-password', authLimiter, authenticateToken, async
 
 app.post('/api/request-password-change-code', authLimiter, authenticateToken, async (req, res) => {
     try {
-        // --- MODIFICADO: Se identifica al usuario por el token. ---
         const userId = req.user.id;
         const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
         if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
@@ -558,7 +546,6 @@ app.post('/api/request-password-change-code', authLimiter, authenticateToken, as
 
 app.post('/api/change-password', authLimiter, authenticateToken, async (req, res) => {
     try {
-        // --- MODIFICADO: Se identifica al usuario por el token. ---
         const userId = req.user.id;
         const { currentPassword, newPassword, code } = req.body;
         if (!currentPassword || !newPassword || !code) return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
@@ -604,14 +591,12 @@ app.post('/api/forgot-password', authLimiter, async (req, res) => {
     try {
         const user = await db.collection('users').findOne({ email: email.toLowerCase() });
         if (!user) {
-            // ¡Importante! No reveles si el email existe o no para evitar enumeración de usuarios.
             return res.status(200).json({ message: 'Si tu correo está registrado, recibirás un enlace para restablecer tu contraseña.' });
         }
 
-        const secret = JWT_SECRET + user.password; // El token depende de la contraseña actual, si se cambia, el token se invalida.
+        const secret = JWT_SECRET + user.password;
         const token = jwt.sign({ email: user.email, id: user._id.toString() }, secret, { expiresIn: '15m' });
         
-        // --- MEJORADO: Usar variable de entorno para la URL del frontend ---
         const resetLink = `${process.env.FRONTEND_URL}/index.html?action=reset&id=${user._id}&token=${token}`;
 
         await transporter.sendMail({
@@ -641,7 +626,7 @@ app.post('/api/reset-password', authLimiter, async (req, res) => {
         if (!user) return res.status(400).json({ message: 'Usuario no válido.' });
 
         const secret = JWT_SECRET + user.password;
-        jwt.verify(token, secret); // Si esto falla, el catch lo manejará.
+        jwt.verify(token, secret);
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
