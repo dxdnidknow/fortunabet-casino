@@ -76,8 +76,17 @@ const API_KEY = process.env.ODDS_API_KEY;
 if (!API_KEY) { console.error('❌ Error: La variable de entorno ODDS_API_KEY no está definida.'); process.exit(1); }
 const eventsCache = new NodeCache({ stdTTL: 600 });
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    host: 'smtp.gmail.com', // El servidor SMTP de Gmail
+    port: 587,              // El puerto para TLS/STARTTLS
+    secure: false,          // `true` para el puerto 465, `false` para otros puertos
+    auth: {
+        user: process.env.EMAIL_USER, // Tu correo de Gmail
+        pass: process.env.EMAIL_PASS  // Tu CONTRASEÑA DE APLICACIÓN de 16 caracteres
+    },
+    tls: {
+        // No fallar en certificados inválidos (aunque con Gmail no debería pasar)
+        rejectUnauthorized: false
+    }
 });
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
