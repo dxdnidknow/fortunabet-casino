@@ -191,22 +191,39 @@ app.post('/api/register', authLimiter, async (req, res) => {
 
 // EN server.js, REEMPLAZA el endpoint /api/verify-email completo
 
+// EN server.js, REEMPLAZA el endpoint /api/verify-email completo con esta versión mejorada
+
 app.post('/api/verify-email', authLimiter, async (req, res) => {
     try {
         const { email, otp } = req.body;
-        // ... (tus validaciones de email y otp siguen aquí)
         if (!otp) return res.status(400).json({ message: 'El código de verificación es obligatorio.' });
-        if (!email) return res.status(400).json({ message: 'No se pudo identificar el correo.' });
+        if (!email) return res.status(400).json({ message: 'No se pudo identificar el correo. Por favor, intenta registrarte de nuevo.' });
 
         const unverifiedUsersCollection = db.collection('unverified_users');
         const unverifiedUser = await unverifiedUsersCollection.findOne({ email: email.toLowerCase() });
 
-        if (!unverifiedUser) return res.status(404).json({ message: 'No se encontró una solicitud de registro.' });
+        if (!unverifiedUser) return res.status(404).json({ message: 'No se encontró una solicitud de registro para este correo.' });
         if (unverifiedUser.otp !== otp) return res.status(400).json({ message: 'El código de verificación es incorrecto.' });
-        if (new Date() > unverifiedUser.otpExpires) return res.status(400).json({ message: 'El código de verificación ha expirado.' });
+        if (new Date() > unverifiedUser.otpExpires) return res.status(400).json({ message: 'El código de verificación ha expirado. Por favor, regístrate de nuevo.' });
 
-        // Mueve el usuario a la colección principal
         const usersCollection = db.collection('users');
+
+        // --- INICIO DE LA LÓGICA DE PREVENCIÓN DE DUPLICADOS ---
+        const existingUser = await usersCollection.findOne({
+            $or: [
+                { email: unverifiedUser.email },
+                { username: unverifiedUser.username }
+            ]
+        });
+
+        if (existingUser) {
+            // Si el usuario ya existe, limpiamos el registro no verificado y devolvemos un error
+            await unverifiedUsersCollection.deleteOne({ email: email.toLowerCase() });
+            return res.status(409).json({ message: 'El nombre de usuario o el correo ya existen en una cuenta verificada.' });
+        }
+        // --- FIN DE LA LÓGICA DE PREVENCIÓN DE DUPLICADOS ---
+
+        // Si no existe, procedemos a crearlo
         const newUserResult = await usersCollection.insertOne({
             username: unverifiedUser.username,
             email: unverifiedUser.email,
@@ -220,13 +237,11 @@ app.post('/api/verify-email', authLimiter, async (req, res) => {
 
         await unverifiedUsersCollection.deleteOne({ email: email.toLowerCase() });
 
-        // --- INICIO DE LA LÓGICA DE AUTO-LOGIN ---
         const payload = {
-            id: newUserResult.insertedId, // El ID del usuario recién creado
+            id: newUserResult.insertedId,
             username: unverifiedUser.username,
             email: unverifiedUser.email
         };
-
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
 
         res.status(201).json({ 
@@ -237,11 +252,10 @@ app.post('/api/verify-email', authLimiter, async (req, res) => {
                 email: unverifiedUser.email
             }
         });
-        // --- FIN DE LA LÓGICA DE AUTO-LOGIN ---
 
     } catch (error) {
         console.error('[ERROR] en la verificación de email:', error);
-        res.status(500).json({ message: 'Error interno del servidor.' });
+        res.status(500).json({ message: 'Error interno del servidor durante la verificación.' });
     }
 });
 
