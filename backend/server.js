@@ -192,8 +192,11 @@ app.post('/api/register', authLimiter, async (req, res) => {
 app.post('/api/verify-email', authLimiter, async (req, res) => {
     try {
         const { email, otp } = req.body;
-        if (!email || !otp) {
-            return res.status(400).json({ message: 'El correo y el código son obligatorios.' });
+        if (!otp) {
+            return res.status(400).json({ message: 'El código de verificación es obligatorio.' });
+        }
+        if (!email) {
+            return res.status(400).json({ message: 'No se pudo identificar el correo. Por favor, intenta registrarte de nuevo.' });
         }
 
         const unverifiedUsersCollection = db.collection('unverified_users');

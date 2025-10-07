@@ -1,7 +1,7 @@
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
 import { openModal, closeModal } from './modal.js';
-
+let emailForVerification = '';
 function getToken() {
     return localStorage.getItem('fortunaToken');
 }
@@ -84,15 +84,15 @@ async function handleRegisterSubmit(event) {
         if (!response.ok) {
             throw new Error(data.message || 'Ocurrió un error.');
         }
-
+sessionStorage.setItem('emailForVerification', emailInput.value);
         const registerModal = document.getElementById('register-modal');
         const otpModal = document.getElementById('email-verification-modal');
 
         if (registerModal) closeModal(registerModal);
         
         if (otpModal) {
-            otpModal.querySelector('#email-for-verification').value = emailInput.value;
-            otpModal.querySelector('#email-display').textContent = emailInput.value;
+            
+            otpModal.querySelector('#email-display').textContent = emailForVerification;
             openModal(otpModal);
         }
 
@@ -107,7 +107,8 @@ async function handleRegisterSubmit(event) {
 async function handleOtpSubmit(event) {
     event.preventDefault();
     const form = event.target;
-    const email = form.querySelector('#email-for-verification').value;
+const email = sessionStorage.getItem('emailForVerification'); // Leemos desde nuestra variable segura, no desde el form
+    // --- FIN DE LA LÓGICA CORREGIDA ---
     const otp = form.querySelector('#otp-code-input').value;
     const errorMessageEl = form.querySelector('#email-verification-error');
     const submitButton = form.querySelector('button[type="submit"]');
@@ -144,6 +145,7 @@ async function handleOtpSubmit(event) {
     } catch (error) {
         errorMessageEl.textContent = error.message;
     } finally {
+        sessionStorage.removeItem('emailForVerification'); // <--- AÑADE ESTA LÍNEA
         submitButton.disabled = false;
         submitButton.innerHTML = 'Confirmar y Activar Cuenta';
     }
@@ -363,6 +365,13 @@ export function initAuth() {
     const currentUser = getUser();
     if (currentUser) {
         updateLoginState(currentUser);
+    }
+        const otpInput = document.getElementById('otp-code-input');
+    if (otpInput) {
+        otpInput.addEventListener('input', () => {
+            // Reemplaza cualquier cosa que no sea un número con una cadena vacía
+            otpInput.value = otpInput.value.replace(/[^0-9]/g, '');
+        });
     }
 
     document.body.addEventListener('submit', (event) => {
