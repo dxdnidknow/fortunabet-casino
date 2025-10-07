@@ -1,17 +1,14 @@
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
 import { openModal, closeModal } from './modal.js';
-let emailForVerification = '';
+
 function getToken() {
     return localStorage.getItem('fortunaToken');
 }
 
 function getUser() {
     const userString = localStorage.getItem('fortunaUser');
-    if (!userString) {
-        return null;
-    }
-    
+    if (!userString) return null;
     try {
         return JSON.parse(userString);
     } catch (error) {
@@ -27,8 +24,7 @@ function validatePasswordStrength(password) {
     if (regex.test(password)) {
         return { isValid: true, message: '' };
     } else {
-        let message = 'La contraseña debe tener al menos 8 caracteres, e incluir una mayúscula, una minúscula, un número y un carácter especial.';
-        return { isValid: false, message: message };
+        return { isValid: false, message: 'La contraseña debe tener al menos 8 caracteres, e incluir una mayúscula, una minúscula, un número y un carácter especial.' };
     }
 }
 
@@ -54,13 +50,11 @@ async function handleRegisterSubmit(event) {
     const submitButton = form.querySelector('button[type="submit"]');
 
     errorMessageEl.textContent = '';
-
     const passwordValidation = validatePasswordStrength(passwordInput.value);
     if (!passwordValidation.isValid) {
         errorMessageEl.textContent = passwordValidation.message;
         return;
     }
-
     if (passwordInput.value !== confirmPasswordInput.value) {
         errorMessageEl.textContent = 'Las contraseñas no coinciden.';
         return;
@@ -79,23 +73,18 @@ async function handleRegisterSubmit(event) {
                 password: passwordInput.value
             })
         });
-
         const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'Ocurrió un error.');
-        }
-sessionStorage.setItem('emailForVerification', emailInput.value);
+        if (!response.ok) throw new Error(data.message || 'Ocurrió un error.');
+
+        sessionStorage.setItem('emailForVerification', emailInput.value);
+
         const registerModal = document.getElementById('register-modal');
         const otpModal = document.getElementById('email-verification-modal');
-
         if (registerModal) closeModal(registerModal);
-        
         if (otpModal) {
-            
-            otpModal.querySelector('#email-display').textContent = emailForVerification;
+            otpModal.querySelector('#email-display').textContent = emailInput.value;
             openModal(otpModal);
         }
-
     } catch (error) {
         errorMessageEl.textContent = error.message;
     } finally {
@@ -107,9 +96,8 @@ sessionStorage.setItem('emailForVerification', emailInput.value);
 async function handleOtpSubmit(event) {
     event.preventDefault();
     const form = event.target;
-const email = sessionStorage.getItem('emailForVerification'); // Leemos desde nuestra variable segura, no desde el form
-    // --- FIN DE LA LÓGICA CORREGIDA ---
-    const otp = form.querySelector('#otp-code-input').value;
+    const email = sessionStorage.getItem('emailForVerification');
+    const otp = form.querySelector('#email-otp-input').value;
     const errorMessageEl = form.querySelector('#email-verification-error');
     const submitButton = form.querySelector('button[type="submit"]');
 
@@ -123,29 +111,28 @@ const email = sessionStorage.getItem('emailForVerification'); // Leemos desde nu
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, otp })
         });
-
         const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'Error al verificar.');
+        if (!response.ok) throw new Error(data.message || 'Error al verificar.');
+
+        if (!data.token || !data.user) {
+            throw new Error('La respuesta del servidor no incluyó los datos de sesión.');
         }
+
+        localStorage.setItem('fortunaToken', data.token);
+        localStorage.setItem('fortunaUser', JSON.stringify(data.user));
 
         const otpModal = document.getElementById('email-verification-modal');
-        const registerModal = document.getElementById('register-modal');
-        
-        if (otpModal) closeModal(otpModal);
-
-        if (registerModal) {
-            const formContainer = registerModal.querySelector('#register-form-container');
-            const successMessage = registerModal.querySelector('#success-message');
-            if (formContainer) formContainer.classList.add('hidden');
-            if (successMessage) successMessage.classList.remove('hidden');
-            openModal(registerModal);
+        if (otpModal) {
+            closeModal(otpModal);
         }
 
+        updateLoginState(data.user);
+        showToast(`¡Bienvenido a FortunaBet, ${data.user.username}!`);
+        
     } catch (error) {
         errorMessageEl.textContent = error.message;
     } finally {
-        sessionStorage.removeItem('emailForVerification'); // <--- AÑADE ESTA LÍNEA
+        sessionStorage.removeItem('emailForVerification');
         submitButton.disabled = false;
         submitButton.innerHTML = 'Confirmar y Activar Cuenta';
     }
@@ -154,7 +141,7 @@ const email = sessionStorage.getItem('emailForVerification'); // Leemos desde nu
 async function handleResendOtp(event) {
     event.preventDefault();
     const link = event.target;
-    const email = document.getElementById('email-for-verification').value;
+    const email = sessionStorage.getItem('emailForVerification'); // Leer desde sessionStorage
 
     if (!email || link.dataset.disabled === 'true') {
         return;
@@ -211,22 +198,14 @@ async function handleLoginSubmit(event) {
         });
 
         const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Error en el inicio de sesión.');
-        }
-
-        if (!data.token || !data.user) {
-            throw new Error('Respuesta del servidor incompleta. Inténtalo de nuevo.');
-        }
+        if (!response.ok) throw new Error(data.message || 'Error en el inicio de sesión.');
+        if (!data.token || !data.user) throw new Error('Respuesta del servidor incompleta. Inténtalo de nuevo.');
 
         localStorage.setItem('fortunaToken', data.token);
         localStorage.setItem('fortunaUser', JSON.stringify(data.user));
 
         const loginModal = document.getElementById('login-modal');
-        if (loginModal) {
-            closeModal(loginModal);
-        }
+        if (loginModal) closeModal(loginModal);
 
         updateLoginState(data.user);
         showToast(`¡Hola de nuevo, ${data.user.username}!`);
@@ -257,15 +236,10 @@ async function handleForgotPasswordSubmit(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: emailInput.value })
         });
-        
         const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'Ocurrió un error.');
-        }
-
+        if (!response.ok) throw new Error(data.message || 'Ocurrió un error.');
         formContainer.classList.add('hidden');
         successMessage.classList.remove('hidden');
-
     } catch (error) {
         errorMessageEl.textContent = error.message;
         submitButton.disabled = false;
@@ -282,13 +256,11 @@ async function handleResetPasswordSubmit(event) {
     const submitButton = form.querySelector('button[type="submit"]');
 
     errorMessageEl.textContent = '';
-
     const passwordValidation = validatePasswordStrength(passwordInput.value);
     if (!passwordValidation.isValid) {
         errorMessageEl.textContent = passwordValidation.message;
         return;
     }
-
     if (passwordInput.value !== confirmPasswordInput.value) {
         errorMessageEl.textContent = 'Las contraseñas no coinciden.';
         return;
@@ -303,15 +275,10 @@ async function handleResetPasswordSubmit(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id, token, password: passwordInput.value })
         });
-
         const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'Error al actualizar la contraseña.');
-        }
-
+        if (!response.ok) throw new Error(data.message || 'Error al actualizar la contraseña.');
         document.getElementById('reset-form-container').classList.add('hidden');
         document.getElementById('reset-success-message').classList.remove('hidden');
-
     } catch (error) {
         errorMessageEl.textContent = error.message;
         submitButton.disabled = false;
@@ -321,12 +288,10 @@ async function handleResetPasswordSubmit(event) {
 function handleLogout() {
     localStorage.removeItem('fortunaToken');
     localStorage.removeItem('fortunaUser');
-    
     document.body.classList.remove('user-logged-in');
     document.querySelectorAll('.auth-buttons').forEach(el => el.classList.remove('hidden'));
     document.querySelectorAll('.user-info').forEach(el => el.classList.add('hidden'));
     showToast('Has cerrado sesión.');
-
     if (window.location.pathname.includes('mi-cuenta.html')) {
         window.location.href = 'index.html';
     }
@@ -334,30 +299,17 @@ function handleLogout() {
 
 export async function fetchWithAuth(url, options = {}) {
     const token = getToken();
-
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers,
-    };
-
+    const headers = { 'Content-Type': 'application/json', ...options.headers };
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
-
-    const response = await fetch(url, {
-        ...options,
-        headers,
-    });
-
+    const response = await fetch(url, { ...options, headers });
     if (response.status === 401 || response.status === 403) {
         handleLogout();
         const loginModal = document.getElementById('login-modal');
-        if (loginModal) {
-            openModal(loginModal);
-        }
+        if (loginModal) openModal(loginModal);
         throw new Error('Sesión expirada. Por favor, inicia sesión de nuevo.');
     }
-
     return response;
 }
 
@@ -366,11 +318,18 @@ export function initAuth() {
     if (currentUser) {
         updateLoginState(currentUser);
     }
-        const otpInput = document.getElementById('otp-code-input');
-    if (otpInput) {
-        otpInput.addEventListener('input', () => {
-            // Reemplaza cualquier cosa que no sea un número con una cadena vacía
-            otpInput.value = otpInput.value.replace(/[^0-9]/g, '');
+    
+    const emailOtpInput = document.getElementById('email-otp-input');
+    if (emailOtpInput) {
+        emailOtpInput.addEventListener('input', () => {
+            emailOtpInput.value = emailOtpInput.value.replace(/[^0-9]/g, '');
+        });
+    }
+    
+    const phoneOtpInput = document.getElementById('phone-otp-input');
+    if (phoneOtpInput) {
+        phoneOtpInput.addEventListener('input', () => {
+            phoneOtpInput.value = phoneOtpInput.value.replace(/[^0-9]/g, '');
         });
     }
 
@@ -383,20 +342,16 @@ export function initAuth() {
     });
 
     document.body.addEventListener('click', (event) => {
-        const forgotPasswordLink = event.target.closest('.forgot-password');
-        if (forgotPasswordLink) {
+        if (event.target.closest('.forgot-password')) {
             event.preventDefault();
             const loginModal = document.getElementById('login-modal');
             const forgotModal = document.getElementById('forgot-password-modal');
-            
             if (loginModal) closeModal(loginModal); 
             if (forgotModal) openModal(forgotModal);
         }
-
         if (event.target.id === 'logout-btn' || event.target.id === 'logout-btn-mobile') {
             handleLogout();
         }
-
         const toggleIcon = event.target.closest('.toggle-password');
         if (toggleIcon) {
             const wrapper = toggleIcon.closest('.input-wrapper');
@@ -410,9 +365,7 @@ export function initAuth() {
                 }
             }
         }
-
-        const resendLink = event.target.closest('#resend-otp-link');
-        if (resendLink) {
+        if (event.target.closest('#resend-otp-link')) {
             handleResendOtp(event);
         }
     });

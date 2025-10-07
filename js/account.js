@@ -1,7 +1,6 @@
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
 import { openModal, closeModal } from './modal.js';
-// --- NUEVO: Importamos la función segura para hacer llamadas a la API ---
 import { fetchWithAuth } from './auth.js';
 
 // =======================================================================
@@ -43,8 +42,7 @@ function validatePasswordStrength(password) {
     if (regex.test(password)) {
         return { isValid: true, message: '' };
     } else {
-        let message = 'La contraseña debe tener al menos 8 caracteres, e incluir una mayúscula, una minúscula, un número y un carácter especial.';
-        return { isValid: false, message: message };
+        return { isValid: false, message: 'La contraseña debe tener al menos 8 caracteres, e incluir una mayúscula, una minúscula, un número y un carácter especial.' };
     }
 }
 
@@ -52,7 +50,6 @@ function validatePasswordStrength(password) {
 //  COMUNICACIÓN SEGURA CON EL BACKEND
 // =======================================================================
 
-// --- MODIFICADO: Ahora usa `fetchWithAuth` y ya no necesita enviar el email. ---
 async function fetchUserData() {
     const response = await fetchWithAuth(`${API_BASE_URL}/user-data`);
     const data = await response.json();
@@ -66,7 +63,6 @@ async function fetchUserData() {
 //  LÓGICA PARA RENDERIZAR Y MANEJAR COMPONENTES DE LA PÁGINA
 // =======================================================================
 
-// --- MODIFICADO: Usa `fetchWithAuth` y ya no envía el email. ---
 async function handleUsernameChange(event) {
     event.preventDefault();
     const form = event.target;
@@ -162,7 +158,7 @@ function renderPhoneVerificationStatus(isVerified, phone) {
     } else {
         statusContainer.innerHTML = `
             <span class="status-icon unverified"><i class="fa-solid fa-exclamation-circle"></i> No verificado</span>
-            <button class="btn btn-secondary" id="verify-phone-btn" style="padding: 8px 12px; font-size: 0.8rem;">Verificar</button>
+            <button type="button" class="btn btn-secondary" id="verify-phone-btn" style="padding: 8px 12px; font-size: 0.8rem;">Verificar</button>
         `;
     }
 }
@@ -181,8 +177,6 @@ function populatePersonalInfoForm(personalInfo = {}) {
     renderPhoneVerificationStatus(personalInfo.phoneVerified, personalInfo.phone);
 }
 
-// --- LÓGICA DE VERIFICACIÓN DE TELÉFONO (MODIFICADA) ---
-// --- MODIFICADO: Usa `fetchWithAuth` y el body está vacío. ---
 async function requestPhoneVerification() {
     const btn = document.getElementById('verify-phone-btn');
     if (btn) btn.disabled = true;
@@ -191,11 +185,10 @@ async function requestPhoneVerification() {
     try {
         const response = await fetchWithAuth(`${API_BASE_URL}/request-phone-verification`, {
             method: 'POST',
-            body: JSON.stringify({}) // El body va vacío, el token identifica al usuario
+            body: JSON.stringify({})
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
-
         showToast(data.message, 'success');
         openModal(document.getElementById('phone-verification-modal'));
     } catch (error) {
@@ -205,11 +198,10 @@ async function requestPhoneVerification() {
     }
 }
 
-// --- MODIFICADO: Usa `fetchWithAuth` y no envía el email. ---
 async function handlePhoneVerificationSubmit(event) {
     event.preventDefault();
     const form = event.target;
-    const codeInput = form.querySelector('#verification-code-input');
+    const codeInput = form.querySelector('#phone-otp-input'); // <-- CORREGIDO
     const errorEl = form.querySelector('#phone-verification-error');
     const submitBtn = form.querySelector('button[type="submit"]');
 
@@ -219,11 +211,10 @@ async function handlePhoneVerificationSubmit(event) {
     try {
         const response = await fetchWithAuth(`${API_BASE_URL}/verify-phone-code`, {
             method: 'POST',
-            body: JSON.stringify({ code: codeInput.value }) // Solo enviamos el código
+            body: JSON.stringify({ code: codeInput.value })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
-
         showToast(data.message, 'success');
         closeModal(document.getElementById('phone-verification-modal'));
         form.reset();
@@ -283,18 +274,12 @@ function handle2FASetup() {
 export function renderBetHistory() {
     const historyLists = document.querySelectorAll('.history-list');
     if (historyLists.length === 0) return;
-
-    // --- CORRECCIÓN: Obtenemos el objeto de usuario y luego extraemos el username ---
     const userString = localStorage.getItem('fortunaUser');
     if (!userString) return;
     
-    // 1. Convertimos la cadena de vuelta a un objeto
     const currentUser = JSON.parse(userString); 
-    // 2. Extraemos solo el nombre de usuario
     const username = currentUser.username; 
-
     const allHistories = JSON.parse(localStorage.getItem('fortunaAllHistories')) || {};
-    // 3. Usamos el nombre de usuario como clave para buscar el historial
     const betHistory = allHistories[username] || []; 
     
     historyLists.forEach(list => {
@@ -324,7 +309,6 @@ export function renderBetHistory() {
 function renderBalance(balance) {
     const balanceEl = document.querySelector('.account-card .balance');
     if (balanceEl) {
-        // Usamos toLocaleString para formatear el número con separadores
         const formattedBalance = (balance || 0).toLocaleString('es-ES', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
@@ -355,7 +339,7 @@ export async function initAccountDashboard() {
 
     try {
         const userData = await fetchUserData();     
-        renderBalance(userData.balance); // Llama a la nueva función para el saldo
+        renderBalance(userData.balance);
         if (userData.personalInfo) {
             populatePersonalInfoForm(userData.personalInfo);
         }
@@ -382,20 +366,17 @@ export async function initAccountDashboard() {
         addMethodBtn.addEventListener('click', () => payoutForm.classList.toggle('hidden'));
     }
 
-    // --- MODIFICADO: Listener para el formulario de información personal ---
     if (personalInfoForm) {
         personalInfoForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const submitButton = personalInfoForm.querySelector('button[type="submit"]');
             submitButton.disabled = true;
-
             const birthDateValue = document.getElementById('birth-date').value;
             if (birthDateValue && !isOver18(birthDateValue)) {
                 showToast('Debes ser mayor de 18 años.', 'error');
                 submitButton.disabled = false;
                 return;
             }
-
             const phoneNumberRaw = document.getElementById('phone-number').value.replace(/\D/g, '');
             const formData = {
                 firstName: document.getElementById('first-name').value,
@@ -423,7 +404,6 @@ export async function initAccountDashboard() {
         });
     }
     
-    // --- MODIFICADO: Listener para el formulario de cambio de contraseña ---
     if (passwordChangeForm) {
         let isCodeStep = false;
         const submitButton = passwordChangeForm.querySelector('button[type="submit"]');
@@ -432,35 +412,24 @@ export async function initAccountDashboard() {
         passwordChangeForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             submitButton.disabled = true;
-
             const currentPassword = document.getElementById('current-password').value;
             const newPassword = document.getElementById('new-password').value;
             const confirmNewPassword = document.getElementById('confirm-new-password').value;
 
             if (!isCodeStep) {
                 const passwordValidation = validatePasswordStrength(newPassword);
-                if (!passwordValidation.isValid) {
-                    showToast(passwordValidation.message, 'error'); submitButton.disabled = false; return;
-                }
-                if (newPassword !== confirmNewPassword) {
-                    showToast('Las nuevas contraseñas no coinciden.', 'error'); submitButton.disabled = false; return;
-                }
-                 if (currentPassword === newPassword) {
-                    showToast('La nueva contraseña no puede ser la misma que la actual.', 'error'); submitButton.disabled = false; return;
-                }
+                if (!passwordValidation.isValid) { showToast(passwordValidation.message, 'error'); submitButton.disabled = false; return; }
+                if (newPassword !== confirmNewPassword) { showToast('Las nuevas contraseñas no coinciden.', 'error'); submitButton.disabled = false; return; }
+                if (currentPassword === newPassword) { showToast('La nueva contraseña no puede ser la misma que la actual.', 'error'); submitButton.disabled = false; return; }
 
                 try {
                     await fetchWithAuth(`${API_BASE_URL}/validate-current-password`, {
                         method: 'POST',
                         body: JSON.stringify({ currentPassword })
                     });
-                    
-                    const codeResponse = await fetchWithAuth(`${API_BASE_URL}/request-password-change-code`, {
-                        method: 'POST', body: JSON.stringify({})
-                    });
+                    const codeResponse = await fetchWithAuth(`${API_BASE_URL}/request-password-change-code`, { method: 'POST', body: JSON.stringify({}) });
                     const codeData = await codeResponse.json();
                     if (!codeResponse.ok) throw new Error(codeData.message);
-
                     showToast(codeData.message, 'success');
                     confirmationGroup.classList.remove('hidden');
                     isCodeStep = true;
@@ -478,7 +447,6 @@ export async function initAccountDashboard() {
                     });
                     const data = await response.json();
                     if (!response.ok) throw new Error(data.message);
-
                     showToast(data.message, 'success');
                     passwordChangeForm.reset();
                     confirmationGroup.classList.add('hidden');

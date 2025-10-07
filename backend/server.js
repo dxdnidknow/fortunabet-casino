@@ -189,33 +189,25 @@ app.post('/api/register', authLimiter, async (req, res) => {
     }
 });
 
+// EN server.js, REEMPLAZA el endpoint /api/verify-email completo
+
 app.post('/api/verify-email', authLimiter, async (req, res) => {
     try {
         const { email, otp } = req.body;
-        if (!otp) {
-            return res.status(400).json({ message: 'El código de verificación es obligatorio.' });
-        }
-        if (!email) {
-            return res.status(400).json({ message: 'No se pudo identificar el correo. Por favor, intenta registrarte de nuevo.' });
-        }
+        // ... (tus validaciones de email y otp siguen aquí)
+        if (!otp) return res.status(400).json({ message: 'El código de verificación es obligatorio.' });
+        if (!email) return res.status(400).json({ message: 'No se pudo identificar el correo.' });
 
         const unverifiedUsersCollection = db.collection('unverified_users');
         const unverifiedUser = await unverifiedUsersCollection.findOne({ email: email.toLowerCase() });
 
-        if (!unverifiedUser) {
-            return res.status(404).json({ message: 'No se encontró una solicitud de registro para este correo.' });
-        }
+        if (!unverifiedUser) return res.status(404).json({ message: 'No se encontró una solicitud de registro.' });
+        if (unverifiedUser.otp !== otp) return res.status(400).json({ message: 'El código de verificación es incorrecto.' });
+        if (new Date() > unverifiedUser.otpExpires) return res.status(400).json({ message: 'El código de verificación ha expirado.' });
 
-        if (unverifiedUser.otp !== otp) {
-            return res.status(400).json({ message: 'El código de verificación es incorrecto.' });
-        }
-        
-        if (new Date() > unverifiedUser.otpExpires) {
-            return res.status(400).json({ message: 'El código de verificación ha expirado. Por favor, regístrate de nuevo.' });
-        }
-
+        // Mueve el usuario a la colección principal
         const usersCollection = db.collection('users');
-        await usersCollection.insertOne({
+        const newUserResult = await usersCollection.insertOne({
             username: unverifiedUser.username,
             email: unverifiedUser.email,
             password: unverifiedUser.password,
@@ -228,7 +220,24 @@ app.post('/api/verify-email', authLimiter, async (req, res) => {
 
         await unverifiedUsersCollection.deleteOne({ email: email.toLowerCase() });
 
-        res.status(201).json({ message: '¡Cuenta verificada y creada con éxito!' });
+        // --- INICIO DE LA LÓGICA DE AUTO-LOGIN ---
+        const payload = {
+            id: newUserResult.insertedId, // El ID del usuario recién creado
+            username: unverifiedUser.username,
+            email: unverifiedUser.email
+        };
+
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
+
+        res.status(201).json({ 
+            message: '¡Cuenta verificada y creada con éxito!',
+            token: token,
+            user: {
+                username: unverifiedUser.username,
+                email: unverifiedUser.email
+            }
+        });
+        // --- FIN DE LA LÓGICA DE AUTO-LOGIN ---
 
     } catch (error) {
         console.error('[ERROR] en la verificación de email:', error);
