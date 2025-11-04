@@ -1,8 +1,9 @@
-// Archivo: js/payments.js (VERSIÓN FINAL COMPLETA Y MODIFICADA)
+// Archivo: js/payments.js (MODIFICADO Y COMPLETO)
 
 import { showToast } from './ui.js';
-import { fetchWithAuth } from './auth.js'; // <-- AÑADIDO
-import { API_BASE_URL } from './config.js'; // <-- AÑADIDO
+import { fetchWithAuth } from './auth.js'; 
+import { API_BASE_URL } from './config.js'; 
+import { closeModal } from './modal.js'; // <-- Importar closeModal
 
 let currentMethod = null;
 
@@ -27,32 +28,21 @@ function showInstructions(method) {
 export function initPaymentModals() {
     const depositModal = document.getElementById('deposit-modal');
     
+    // (Esta función ahora solo maneja el modal de DEPÓSITO)
+    
     if (!depositModal) return;
 
-    // (El resto de tus listeners de botones de modal están perfectos)
+    // Listener para los botones de depósito en Mi Cuenta
     document.body.addEventListener('click', (e) => {
         const target = e.target;
         
-        if (target.matches('.btn.btn-primary') && target.textContent === 'Depositar') {
-            document.getElementById('deposit-modal')?.classList.add('active');
-            document.body.classList.add('modal-open');
-        }
-        if (target.matches('.btn.btn-secondary') && target.textContent === 'Retirar') {
-            document.getElementById('withdraw-modal')?.classList.add('active');
-            document.body.classList.add('modal-open');
-        }
-
-        const editMethodLink = target.closest('.edit-method-link');
-        if (editMethodLink) {
+        // Listener para abrir el modal de depósito
+        if (target.matches('[data-modal="deposit-modal"]')) {
             e.preventDefault();
-            
-            document.getElementById('withdraw-modal')?.classList.remove('active');
-            document.body.classList.remove('modal-open');
-
-            if (window.location.pathname.includes('mi-cuenta.html')) {
-                document.querySelector('.account-menu-link[data-target="mis-datos"]')?.click();
-            } else {
-                window.location.href = 'mi-cuenta.html#mis-datos';
+            const modal = document.getElementById('deposit-modal');
+            if(modal) {
+                modal.classList.add('active');
+                document.body.classList.add('modal-open');
             }
         }
     });
@@ -69,16 +59,16 @@ export function initPaymentModals() {
 
         const copyBtn = e.target.closest('.copy-btn');
         if (copyBtn) {
-            const address = copyBtn.previousElementSibling.textContent;
-            navigator.clipboard.writeText(address).then(() => {
-                showToast('¡Dirección copiada!');
-            });
+            // Busca el elemento de texto ANTES del botón
+            const textToCopy = copyBtn.closest('.wallet-address').querySelector('span');
+            if (textToCopy) {
+                navigator.clipboard.writeText(textToCopy.textContent).then(() => {
+                    showToast('¡Dirección copiada!');
+                });
+            }
         }
     });
 
-    // ==========================================================
-    //  INICIO DE LA MODIFICACIÓN: Reportar Depósito
-    // ==========================================================
     const reportForm = document.getElementById('report-payment-form');
     reportForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -105,7 +95,8 @@ export function initPaymentModals() {
         submitButton.innerHTML = '<span class="spinner-sm"></span> Reportando...';
 
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/request-deposit`, {
+            // Esta ruta debe estar en routes/user.js
+            const response = await fetchWithAuth(`${API_BASE_URL}/request-deposit`, { 
                 method: 'POST',
                 body: JSON.stringify({
                     amount: amount,
@@ -119,8 +110,7 @@ export function initPaymentModals() {
 
             showToast(data.message, 'success');
             
-            depositModal.classList.remove('active');
-            document.body.classList.remove('modal-open');
+            closeModal(depositModal); // Usar la función importada
             reportForm.reset();
             showStep(1);
 
@@ -131,42 +121,75 @@ export function initPaymentModals() {
             submitButton.innerHTML = originalBtnText;
         }
     });
+    
     // ==========================================================
-    //  FIN DE LA MODIFICACIÓN
-    // ==========================================================
-
-    // ==========================================================
-    //  INICIO DE LA MODIFICACIÓN: Solicitar Retiro
+    //  LÓGICA DE RETIRO (MOVIDA Y CORREGIDA)
     // ==========================================================
     const withdrawForm = document.getElementById('withdraw-form');
     const withdrawModal = document.getElementById('withdraw-modal');
+
+    // Listener para abrir el modal de retiro
+    document.body.addEventListener('click', (e) => {
+        if (e.target.matches('[data-modal="withdraw-modal"]')) {
+            e.preventDefault();
+            const modal = document.getElementById('withdraw-modal');
+            if(modal) {
+                modal.classList.add('active');
+                document.body.classList.add('modal-open');
+                // IMPORTANTE: Recargamos los métodos de pago cada vez que se abre el modal
+                if (typeof loadPayoutMethods === 'function') {
+                    loadPayoutMethods(); 
+                }
+            }
+        }
+    });
+    
     withdrawForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const amountInput = withdrawForm.querySelector('input[name="withdraw-amount"]');
-        // const methodSelect = withdrawForm.querySelector('select[name="withdraw-method"]'); // (Deberás añadir esto a tu HTML)
+        
+        // ==========================================================
+        //  INICIO DE LA MODIFICACIÓN (Leer el Select dinámico)
+        // ==========================================================
+        const methodSelect = withdrawForm.querySelector('select[name="withdraw-method"]');
+        // ==========================================================
+        //  FIN DE LA MODIFICACIÓN
+        // ==========================================================
+        
         const submitButton = withdrawForm.querySelector('button[type="submit"]');
         
         const amount = parseFloat(amountInput.value);
-        // const methodId = methodSelect.value; // (El ID del método de pago guardado)
+        
+        // ==========================================================
+        //  INICIO DE LA MODIFICACIÓN (Validar el Select)
+        // ==========================================================
+        const methodId = methodSelect ? methodSelect.value : null;
 
         if (!amount || amount <= 0) {
             showToast('Ingresa un monto válido.', 'error');
             return;
         }
         
-        // (Deberás añadir una validación para 'methodId' aquí)
+        if (!methodId) {
+            showToast('Por favor, selecciona un método de retiro. Si no tienes uno, añádelo en "Mi Cuenta".', 'error');
+            return;
+        }
+        // ==========================================================
+        //  FIN DE LA MODIFICACIÓN
+        // ==========================================================
 
         const originalBtnText = submitButton.innerHTML;
         submitButton.disabled = true;
         submitButton.innerHTML = '<span class="spinner-sm"></span> Procesando...';
 
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/request-withdrawal`, {
+            // Esta ruta debe estar en routes/user.js
+            const response = await fetchWithAuth(`${API_BASE_URL}/request-withdrawal`, { 
                 method: 'POST',
                 body: JSON.stringify({
                     amount: amount,
-                    methodId: "pago-movil-id-ejemplo" // <-- Reemplaza esto con el valor real
+                    methodId: methodId // <-- ¡YA ES DINÁMICO!
                 })
             });
             
@@ -176,8 +199,7 @@ export function initPaymentModals() {
             showToast(data.message, 'success');
 
             if(withdrawModal){
-                withdrawModal.classList.remove('active');
-                document.body.classList.remove('modal-open');
+                closeModal(withdrawModal); // Usar la función importada
             }
             withdrawForm.reset();
 
@@ -188,7 +210,4 @@ export function initPaymentModals() {
             submitButton.innerHTML = originalBtnText;
         }
     });
-    // ==========================================================
-    //  FIN DE LA MODIFICACIÓN
-    // ==========================================================
 }

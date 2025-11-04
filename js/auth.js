@@ -1,7 +1,14 @@
+// Archivo: js/auth.js (MODIFICADO Y COMPLETO)
+
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
 import { openModal, closeModal } from './modal.js';
 
+// --- Constantes y Estado ---
+const RESEND_COOLDOWN_SECONDS = 60;
+let isResendCoolingDown = false;
+
+// --- Funciones de Sesión (Sin cambios) ---
 function getToken() {
     return localStorage.getItem('fortunaToken');
 }
@@ -34,10 +41,28 @@ function updateLoginState(user) {
         return;
     }
     document.body.classList.add('user-logged-in');
-    document.querySelectorAll('.auth-buttons').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.user-info').forEach(el => el.classList.remove('hidden'));
-    document.querySelectorAll('.welcome-message').forEach(el => el.textContent = `Hola, ${user.username}`);
+    
+    // Oculta/muestra los botones de login/logout en el header (de components/header.html)
+    const authButtons = document.querySelector('.auth-wrapper .auth-buttons');
+    const userInfo = document.querySelector('.auth-wrapper .user-info');
+    if (authButtons) authButtons.classList.add('hidden');
+    if (userInfo) {
+        userInfo.classList.remove('hidden');
+        const welcomeMsg = userInfo.querySelector('.welcome-message');
+        if (welcomeMsg) welcomeMsg.textContent = `Hola, ${user.username}`;
+    }
+
+    // Oculta/muestra los botones en el menú móvil (de components/mobile-menu.html)
+    const mobileAuthButtons = document.querySelector('.mobile-menu-auth .auth-buttons');
+    const mobileUserInfo = document.querySelector('.mobile-menu-auth .user-info');
+    if (mobileAuthButtons) mobileAuthButtons.style.display = 'none';
+    if (mobileUserInfo) {
+        mobileUserInfo.style.display = 'block';
+        const mobileWelcomeMsg = mobileUserInfo.querySelector('.welcome-message');
+        if (mobileWelcomeMsg) mobileWelcomeMsg.textContent = `Hola, ${user.username}`;
+    }
 }
+
 
 async function handleRegisterSubmit(event) {
     event.preventDefault();
@@ -64,7 +89,7 @@ async function handleRegisterSubmit(event) {
     submitButton.innerHTML = '<span class="spinner-sm"></span>';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/register`, {
+        const response = await fetch(`${API_BASE_URL}/register`, { // Asumiendo que esta ruta está en routes/auth.js
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -76,6 +101,7 @@ async function handleRegisterSubmit(event) {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Ocurrió un error.');
 
+        // Guardamos el email para usarlo en la siguiente pantalla
         sessionStorage.setItem('emailForVerification', emailInput.value);
 
         const registerModal = document.getElementById('register-modal');
@@ -101,25 +127,53 @@ async function handleOtpSubmit(event) {
     const errorMessageEl = form.querySelector('#email-verification-error');
     const submitButton = form.querySelector('button[type="submit"]');
 
+    if (!email) {
+        errorMessageEl.textContent = 'No se pudo identificar el correo. Por favor, intenta registrarte de nuevo.';
+        return;
+    }
+    
     errorMessageEl.textContent = '';
     submitButton.disabled = true;
     submitButton.innerHTML = '<span class="spinner-sm"></span>';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/verify-email`, {
+        const response = await fetch(`${API_BASE_URL}/verify-email`, { // Esta ruta la modificamos en server.js
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, otp })
         });
+        
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Error al verificar.');
+        
+        // ==========================================================
+        //  INICIO DE LA MODIFICACIÓN (Manejo de success: false)
+        // ==========================================================
+        
+        // Tu backend ahora envía 200 OK con { success: false } si el código es malo.
+        // Ya no usamos !response.ok, sino que revisamos el JSON.
+        if (data.success === false) {
+            throw new Error(data.message || 'Error al verificar.');
+        }
+        
+        // ==========================================================
+        //  FIN DE LA MODIFICACIÓN
+        // ==========================================================
 
         if (!data.token || !data.user) {
             throw new Error('La respuesta del servidor no incluyó los datos de sesión.');
         }
 
+        // --- ÉXITO ---
         localStorage.setItem('fortunaToken', data.token);
         localStorage.setItem('fortunaUser', JSON.stringify(data.user));
+
+        // ==========================================================
+        //  INICIO DE LA MODIFICACIÓN (Limpiar email SOLO en éxito)
+        // ==========================================================
+        sessionStorage.removeItem('emailForVerification');
+        // ==========================================================
+        //  FIN DE LA MODIFICACIÓN
+        // ==========================================================
 
         const otpModal = document.getElementById('email-verification-modal');
         if (otpModal) {
@@ -132,7 +186,6 @@ async function handleOtpSubmit(event) {
     } catch (error) {
         errorMessageEl.textContent = error.message;
     } finally {
-        sessionStorage.removeItem('emailForVerification');
         submitButton.disabled = false;
         submitButton.innerHTML = 'Confirmar y Activar Cuenta';
     }
@@ -140,39 +193,76 @@ async function handleOtpSubmit(event) {
 
 async function handleResendOtp(event) {
     event.preventDefault();
-    const link = event.target;
-    const email = sessionStorage.getItem('emailForVerification'); // Leer desde sessionStorage
+    const link = event.target.closest('#resend-otp-link');
+    const email = sessionStorage.getItem('emailForVerification');
 
-    if (!email || link.dataset.disabled === 'true') {
+    // ==========================================================
+    //  INICIO DE LA MODIFICACIÓN (Cooldown de 60 segundos)
+    // ==========================================================
+    
+    if (!email) {
+        showToast('No se pudo identificar el correo para reenviar.', 'error');
+        return;
+    }
+    
+    if (isResendCoolingDown || !link) {
         return;
     }
 
-    link.dataset.disabled = 'true';
-    link.style.opacity = '0.5';
-    link.style.cursor = 'not-allowed';
-    showToast('Reenviando código...');
+    // 1. Iniciar Cooldown Visual
+    isResendCoolingDown = true;
+    link.classList.add('disabled'); // Usa la clase CSS
+    
+    let timer = RESEND_COOLDOWN_SECONDS;
+    const initialText = link.textContent;
+    link.textContent = `Reenviar en ${timer}s`;
 
+    const interval = setInterval(() => {
+        timer--;
+        link.textContent = `Reenviar en ${timer}s`;
+        if (timer <= 0) {
+            clearInterval(interval);
+            link.textContent = initialText;
+            link.classList.remove('disabled');
+            isResendCoolingDown = false;
+        }
+    }, 1000);
+
+    // 2. Llamar a la API (que también tiene su propio limiter)
     try {
         const response = await fetch(`${API_BASE_URL}/resend-otp`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email })
         });
+        
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message);
+        
+        if (!response.ok) {
+            // Si la API falla (ej. 429 Too Many Requests), detenemos el timer
+            clearInterval(interval);
+            link.textContent = initialText;
+            link.classList.remove('disabled');
+            isResendCoolingDown = false;
+            throw new Error(data.message);
+        }
         
         showToast(data.message, 'success');
+        // Si la API tiene éxito, el timer sigue corriendo
 
     } catch (error) {
+        // Si el fetch falla, detenemos el timer
+        clearInterval(interval);
+        link.textContent = initialText;
+        link.classList.remove('disabled');
+        isResendCoolingDown = false;
         showToast(error.message, 'error');
-    } finally {
-        setTimeout(() => {
-            link.dataset.disabled = 'false';
-            link.style.opacity = '1';
-            link.style.cursor = 'pointer';
-        }, 30000);
     }
+    // ==========================================================
+    //  FIN DE LA MODIFICACIÓN
+    // ==========================================================
 }
+
 
 async function handleLoginSubmit(event) {
     event.preventDefault();
@@ -188,7 +278,7 @@ async function handleLoginSubmit(event) {
     submitButton.disabled = true;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/login`, {
+        const response = await fetch(`${API_BASE_URL}/login`, { // Asumiendo que esta ruta está en routes/auth.js
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -231,7 +321,7 @@ async function handleForgotPasswordSubmit(event) {
     submitButton.disabled = true;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/forgot-password`, {
+        const response = await fetch(`${API_BASE_URL}/forgot-password`, { // Asumiendo que esta ruta está en routes/auth.js
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: emailInput.value })
@@ -270,7 +360,7 @@ async function handleResetPasswordSubmit(event) {
     submitButton.disabled = true;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/reset-password`, {
+        const response = await fetch(`${API_BASE_URL}/reset-password`, { // Asumiendo que esta ruta está en routes/auth.js
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id, token, password: passwordInput.value })
@@ -288,9 +378,20 @@ async function handleResetPasswordSubmit(event) {
 function handleLogout() {
     localStorage.removeItem('fortunaToken');
     localStorage.removeItem('fortunaUser');
+    
+    // Revierte los cambios de updateLoginState
     document.body.classList.remove('user-logged-in');
-    document.querySelectorAll('.auth-buttons').forEach(el => el.classList.remove('hidden'));
-    document.querySelectorAll('.user-info').forEach(el => el.classList.add('hidden'));
+    
+    const authButtons = document.querySelector('.auth-wrapper .auth-buttons');
+    const userInfo = document.querySelector('.auth-wrapper .user-info');
+    if (authButtons) authButtons.classList.remove('hidden');
+    if (userInfo) userInfo.classList.add('hidden');
+
+    const mobileAuthButtons = document.querySelector('.mobile-menu-auth .auth-buttons');
+    const mobileUserInfo = document.querySelector('.mobile-menu-auth .user-info');
+    if (mobileAuthButtons) mobileAuthButtons.style.display = 'block';
+    if (mobileUserInfo) mobileUserInfo.style.display = 'none';
+
     showToast('Has cerrado sesión.');
     if (window.location.pathname.includes('mi-cuenta.html')) {
         window.location.href = 'index.html';
@@ -305,6 +406,7 @@ export async function fetchWithAuth(url, options = {}) {
     }
     const response = await fetch(url, { ...options, headers });
     if (response.status === 401 || response.status === 403) {
+        // Si la sesión expira o no es válida
         handleLogout();
         const loginModal = document.getElementById('login-modal');
         if (loginModal) openModal(loginModal);
@@ -317,6 +419,9 @@ export function initAuth() {
     const currentUser = getUser();
     if (currentUser) {
         updateLoginState(currentUser);
+    } else {
+        // Asegurarse de que el estado de 'log-out' esté aplicado
+        document.body.classList.remove('user-logged-in');
     }
     
     const emailOtpInput = document.getElementById('email-otp-input');

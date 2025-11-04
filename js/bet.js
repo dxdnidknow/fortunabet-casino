@@ -1,6 +1,9 @@
-// Archivo: js/bet.js (VERSIÓN FINAL COMPLETA - HISTORIAL POR USUARIO)
+// Archivo: js/bet.js (MODIFICADO Y COMPLETO)
 
 import { showToast } from './ui.js';
+import { fetchWithAuth } from './auth.js'; // <-- AÑADIDO
+import { API_BASE_URL } from './config.js'; // <-- AÑADIDO
+import { openModal } from './modal.js'; // <-- AÑADIDO
 
 let bets = JSON.parse(localStorage.getItem('fortunaBetCoupon')) || [];
 
@@ -60,9 +63,14 @@ function calculateWinnings() {
         return;
     }
     const stake = parseFloat(stakeInputEl.value) || 0;
+    
+    // Cálculo de Parley (multiplicador)
     const totalOdds = bets.reduce((acc, bet) => acc * bet.odds, 1);
     const potentialWinnings = stake * totalOdds;
+    
     winningsEl.textContent = `Bs. ${potentialWinnings.toFixed(2)}`;
+    
+    // Reiniciar la animación de resaltado
     winningsEl.classList.remove('highlight'); 
     void winningsEl.offsetWidth; 
     winningsEl.classList.add('highlight');
@@ -73,15 +81,23 @@ function saveBetsToLocalStorage() {
 }
 
 export function addBet(betInfo) {
-    const existingBetIndex = bets.findIndex(bet => bet.id === betInfo.id);
+    // Busca si ya existe una apuesta para el mismo evento (basado en el 'team' que es el ID del partido)
+    const existingBetIndex = bets.findIndex(bet => bet.team.split(' - ')[0] === betInfo.team.split(' - ')[0]);
     
-    if (existingBetIndex === -1) {
-        const newBet = { ...betInfo, id: Date.now() }; 
-        bets.push(newBet);
-        showToast('Apuesta añadida al cupón');
+    if (existingBetIndex !== -1) {
+        // Si la apuesta es exactamente la misma, la elimina
+        if (bets[existingBetIndex].id === betInfo.id) {
+            bets.splice(existingBetIndex, 1);
+            showToast('Selección eliminada del cupón');
+        } else {
+            // Si es una apuesta diferente para el mismo partido, la reemplaza
+            bets[existingBetIndex] = { ...betInfo, id: betInfo.id || Date.now() };
+            showToast('Selección actualizada en el cupón');
+        }
     } else {
-        bets.splice(existingBetIndex, 1);
-        showToast('Apuesta eliminada del cupón');
+        // Si es un partido nuevo, la añade
+        bets.push({ ...betInfo, id: betInfo.id || Date.now() });
+        showToast('Selección añadida al cupón');
     }
     
     saveBetsToLocalStorage(); 
@@ -90,7 +106,8 @@ export function addBet(betInfo) {
 }
 
 function removeBetById(betIdToRemove) {
-    bets = bets.filter(bet => bet.id !== parseInt(betIdToRemove));
+    // Asegurarse de comparar el ID correcto
+    bets = bets.filter(bet => bet.id.toString() !== betIdToRemove.toString());
     saveBetsToLocalStorage();
     showToast('Apuesta eliminada del cupón');
     renderBetSlip();
@@ -112,47 +129,63 @@ export function initBetSlip() {
         }
     });
 
-    document.getElementById('place-bet-btn')?.addEventListener('click', () => {
+    // ==========================================================
+    //  INICIO DE LA MODIFICACIÓN (Llamada a la API para apostar)
+    // ==========================================================
+    document.getElementById('place-bet-btn')?.addEventListener('click', async () => {
         const stakeInput = document.querySelector('.stake-input');
         const stake = parseFloat(stakeInput.value) || 0;
+        const placeBetBtn = document.getElementById('place-bet-btn');
 
         if (bets.length === 0) {
-            showToast('Añade al menos una selección al cupón.');
+            showToast('Añade al menos una selección al cupón.', 'error');
             return;
         }
         if (stake <= 0) {
-            showToast('Ingresa un monto válido para apostar.');
+            showToast('Ingresa un monto válido para apostar.', 'error');
             return;
         }
 
         const currentUser = localStorage.getItem('fortunaUser');
         if (!currentUser) {
-            showToast('Debes iniciar sesión para realizar una apuesta.');
+            showToast('Debes iniciar sesión para realizar una apuesta.', 'info');
+            openModal(document.getElementById('login-modal')); // Abre el modal de login
             return;
         }
 
-        const allHistories = JSON.parse(localStorage.getItem('fortunaAllHistories')) || {};
-        
-        if (!allHistories[currentUser]) {
-            allHistories[currentUser] = [];
+        const originalBtnText = placeBetBtn.innerHTML;
+        placeBetBtn.disabled = true;
+        placeBetBtn.innerHTML = '<span class="spinner-sm"></span> Apostando...';
+
+        try {
+            // Esta es la nueva ruta del backend que debes crear en routes/user.js
+            const response = await fetchWithAuth(`${API_BASE_URL}/place-bet`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    bets: bets, // El array de selecciones
+                    stake: stake // El monto
+                })
+            });
+            
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message);
+
+            showToast(data.message, 'success');
+
+            // Limpiar el cupón solo si la apuesta fue exitosa
+            bets = [];
+            saveBetsToLocalStorage();
+            renderBetSlip();
+            notify();
+
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
+            placeBetBtn.disabled = false;
+            placeBetBtn.innerHTML = originalBtnText;
         }
-
-        const newBetRecord = {
-            id: Date.now(),
-            bets: [...bets],
-            stake: stake,
-            status: ['Ganada', 'Perdida', 'Pendiente'][Math.floor(Math.random() * 3)]
-        };
-
-        allHistories[currentUser].push(newBetRecord);
-
-        localStorage.setItem('fortunaAllHistories', JSON.stringify(allHistories));
-        
-        showToast('¡Apuesta realizada con éxito!');
-
-        bets = [];
-        saveBetsToLocalStorage();
-        renderBetSlip();
-        notify();
     });
+    // ==========================================================
+    //  FIN DE LA MODIFICACIÓN
+    // ==========================================================
 }
