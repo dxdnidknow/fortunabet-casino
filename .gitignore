@@ -1,0 +1,17 @@
+# Dependencias de Node en la RAÍZ (si tienes un package.json aquí)
+/node_modules
+
+# Dependencias de Node en el BACKEND (si tu backend/ tiene su propio package.json)
+/backend/node_modules
+
+# Archivos de entorno y secretos (CRUCIAL)
+.env
+.DS_Store
+
+# Logs y Bases de datos (comúnmente ignorados)
+npm-debug.log*
+yarn-error.log*
+*.sqlite
+/data
+/log
+/temp

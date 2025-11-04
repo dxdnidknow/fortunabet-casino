@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+	<title>FortunaBet - Apuestas Deportivas</title>
+	<meta name="description" content="Las mejores cuotas para tus deportes favoritos. Apuesta en vivo y gana con FortunaBet.">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+	<link rel="stylesheet" href="css/style.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="page-backdrop" class="page-backdrop"></div>
+    <div id="page-wrapper">
+        <div id="header-placeholder"></div>
+
+        <section class="game-slider-container">
+            <div class="slider-wrapper">
+                <div class="slide" data-background="https://e-dunbarton.org.uk/wp-content/uploads/2023/04/Desain-tanpa-judul-2023-04-11T164321.403.jpg">
+                    <div class="slide-content">
+                        <h3>Tragamonedas Lucky, Grace & Charm</h3>
+                        <p>¡Dirige el barco hacia las mayores ganancias en Lucky, Grace & Charm.</p>
+                        <a href="#" class="btn btn-primary">Jugar Ahora</a>
+                    </div>
+                </div>
+                <div class="slide" data-background="https://media.betmgm.co.uk/images/games/fortune-roulette/fortune-roulette-tile.jpg">
+                    <div class="slide-content">
+                        <h3>Fortune Roulette</h3>
+                        <p>Apuesta a tu número de la suerte y mira girar la rueda.</p>
+                        <a href="#" class="btn btn-primary">Girar y Ganar</a>
+                    </div>
+                </div>
+                <div class="slide" data-background="https://media.leovegas.com/images/games/live-blackjack-15/live-blackjack-15-tile.jpg">
+                    <div class="slide-content">
+                        <h3>Blackjack k-15</h3>
+                        <p>Siente la emoción del casino en vivo. ¿Puedes vencer al crupier?</p>
+                        <a href="#" class="btn btn-primary">Ir a la Mesa</a>
+                    </div>
+                </div>
+            </div>
+            <div class="slider-nav">
+                <button class="slider-btn prev-btn" aria-label="Juego anterior">
+                    <span class="visually-hidden">Juego anterior</span>
+                    <span aria-hidden="true">&lt;</span>
+                </button>
+                <button class="slider-btn next-btn" aria-label="Siguiente juego">
+                    <span class="visually-hidden">Siguiente juego</span>
+                    <span aria-hidden="true">&gt;</span>
+                </button>
+            </div>
+            <div class="slider-dots"></div>
+        </section>
+<!-- ===== SECCIÓN DE PARTIDOS DESTACADOS (NUEVA) ===== -->
+<section class="featured-events">
+    <div class="page-container">
+        <div class="featured-events-header">
+            <h2>Acción del Día</h2>
+            <p>Los partidos más populares, en vivo y por comenzar.</p>
+        </div>
+
+        <div id="loader-featured" class="loader-container">
+            <div class="spinner"></div>
+        </div>
+        
+        <div id="featured-events-container" class="featured-grid">
+            <!-- El JavaScript llenará esta sección con los partidos -->
+        </div>
+
+        <div class="view-all-link">
+            <a href="deportes.html" class="btn btn-secondary">Ver todos los deportes</a>
+        </div>
+    </div>
+</section>
+
+        <!-- ===== SECCIÓN POR QUÉ ELEGIRNOS (NUEVA) ===== -->
+<section class="why-us-section">
+    <div class="page-container">
+        <div class="featured-events-header">
+            <h2>La Mejor Experiencia de Apuestas</h2>
+            <p>Seguridad, rapidez y las mejores cuotas del mercado.</p>
+        </div>
+        <div class="why-us-grid">
+            <div class="feature-item">
+                <i class="fa-solid fa-shield-halved"></i>
+                <h3>Seguro y Confiable</h3>
+                <p>Tus datos y tu dinero están protegidos con la mejor tecnología de encriptación.</p>
+            </div>
+            <div class="feature-item">
+                <i class="fa-solid fa-bolt-lightning"></i>
+                <h3>Pagos Rápidos</h3>
+                <p>Deposita y retira tus ganancias en minutos con nuestros métodos de pago verificados.</p>
+            </div>
+            <div class="feature-item">
+                <i class="fa-solid fa-headset"></i>
+                <h3>Soporte 24/7</h3>
+                <p>Nuestro equipo de atención al cliente está disponible para ayudarte en cualquier momento.</p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ===== SECCIÓN MÉTODOS DE PAGO (NUEVA) ===== -->
+<section class="payment-methods-section">
+    <div class="page-container">
+        <p>Aceptamos los métodos de pago más populares y seguros</p>
+        <div class="payment-logos">
+            <!-- NOTA: Debes tener estas imágenes en una carpeta /images/logos/ -->
+            <img src="images/logos/pago-movil.png" alt="Pago Móvil">
+            <img src="images/logos/mercantil.png" alt="Mercantil">
+            <img src="images/logos/banesco.png" alt="Banesco">
+            <img src="images/logos/usdt.png" alt="USDT">
+        </div>
+    </div>
+</section>
+         <div id="footer-placeholder"></div>
+         
+    </div>
+
+    <!-- Los elementos "overlay" van FUERA y DESPUÉS del wrapper -->
+<div id="mobile-menu-placeholder"></div>
+<div id="sports-panel-placeholder"></div><!-- AÑADE ESTO -->
+<div id="modals-placeholder"></div>
+<div id="help-widget-placeholder"></div>
+	<script src="js/main.js" type="module"></script>
+</body>
+</html>

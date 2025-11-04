@@ -1,0 +1,59 @@
+<!-- Archivo: components/help-widget.html (NUEVO) -->
+
+<!-- Botón flotante que siempre estará visible -->
+<button class="help-trigger-btn" aria-label="Abrir ayuda rápida">
+    <i class="fa-solid fa-headset"></i>
+</button>
+
+<!-- El widget de ayuda, que está oculto por defecto -->
+<div id="help-widget" class="help-widget">
+    <div class="help-widget__header">
+        <h3>Ayuda Rápida</h3>
+        <button class="close-widget-btn" aria-label="Cerrar ayuda">&times;</button>
+    </div>
+    <div class="help-widget__body">
+        <div class="search-container">
+            <i class="fa-solid fa-search"></i>
+            <input type="search" id="faq-search" placeholder="¿En qué podemos ayudarte?">
+        </div>
+        <div id="faq-list" class="faq-list">
+            <!-- JS llenará esta lista, pero aquí tienes unos ejemplos -->
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>¿Cómo realizo un depósito?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Para depositar, ve a "Mi Cuenta", haz clic en el botón "Depositar" y sigue las instrucciones. Aceptamos tarjetas de crédito, transferencias y criptomonedas.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>¿Cuánto tarda un retiro?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Los retiros suelen procesarse en un plazo de 24 a 48 horas hábiles, dependiendo del método que hayas elegido.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>¿Qué es una cuota?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>La cuota es el multiplicador que determina tu ganancia potencial. Si apuestas $10 a una cuota de 1.50, tu ganancia total sería de $15 ($10 x 1.50).</p>
+                </div>
+            </div>
+             <div class="faq-item">
+                <button class="faq-question">
+                    <span>¿Mi apuesta fue anulada, qué significa?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Una apuesta puede ser anulada si el evento se cancela o pospone. En este caso, el monto apostado se te devuelve íntegramente a tu saldo.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

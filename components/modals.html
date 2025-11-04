@@ -1,0 +1,364 @@
+<!-- ======================================================================= -->
+<!--             ARCHIVO components/modals.html (COMPLETO Y CORREGIDO)       -->
+<!-- ======================================================================= -->
+
+<!-- ===== MODAL DE REGISTRO ===== -->
+<div id="register-modal" class="modal-overlay">
+	<div class="auth-container">
+		<button class="close-modal" aria-label="Cerrar">&times;</button>
+		
+        <div id="success-message" class="hidden" style="text-align: center;">
+            <i class="fa-solid fa-circle-check" style="font-size: 48px; color: var(--color-success); margin-bottom: 15px;"></i>
+            <h2 style="color: var(--primary-color);">¡Registro Exitoso!</h2>
+            <p>Tu cuenta ha sido creada. Ya puedes iniciar sesión y comenzar a jugar.</p>
+            <button class="btn btn-primary btn-cta" data-modal-switch="login-modal" style="margin-top: 20px;">Iniciar Sesión Ahora</button>
+        </div>
+
+		<div id="register-form-container">
+			<div class="auth-header">
+				<h2>Crea tu cuenta</h2>
+				<p>Únete a la acción en menos de un minuto.</p>
+			</div>
+			<form id="register-form" class="auth-form">
+				<div class="form-group">
+					<label for="username">Nombre de usuario</label>
+					<div class="input-wrapper">
+						<input type="text" id="username" name="username" placeholder="Elige un nombre único" 
+							   required 
+							   minlength="4"
+                               maxlength="20"
+							   pattern="[a-zA-Z]+" 
+							   title="Solo letras, sin espacios ni números. Mínimo 4 caracteres.">
+						
+						<span class="tooltip-trigger" 
+							  data-tooltip="El nombre de usuario debe tener al menos 4 letras. No se permiten espacios, números ni caracteres especiales.">
+							<i class="fa-solid fa-circle-info"></i>
+						</span>
+					</div>
+				</div>
+				<div class="form-group">
+					<label for="email">Correo Electrónico</label>
+					<input type="email" id="email" name="email" placeholder="tu@correo.com" required autocomplete="email">
+				</div>
+
+				<div class="form-group password-group">
+					<label for="register-password">Contraseña</label>
+					<div class="input-wrapper">
+						<input type="password" id="register-password" name="register-password" placeholder="Mínimo 8 caracteres" required autocomplete="new-password" title="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.">
+						<button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
+							<i class="fa-solid fa-eye" aria-hidden="true"></i>
+						</button>
+					</div>
+				</div>
+
+				<div class="form-group password-group">
+					<label for="register-confirm-password">Confirmar Contraseña</label>
+					<div class="input-wrapper">
+						<input type="password" id="register-confirm-password" name="register-confirm-password" placeholder="Repite la contraseña" required autocomplete="new-password" title="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.">
+						<button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
+							<i class="fa-solid fa-eye" aria-hidden="true"></i>
+						</button>
+					</div>
+				</div>
+
+				<p id="error-message" class="error-message" aria-live="polite"></p>
+
+				<button type="submit" class="btn btn-primary btn-cta">Crear Cuenta</button>
+			</form>
+			<div class="auth-footer">
+				<p>¿Ya tienes una cuenta? <a href="#" data-modal-switch="login-modal">Inicia sesión aquí</a></p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- ===== MODAL DE INICIO DE SESIÓN ===== -->
+<div id="login-modal" class="modal-overlay">
+	<div class="auth-container">
+		<button class="close-modal" aria-label="Cerrar">&times;</button>
+		<div class="auth-header">
+			<h2>Iniciar Sesión</h2>
+			<p>Bienvenido de vuelta.</p>
+		</div>
+		<form id="login-form" class="auth-form">
+			<div class="form-group">
+				<label for="login-identifier">Correo o Usuario</label>
+				<input type="text" id="login-identifier" name="login-identifier" placeholder="tu@correo.com o tu_usuario" required>
+			</div>
+
+			<div class="form-group password-group">
+				<label for="login-password">Contraseña</label>
+				<div class="input-wrapper">
+					<input type="password" id="login-password" name="login-password" placeholder="Ingresa tu contraseña" required autocomplete="current-password">
+					<button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
+						<i class="fa-solid fa-eye" aria-hidden="true"></i>
+					</button>
+				</div>
+			</div>
+			
+			<a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+
+			<p id="login-error-message" class="error-message" aria-live="polite"></p>
+
+			<button type="submit" class="btn btn-primary btn-cta">Ingresar</button>
+		</form>
+		<div class="auth-footer">
+			<p>¿No tienes una cuenta? <a href="#" data-modal-switch="register-modal">Crea una aquí</a></p>
+		</div>
+	</div>
+</div>
+
+<!-- ======================================================================= -->
+<!--             MODAL DE OLVIDÉ MI CONTRASEÑA                               -->
+<!-- ======================================================================= -->
+<div id="forgot-password-modal" class="modal-overlay">
+	<div class="auth-container">
+		<button class="close-modal" aria-label="Cerrar">&times;</button>
+		
+		<div id="forgot-form-container">
+			<div class="auth-header">
+				<h2>Recuperar Contraseña</h2>
+				<p>Ingresa tu correo y te enviaremos un enlace para restablecerla.</p>
+			</div>
+			<form id="forgot-password-form" class="auth-form">
+				<div class="form-group">
+					<label for="forgot-email">Correo Electrónico</label>
+					<input type="email" id="forgot-email" name="forgot-email" placeholder="tu@correo.com" required autocomplete="email">
+				</div>
+				<p id="forgot-error-message" class="error-message" aria-live="polite"></p>
+				<button type="submit" class="btn btn-primary btn-cta">Enviar Enlace</button>
+			</form>
+			<div class="auth-footer">
+				<p>¿Recordaste tu contraseña? <a href="#" data-modal-switch="login-modal">Vuelve a Iniciar Sesión</a></p>
+			</div>
+		</div>
+
+		<div id="forgot-success-message" class="hidden" style="text-align: center;">
+            <i class="fa-solid fa-paper-plane" style="font-size: 48px; color: var(--color-primary); margin-bottom: 15px;"></i>
+            <h2>Revisa tu Correo</h2>
+            <p>Si tu cuenta existe, hemos enviado un enlace a tu dirección de correo para que puedas restablecer tu contraseña.</p>
+        </div>
+	</div>
+</div>
+
+<!-- ======================================================================= -->
+<!--             MODAL PARA RESTABLECER LA CONTRASEÑA                        -->
+<!-- ======================================================================= -->
+<div id="reset-password-modal" class="modal-overlay">
+	<div class="auth-container">
+		<button class="close-modal" aria-label="Cerrar">&times;</button>
+		<div id="reset-form-container">
+			<div class="auth-header">
+				<h2>Crear Nueva Contraseña</h2>
+				<p>Ingresa una nueva contraseña segura para tu cuenta.</p>
+			</div>
+			<form id="reset-password-form" class="auth-form">
+				<div class="form-group password-group">
+					<label for="reset-password">Nueva Contraseña</label>
+					<div class="input-wrapper">
+						<input type="password" id="reset-password" name="reset-password" placeholder="Mínimo 8 caracteres" required autocomplete="new-password" title="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.">
+						<button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
+							<i class="fa-solid fa-eye" aria-hidden="true"></i>
+						</button>
+					</div>
+				</div>
+				<div class="form-group password-group">
+					<label for="reset-confirm-password">Confirmar Nueva Contraseña</label>
+					<div class="input-wrapper">
+						<input type="password" id="reset-confirm-password" name="reset-confirm-password" placeholder="Repite la nueva contraseña" required autocomplete="new-password" title="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.">
+						<button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
+							<i class="fa-solid fa-eye" aria-hidden="true"></i>
+						</button>
+					</div>
+				</div>
+				<p id="reset-error-message" class="error-message" aria-live="polite"></p>
+				<button type="submit" class="btn btn-primary btn-cta">Actualizar Contraseña</button>
+			</form>
+		</div>
+
+		<div id="reset-success-message" class="hidden" style="text-align: center;">
+            <i class="fa-solid fa-circle-check" style="font-size: 48px; color: var(--color-success); margin-bottom: 15px;"></i>
+            <h2>¡Contraseña Actualizada!</h2>
+            <p>Tu contraseña ha sido cambiada con éxito. Ya puedes iniciar sesión.</p>
+			<button class="btn btn-primary btn-cta" data-modal-switch="login-modal" style="margin-top: 20px;">Ir a Iniciar Sesión</button>
+        </div>
+	</div>
+</div>
+
+<!-- ======================================================================= -->
+<!--                   MODAL DE DEPÓSITO                                     -->
+<!-- ======================================================================= -->
+<div id="deposit-modal" class="modal-overlay">
+	<div class="auth-container">
+		<button class="close-modal" aria-label="Cerrar">&times;</button>
+		<div class="auth-header">
+			<h2>Realizar un Depósito</h2>
+			<p>Selecciona tu método de pago preferido.</p>
+		</div>
+
+		<div id="deposit-flow-container">
+			<div id="deposit-step-1" class="deposit-step active">
+				<div class="payment-methods-grid">
+					<button class="payment-method-btn" data-method="pago-movil">
+						<i class="fa-solid fa-mobile-screen-button"></i>
+						<span>Pago Móvil</span>
+					</button>
+					<button class="payment-method-btn" data-method="transferencia">
+						<i class="fa-solid fa-building-columns"></i>
+						<span>Transferencia Bs.</span>
+					</button>
+					<button class="payment-method-btn" data-method="usdt">
+						<i class="fa-brands fa-bitcoin"></i>
+						<span>Cripto (USDT)</span>
+					</button>
+				</div>
+			</div>
+
+			<div id="deposit-step-2" class="deposit-step">
+				<button class="back-to-methods btn btn-secondary" style="margin-bottom: 20px;">&lt; Volver</button>
+				
+				<div id="instructions-pago-movil" class="payment-instructions">
+					<h4>Instrucciones para Pago Móvil</h4>
+					<p>Realiza el pago a los siguientes datos y luego reporta tu pago:</p>
+					<ul class="payment-details">
+						<li><strong>Banco:</strong> 0102 - Banco de Venezuela</li>
+						<li><strong>CI:</strong> V-12.345.678</li>
+						<li><strong>Teléfono:</strong> 0414-1234567</li>
+					</ul>
+				</div>
+				<div id="instructions-transferencia" class="payment-instructions">
+					<h4>Instrucciones para Transferencia</h4>
+					<p>Realiza el pago a la siguiente cuenta y luego reporta tu pago:</p>
+					<ul class="payment-details">
+						<li><strong>Banco:</strong> 0102 - Banco de Venezuela</li>
+						<li><strong>Titular:</strong> FortunaBet C.A.</li>
+						<li><strong>RIF:</strong> J-12345678-9</li>
+						<li><strong>N° de Cuenta:</strong> 01020123456789012345</li>
+					</ul>
+				</div>
+				<div id="instructions-usdt" class="payment-instructions">
+					<h4>Instrucciones para USDT (Tether)</h4>
+					<p>Envía el monto exacto a la siguiente dirección de billetera (Red TRC20):</p>
+					<div class="wallet-address">
+						<span>TAbcDEfgHiJkLMnOpqRSTuvwxyz12345</span>
+						<button class="copy-btn" aria-label="Copiar dirección"><i class="fa-solid fa-copy"></i></button>
+					</div>
+				</div>
+
+				<form id="report-payment-form" class="auth-form" style="margin-top: 20px;">
+					<div class="form-group">
+						<label for="deposit-amount">Monto Depositado (USD)</label>
+						<input type="number" id="deposit-amount" placeholder="Ej: 20.00" required>
+					</div>
+					<div class="form-group">
+						<label for="deposit-reference">N° de Referencia o Hash</label>
+						<input type="text" id="deposit-reference" placeholder="Ej: 00123456" required>
+					</div>
+					<button type="submit" class="btn btn-primary btn-cta">Reportar Pago</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- ======================================================================= -->
+<!--                   MODAL DE RETIRO                                       -->
+<!-- ======================================================================= -->
+<div id="withdraw-modal" class="modal-overlay">
+	<div class="auth-container">
+		<button class="close-modal" aria-label="Cerrar">&times;</button>
+		<div class="auth-header">
+			<h2>Solicitar un Retiro</h2>
+			<p>Tu retiro será procesado en un plazo de 24 horas.</p>
+		</div>
+		<form id="withdraw-form" class="auth-form">
+			<div class="form-group">
+				<label for="withdraw-amount">Monto a Retirar (USD)</label>
+				<input type="number" id="withdraw-amount" placeholder="0.00" required>
+			</div>
+			<p><strong>Método de Pago Registrado:</strong></p>
+			<div class="registered-payment-method">
+				<p>Pago Móvil - Banco de Venezuela</p>
+				<p>0414-1234567</p>
+				<a href="#" class="edit-method-link">Editar</a>
+			</div>
+			<p class="small-notice">Los retiros se procesan al método de pago que tengas configurado en "Mis Datos".</p>
+			<button type="submit" class="btn btn-primary btn-cta">Solicitar Retiro</button>
+		</form>
+	</div>
+</div>
+
+<!-- ======================================================================= -->
+<!--                   MODAL DE JUEGO                                      -->
+<!-- ======================================================================= -->
+<div id="game-modal" class="modal-overlay">
+	<div class="game-container">
+		<button class="close-modal close-game-btn" aria-label="Cerrar Juego">&times;</button>
+		<iframe id="game-iframe" src="" frameborder="0" allowfullscreen></iframe>
+	</div>
+</div>
+
+<!-- ======================================================================= -->
+<!--             MODAL DE VERIFICACIÓN DE CÓDIGO POR CORREO                  -->
+<!-- ======================================================================= -->
+<div id="email-verification-modal" class="modal-overlay">
+	<div class="auth-container">
+		<button class="close-modal" aria-label="Cerrar">&times;</button>
+		<div id="email-verification-container">
+			<div class="auth-header">
+				<h2>Verifica tu Correo</h2>
+				<p>Enviamos un código de 6 dígitos a <strong id="email-display"></strong>. Por favor, ingrésalo a continuación.</p>
+			</div>
+			<form id="email-verification-form" class="auth-form">
+				<div class="form-group">
+					<label for="email-otp-input">Código de Verificación</label>
+					<input 
+						type="text" 
+						id="email-otp-input" 
+						name="otp-code" 
+						placeholder="123456" 
+						required 
+						maxlength="6" 
+						pattern="\d{6}"
+						inputmode="numeric"
+						title="Ingresa el código de 6 dígitos numéricos.">
+				</div>
+				<p id="email-verification-error" class="error-message" aria-live="polite"></p>
+				<button type="submit" class="btn btn-primary btn-cta">Confirmar y Activar Cuenta</button>
+			</form>
+            <div class="auth-footer">
+				<p>¿No recibiste el código? <a href="#" id="resend-otp-link">Reenviar código</a></p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- ======================================================================= -->
+<!--             MODAL DE VERIFICACIÓN DE CÓDIGO TELEFÓNICO                -->
+<!-- ======================================================================= -->
+<div id="phone-verification-modal" class="modal-overlay">
+	<div class="auth-container">
+		<button class="close-modal" aria-label="Cerrar">&times;</button>
+		<div class="auth-header">
+			<h2>Verificar Teléfono</h2>
+			<p>Ingresa el código de 6 dígitos que enviamos a tu número.</p>
+		</div>
+		<form id="phone-verification-form" class="auth-form">
+			<div class="form-group">
+				<label for="phone-otp-input">Código de Verificación</label>
+				<input 
+					type="text" 
+					id="phone-otp-input" 
+					name="verification-code" 
+					placeholder="123456" 
+					required 
+					maxlength="6" 
+					pattern="\d{6}"
+					inputmode="numeric"
+					title="Ingresa el código de 6 dígitos numéricos.">
+			</div>
+			<p id="phone-verification-error" class="error-message" aria-live="polite"></p>
+			<button type="submit" class="btn btn-primary btn-cta">Confirmar Código</button>
+		</form>
+	</div>
+</div>

@@ -1,0 +1,137 @@
+/* Archivo: admin/admin.css */
+
+/* ==========================================================================
+   1. VARIABLES Y CONFIGURACIÓN GLOBAL (Copiadas de tu style.css)
+   ========================================================================== */
+:root {
+    --color-background: #121418;
+    --color-surface-1: #1A1D24;
+    --color-surface-2: #242833;
+    --color-primary: #2ECC71;
+    --color-primary-light: #58D68D;
+    --color-text-primary: #F5F5F5;
+    --color-text-secondary: #A0AEC0;
+    --color-border: #3A3F51;
+    --color-accent-gold: #FDB813;
+    --color-success: #2ECC71;
+    --color-loss: #E74C3C;
+    --color-pending: #F1C40F;
+    --font-family-base: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --border-radius-md: 12px;
+    --border-radius-sm: 8px;
+}
+
+/* ==========================================================================
+   2. ESTILOS GLOBALES DEL PANEL
+   ========================================================================== */
+body {
+    font-family: var(--font-family-base);
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    margin: 0;
+    padding: 20px;
+    -webkit-font-smoothing: antialiased;
+}
+.container { max-width: 1400px; margin: 0 auto; }
+h1, h2 { color: var(--color-primary); }
+h2 { font-size: 1.2rem; }
+
+/* ==========================================================================
+   3. BOTONES Y FORMULARIOS
+   ========================================================================== */
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--color-text-primary);
+    font-size: 16px;
+    box-sizing: border-box;
+}
+.btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+.btn:disabled { cursor: not-allowed; opacity: 0.7; }
+.btn-primary { background-color: var(--color-primary); color: #1a1a1a; }
+.btn-primary:hover:not(:disabled) { background-color: var(--color-primary-light); }
+.btn-full { width: 100%; }
+.btn-danger { background-color: var(--color-loss); color: white; }
+.btn-secondary { background-color: var(--color-surface-2); color: var(--color-text-primary); border: 1px solid var(--color-border); }
+.btn-secondary:hover:not(:disabled) { background-color: var(--color-surface-1); }
+.btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+
+#error-message { color: var(--color-loss); margin-top: 15px; text-align: center; }
+
+/* ==========================================================================
+   4. LAYOUT DEL PANEL (LOGIN Y DASHBOARD)
+   ========================================================================== */
+#login-view {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 30px;
+    background-color: var(--color-surface-1);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--color-border);
+}
+#dashboard-view { display: none; }
+header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--color-border); padding-bottom: 10px; }
+header span { font-weight: 600; color: var(--color-text-secondary); }
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 30px;
+}
+.panel { background-color: var(--color-surface-1); border: 1px solid var(--color-border); border-radius: var(--border-radius-md); }
+.panel-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--color-border); }
+.panel-body { padding: 20px; }
+.panel-body .empty-message { text-align: center; color: #888; padding: 20px 0; }
+
+/* ==========================================================================
+   5. TABLAS DE DATOS
+   ========================================================================== */
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--color-border); }
+th { background-color: var(--color-surface-2); font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-secondary); }
+td .user-info { font-size: 0.9em; color: var(--color-text-secondary); }
+td .amount { font-weight: 700; color: var(--color-primary); }
+td .amount.withdrawal { color: var(--color-loss); }
+td .actions { display: flex; gap: 10px; }
+td small { font-family: monospace; }
+
+/* ==========================================================================
+   6. SPINNER DE CARGA (Para botones)
+   ========================================================================== */
+.spinner-sm {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+.btn-primary .spinner-sm {
+    border: 2px solid rgba(0, 0, 0, 0.3);
+    border-top-color: #000000;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Responsividad */
+@media (max-width: 900px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+}

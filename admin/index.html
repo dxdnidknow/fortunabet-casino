@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - FortunaBet</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+    <div class="container">
+        
+        <div id="login-view">
+            <h1>Login de Administrador</h1>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Entrar</button>
+                <p id="error-message" style="display: none;"></p>
+            </form>
+        </div>
+
+        <div id="dashboard-view">
+            <header>
+                <div>
+                    <h1>Panel de Administración</h1>
+                    <span id="admin-email"></span>
+                </div>
+                <button id="logout-btn" class="btn btn-danger">Cerrar Sesión</button>
+            </header>
+
+            <div class="dashboard-grid">
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2><i class="fa-solid fa-arrow-down-to-bracket"></i> Depósitos Pendientes</h2>
+                        <button class="btn btn-secondary btn-sm" id="refresh-btn"><i class="fa-solid fa-rotate-right"></i> Recargar</button>
+                    </div>
+                    <div class="panel-body">
+                        <table id="deposits-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Monto (Bs.)</th>
+                                    <th>Referencia</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deposits-body">
+                                </tbody>
+                        </table>
+                        <div id="deposits-empty" class="empty-message" style="display: none;">No hay depósitos pendientes.</div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2><i class="fa-solid fa-arrow-up-from-bracket"></i> Retiros Pendientes</h2>
+                    </div>
+                    <div class="panel-body">
+                        <table id="withdrawals-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Monto (Bs.)</th>
+                                    <th>Datos de Pago</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="withdrawals-body">
+                                </tbody>
+                        </table>
+                        <div id="withdrawals-empty" class="empty-message" style="display: none;">No hay retiros pendientes.</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    
+    <script src="admin.js"></script>
+</body>
+</html>
