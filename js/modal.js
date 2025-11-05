@@ -1,4 +1,4 @@
-// --- ARCHIVO COMPLETO Y CORREGIDO: js/modal.js ---
+// Archivo: js/modal.js (COMPLETO Y CORREGIDO)
 
 let activeModal = null;
 let lastActiveElement = null;
@@ -18,17 +18,12 @@ function closeMobileMenu() {
 
 const focusTrap = (e) => {
     if (!activeModal || e.key !== 'Tab') return;
-
     const focusableElements = Array.from(
-        activeModal.querySelectorAll(
-            'a[href]:not([disabled]), button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        )
+        activeModal.querySelectorAll('a[href]:not([disabled]), button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')
     );
     if (focusableElements.length === 0) return;
-
     const firstFocusableEl = focusableElements[0];
     const lastFocusableEl = focusableElements[focusableElements.length - 1];
-
     if (e.shiftKey) {
         if (document.activeElement === firstFocusableEl) {
             lastFocusableEl.focus();
@@ -42,76 +37,59 @@ const focusTrap = (e) => {
     }
 };
 
-/**
- * Abre un modal específico.
- * @param {HTMLElement} modal - El elemento del modal a abrir.
- */
-export function openModal(modal) { // <-- EXPORTADO
+export function openModal(modal) {
     if (!modal) return;
-    
     closeMobileMenu();
-
     lastActiveElement = document.activeElement;
     document.body.classList.add('modal-open');
     modal.classList.add('active');
     activeModal = modal;
-    
     const firstFocusable = modal.querySelector('input, button');
-    if (firstFocusable) {
-        firstFocusable.focus();
-    }
-    
+    if (firstFocusable) firstFocusable.focus();
     document.addEventListener('keydown', focusTrap);
 }
 
 function resetModalForms(modal) {
-    if (modal.id === 'register-modal') {
-        const formContainer = modal.querySelector('#register-form-container');
-        const successMessage = modal.querySelector('#success-message');
-        const form = modal.querySelector('#register-form');
-        const errorMessage = modal.querySelector('#error-message');
+    const forms = modal.querySelectorAll('form');
+    forms.forEach(form => form.reset());
 
-        if (formContainer) formContainer.classList.remove('hidden');
-        if (successMessage) successMessage.classList.add('hidden');
-        if (form) form.reset();
-        if (errorMessage) errorMessage.textContent = '';
+    const errorMessages = modal.querySelectorAll('.error-message');
+    errorMessages.forEach(msg => msg.textContent = '');
+    
+    // Lógica específica para restaurar vistas de formularios (ej. modal de registro)
+    if (modal.id === 'register-modal') {
+        modal.querySelector('#register-form-container')?.classList.remove('hidden');
+        modal.querySelector('#success-message')?.classList.add('hidden');
     }
-    const loginForm = modal.querySelector('#login-form');
-    if (loginForm) {
-        loginForm.reset();
-        const loginError = loginForm.querySelector('#login-error-message');
-        if (loginError) loginError.textContent = '';
+    if (modal.id === 'forgot-password-modal') {
+        modal.querySelector('#forgot-form-container')?.classList.remove('hidden');
+        modal.querySelector('#forgot-success-message')?.classList.add('hidden');
+    }
+    if (modal.id === 'reset-password-modal') {
+        modal.querySelector('#reset-form-container')?.classList.remove('hidden');
+        modal.querySelector('#reset-success-message')?.classList.add('hidden');
     }
 }
 
-/**
- * Cierra un modal específico.
- * @param {HTMLElement} modal - El elemento del modal a cerrar.
- */
-export function closeModal(modal) { // <-- EXPORTADO
+export function closeModal(modal) {
     if (!modal) return;
-    
     document.body.classList.remove('modal-open');
-
     modal.classList.remove('active');
     activeModal = null;
-        if (modal.id === 'game-modal') {
+    if (modal.id === 'game-modal') {
         const gameIframe = modal.querySelector('#game-iframe');
-        if (gameIframe) {
-            gameIframe.src = '';
-        }
+        if (gameIframe) gameIframe.src = '';
     }
-    resetModalForms(modal);
-    document.removeEventListener('keydown', focusTrap);
     
-    if (lastActiveElement) {
-        lastActiveElement.focus();
+    // No reseteamos el formulario de OTP si se cierra con 'X'
+    if (modal.id !== 'email-verification-modal') {
+        resetModalForms(modal);
     }
+
+    document.removeEventListener('keydown', focusTrap);
+    if (lastActiveElement) lastActiveElement.focus();
 }
 
-/**
- * Inicializa todos los listeners de eventos para los modales.
- */
 export function initModals() {
     document.body.addEventListener('click', (event) => {
         const trigger = event.target.closest('[data-modal-trigger]');
@@ -132,19 +110,34 @@ export function initModals() {
             event.preventDefault();
             const currentModal = switcher.closest('.modal-overlay');
             const nextModal = document.getElementById(switcher.dataset.modalSwitch);
-            
             if (currentModal) closeModal(currentModal);
             if (nextModal) openModal(nextModal);
             return;
         }
 
+        // ==========================================================
+        //  INICIO DE LA MODIFICACIÓN (Evitar cierre al hacer clic afuera)
+        // ==========================================================
         if (event.target.classList.contains('modal-overlay')) {
+            // Comprueba si el modal tiene el atributo 'data-persistent'
+            if (event.target.dataset.persistent === "true") {
+                // Si es persistente, no hagas nada (no cierres el modal)
+                return; 
+            }
+            // Si no es persistente, ciérralo
             closeModal(event.target);
         }
+        // ==========================================================
+        //  FIN DE LA MODIFICACIÓN
+        // ==========================================================
     });
 
     window.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && activeModal) {
+            // También respeta 'data-persistent' para la tecla Escape
+            if (activeModal.dataset.persistent === "true") {
+                return;
+            }
             closeModal(activeModal);
         }
     });

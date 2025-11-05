@@ -177,7 +177,79 @@ app.delete('/api/payout-methods/:id', authenticateToken, async (req, res) => {
         res.status(500).json({ message: 'Error interno al eliminar el método de pago.' });
     }
 });
+// =======================================================================
+//  RUTAS DE VERIFICACIÓN TELEFÓNICA (¡NUEVAS!)
+// =======================================================================
 
+// 1. SOLICITAR CÓDIGO SMS (Llamado por account.js)
+app.post('/api/request-phone-verification', authenticateToken, async (req, res) => {
+    const userId = new ObjectId(req.user.id);
+    const db = getDb();
+
+    try {
+        const user = await db.collection('users').findOne({ _id: userId });
+        const phone = user?.personalInfo?.phone; // Asume que el teléfono está guardado
+        
+        if (!phone || !phone.startsWith('+58')) {
+            return res.status(400).json({ message: "Añade un número de teléfono válido (+58) en 'Mis Datos' primero." });
+        }
+        
+        // (Tu código de Twilio/SendGrid para enviar SMS iría aquí)
+        // Por ahora, simularemos el envío y guardaremos un código falso
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+        
+        await db.collection('users').updateOne(
+            { _id: userId },
+            { $set: { 'personalInfo.phoneOtp': otp, 'personalInfo.phoneOtpExpires': otpExpires } }
+        );
+        
+        console.log(`[SIMULACIÓN] Código SMS para ${phone} es: ${otp}`);
+        
+        res.status(200).json({ message: `Se ha enviado un código de verificación a ${phone}.` });
+    } catch (error) {
+        console.error("Error al enviar código de teléfono:", error);
+        res.status(500).json({ message: "No se pudo enviar el código. Verifica que el número sea válido." });
+    }
+});
+
+// 2. VERIFICAR CÓDIGO SMS (Llamado por account.js)
+app.post('/api/verify-phone-code', authenticateToken, async (req, res) => {
+    const userId = new ObjectId(req.user.id);
+    const { code } = req.body;
+    const db = getDb();
+
+    try {
+        const user = await db.collection('users').findOne({ _id: userId });
+        const phoneInfo = user?.personalInfo;
+
+        if (!phoneInfo || !phoneInfo.phoneOtp) {
+            return res.status(400).json({ message: "No hay una verificación de teléfono pendiente." });
+        }
+
+        if (phoneInfo.phoneOtp !== code) {
+            return res.status(400).json({ message: "El código de verificación es incorrecto." });
+        }
+
+        if (new Date() > phoneInfo.phoneOtpExpires) {
+            return res.status(400).json({ message: "El código de verificación ha expirado." });
+        }
+
+        // --- ÉXITO ---
+        await db.collection('users').updateOne(
+            { _id: userId },
+            { 
+                $set: { 'personalInfo.isPhoneVerified': true },
+                $unset: { 'personalInfo.phoneOtp': "", 'personalInfo.phoneOtpExpires': "" } 
+            }
+        );
+        
+        res.status(200).json({ message: "¡Teléfono verificado con éxito!" });
+    } catch (error) {
+        console.error("Error al verificar código de teléfono:", error);
+        res.status(500).json({ message: "Error al verificar el código." });
+    }
+});
 // =======================================================================
 //  RUTA DE RETIRO (WITHDRAW)
 // =======================================================================
