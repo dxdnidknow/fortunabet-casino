@@ -32,18 +32,27 @@ body {
     padding: 20px;
     -webkit-font-smoothing: antialiased;
 }
-.container { max-width: 1400px; margin: 0 auto; }
-h1, h2 { color: var(--color-primary); }
+.container { 
+    max-width: 1600px; 
+    margin: 0 auto; 
+    padding: 0 20px;
+}
+h1, h2 { 
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+h1 { font-size: 1.8rem; }
 h2 { font-size: 1.2rem; }
+h1 i { color: var(--color-primary); margin-right: 10px; }
 
 /* ==========================================================================
    3. BOTONES Y FORMULARIOS
    ========================================================================== */
 .form-group { margin-bottom: 20px; }
-.form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--color-text-secondary); }
 .form-group input {
     width: 100%;
-    padding: 12px;
+    padding: 14px;
     background-color: var(--color-background);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius-sm);
@@ -51,6 +60,12 @@ h2 { font-size: 1.2rem; }
     font-size: 16px;
     box-sizing: border-box;
 }
+.form-group input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+}
+
 .btn {
     padding: 10px 18px;
     border: none;
@@ -66,30 +81,46 @@ h2 { font-size: 1.2rem; }
     transition: all 0.2s ease;
 }
 .btn:disabled { cursor: not-allowed; opacity: 0.7; }
+
 .btn-primary { background-color: var(--color-primary); color: #1a1a1a; }
 .btn-primary:hover:not(:disabled) { background-color: var(--color-primary-light); }
-.btn-full { width: 100%; }
+
+.btn-full { width: 100%; padding: 14px; font-size: 1rem; }
+
 .btn-danger { background-color: var(--color-loss); color: white; }
+.btn-danger:hover:not(:disabled) { background-color: #c0392b; }
+
 .btn-secondary { background-color: var(--color-surface-2); color: var(--color-text-primary); border: 1px solid var(--color-border); }
-.btn-secondary:hover:not(:disabled) { background-color: var(--color-surface-1); }
+.btn-secondary:hover:not(:disabled) { background-color: var(--color-surface-1); border-color: var(--color-text-secondary); }
+
 .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
 
-#error-message { color: var(--color-loss); margin-top: 15px; text-align: center; }
+#error-message { color: var(--color-loss); margin-top: 15px; text-align: center; font-weight: 500; }
 
 /* ==========================================================================
    4. LAYOUT DEL PANEL (LOGIN Y DASHBOARD)
    ========================================================================== */
 #login-view {
-    max-width: 400px;
+    max-width: 450px;
     margin: 100px auto;
-    padding: 30px;
+    padding: 40px;
     background-color: var(--color-surface-1);
     border-radius: var(--border-radius-md);
     border: 1px solid var(--color-border);
+    text-align: center;
 }
+#login-view h1 { margin-bottom: 30px; }
+
 #dashboard-view { display: none; }
-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--color-border); padding-bottom: 10px; }
-header span { font-weight: 600; color: var(--color-text-secondary); }
+header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border-bottom: 1px solid var(--color-border); 
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+header span { font-weight: 500; color: var(--color-text-secondary); }
 
 .dashboard-grid {
     display: grid;
@@ -97,22 +128,95 @@ header span { font-weight: 600; color: var(--color-text-secondary); }
     gap: 30px;
     margin-top: 30px;
 }
-.panel { background-color: var(--color-surface-1); border: 1px solid var(--color-border); border-radius: var(--border-radius-md); }
-.panel-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--color-border); }
-.panel-body { padding: 20px; }
-.panel-body .empty-message { text-align: center; color: #888; padding: 20px 0; }
+.panel { 
+    background-color: var(--color-surface-1); 
+    border: 1px solid var(--color-border); 
+    border-radius: var(--border-radius-md); 
+    overflow: hidden; /* Para que la tabla no se salga */
+}
+.panel-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 20px; 
+    border-bottom: 1px solid var(--color-border); 
+    background-color: var(--color-surface-2);
+}
+.panel-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-text-primary);
+}
+.panel-header i { color: var(--color-primary); }
+
+.panel-body { 
+    padding: 0; /* Quitamos padding para que la tabla ocupe todo */
+}
+.panel-body .empty-message { 
+    text-align: center; 
+    color: var(--color-text-secondary); 
+    padding: 40px 20px;
+    font-size: 1.1rem;
+}
+.panel-body .empty-message i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 15px;
+    color: var(--color-primary);
+}
+
 
 /* ==========================================================================
    5. TABLAS DE DATOS
    ========================================================================== */
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--color-border); }
-th { background-color: var(--color-surface-2); font-size: 0.8rem; text-transform: uppercase; color: var(--color-text-secondary); }
-td .user-info { font-size: 0.9em; color: var(--color-text-secondary); }
-td .amount { font-weight: 700; color: var(--color-primary); }
-td .amount.withdrawal { color: var(--color-loss); }
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+}
+th, td { 
+    padding: 14px 20px; 
+    text-align: left; 
+    border-bottom: 1px solid var(--color-border); 
+    white-space: nowrap;
+}
+/* Quitar borde de la última fila */
+tr:last-child td { border-bottom: none; }
+
+th { 
+    background-color: var(--color-surface-2); 
+    font-size: 0.8rem; 
+    text-transform: uppercase; 
+    color: var(--color-text-secondary); 
+    letter-spacing: 0.5px;
+}
+td .user-info { 
+    font-size: 0.85em; 
+    color: var(--color-text-secondary); 
+    display: block; /* Para que esté debajo del nombre */
+}
+td .amount { 
+    font-weight: 700; 
+    color: var(--color-success); /* Verde para depósitos */
+}
+td .amount.withdrawal { 
+    color: var(--color-loss); /* Rojo para retiros */
+}
 td .actions { display: flex; gap: 10px; }
-td small { font-family: monospace; }
+td small { 
+    font-family: monospace; 
+    font-size: 0.9em;
+    color: var(--color-text-secondary);
+    display: block;
+    white-space: normal; /* Permitir que los detalles largos se ajusten */
+    max-width: 200px; /* Límite para que no se desborde */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+td.date-cell {
+    color: var(--color-text-secondary);
+    font-size: 0.9em;
+}
 
 /* ==========================================================================
    6. SPINNER DE CARGA (Para botones)
@@ -131,7 +235,18 @@ td small { font-family: monospace; }
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* Responsividad */
-@media (max-width: 900px) {
+/* ==========================================================================
+   7. RESPONSIVIDAD
+   ========================================================================== */
+@media (max-width: 1200px) {
     .dashboard-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+    body { padding: 10px; }
+    .container { padding: 0 10px; }
+    h1 { font-size: 1.5rem; }
+    #login-view { padding: 20px; margin: 50px auto; }
+    .panel-body { overflow-x: auto; } /* Permite scroll horizontal en tablas */
+    th, td { padding: 10px 15px; white-space: nowrap; }
 }
