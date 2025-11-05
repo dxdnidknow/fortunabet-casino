@@ -305,5 +305,29 @@ router.post('/place-bet', authLimiter, async (req, res) => {
     }
 });
 
+// Archivo: backend/routes/user.js (AÑADE ESTO AL FINAL)
 
+// =======================================================================
+//  RUTA DE HISTORIAL DE APUESTAS (¡NUEVA!)
+// =======================================================================
+
+// GET /api/get-bets (Llamada por account.js en renderBetHistory)
+router.get('/get-bets', async (req, res) => {
+    const userId = new ObjectId(req.user.id);
+    const db = req.db;
+
+    try {
+        const betHistory = await db.collection('bets')
+            .find({ userId: userId })
+            .sort({ createdAt: -1 }) // Ordena de la más nueva a la más vieja
+            .limit(50) // Limita a las últimas 50 apuestas
+            .toArray();
+            
+        res.status(200).json(betHistory);
+
+    } catch (error) {
+        console.error('[ERROR] Obteniendo historial de apuestas:', error);
+        res.status(500).json({ message: 'Error interno al obtener el historial.' });
+    }
+});
 module.exports = router;
