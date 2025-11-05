@@ -43,6 +43,14 @@ function formatPhoneNumber(event) {
 //  1. CARGA DE DATOS DEL USUARIO
 // =======================================================================
 
+// Archivo: js/account.js (MODIFICADO)
+
+// ... (todas las otras funciones como isOver18, formatPhoneNumber, etc.)
+
+// =======================================================================
+//  1. CARGA DE DATOS DEL USUARIO (MODIFICADO)
+// =======================================================================
+
 export async function loadUserData() {
     try {
         const response = await fetchWithAuth(`${API_BASE_URL}/user-data`);
@@ -53,27 +61,29 @@ export async function loadUserData() {
         const dashboardBalance = document.getElementById('dashboard-balance');
         if(dashboardBalance) dashboardBalance.textContent = `Bs. ${userData.balance.toFixed(2)}`;
         
+        // ... (tu código existente para llenar el formulario de 'user-data-form')
         const form = document.getElementById('user-data-form');
-        if (form && userData.personalInfo) { // Asegurarse que personalInfo exista
-            document.getElementById('full-name').value = userData.personalInfo.fullName || '';
-            document.getElementById('cedula').value = userData.personalInfo.cedula || '';
-            document.getElementById('birth-date').value = userData.personalInfo.birthDate ? userData.personalInfo.birthDate.substring(0, 10) : '';
-            document.getElementById('email').value = userData.email || '';
-            
-            const phoneInput = document.getElementById('phone');
-            if (phoneInput) {
-                phoneInput.value = userData.personalInfo.phone ? userData.personalInfo.phone.replace('+58', '').replace(/\D/g, '').substring(0, 10) : '';
-                formatPhoneNumber({ target: phoneInput }); // Formatear al cargar
-            }
-
-            // ==========================================================
-            //  INICIO DE LA MODIFICACIÓN (Lógica de UI de Teléfono)
-            // ==========================================================
+        if (form && userData.personalInfo) {
+            // ... (código para fullName, cedula, birthDate, email, phone...)
             renderPhoneVerificationStatus(userData.personalInfo.isPhoneVerified, userData.personalInfo.phone);
-            // ==========================================================
-            //  FIN DE LA MODIFICACIÓN
-            // ==========================================================
         }
+
+        // ==========================================================
+        //  INICIO DE LA MODIFICACIÓN (Mostrar enlace de Admin)
+        // ==========================================================
+        
+        // Revisa si el usuario tiene el rol de "admin" (que pusimos en MongoDB)
+        if (userData.role === 'admin') {
+            const adminLink = document.getElementById('admin-panel-link');
+            if (adminLink) {
+                adminLink.style.display = 'flex'; // 'flex' porque es un <a> con <i
+            }
+        }
+        
+        // ==========================================================
+        //  FIN DE LA MODIFICACIÓN
+        // ==========================================================
+
     } catch (error) {
         showToast('Error al cargar datos de usuario. Intenta recargar.', 'error');
     }
