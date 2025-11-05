@@ -1,17 +1,20 @@
-# Dependencias de Node en la RAÍZ (si tienes un package.json aquí)
+# Dependencias de Node en la RAÍZ
 /node_modules
 
-# Dependencias de Node en el BACKEND (si tu backend/ tiene su propio package.json)
+# Dependencias de Node en el BACKEND
 /backend/node_modules
 
-# Archivos de entorno y secretos (CRUCIAL)
+# Archivos de entorno y secretos
 .env
 .DS_Store
 
-# Logs y Bases de datos (comúnmente ignorados)
+# Logs y Bases de datos
 npm-debug.log*
 yarn-error.log*
 *.sqlite
 /data
 /log
 /temp
+
+# Configuración del Editor (Recomendado)
+/.vscode
