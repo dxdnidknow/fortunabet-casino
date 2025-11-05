@@ -1,4 +1,4 @@
-// Archivo: js/account.js (COMPLETO Y CORREGIDO)
+// Archivo: js/account.js (COMPLETO Y CORREGIDO - CON RENDERBETHISTORY)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -43,17 +43,10 @@ function formatPhoneNumber(event) {
 //  1. CARGA DE DATOS DEL USUARIO
 // =======================================================================
 
-// Archivo: js/account.js (MODIFICADO)
-
-// ... (todas las otras funciones como isOver18, formatPhoneNumber, etc.)
-
-// =======================================================================
-//  1. CARGA DE DATOS DEL USUARIO (MODIFICADO)
-// =======================================================================
-
 export async function loadUserData() {
     try {
         const response = await fetchWithAuth(`${API_BASE_URL}/user-data`);
+        if (!response.ok) throw new Error('No se pudieron cargar los datos del usuario.');
         const userData = await response.json();
         
         document.getElementById('user-display-name').textContent = userData.username;
@@ -61,30 +54,28 @@ export async function loadUserData() {
         const dashboardBalance = document.getElementById('dashboard-balance');
         if(dashboardBalance) dashboardBalance.textContent = `Bs. ${userData.balance.toFixed(2)}`;
         
-        // ... (tu código existente para llenar el formulario de 'user-data-form')
         const form = document.getElementById('user-data-form');
         if (form && userData.personalInfo) {
-            // ... (código para fullName, cedula, birthDate, email, phone...)
+            document.getElementById('full-name').value = userData.personalInfo.fullName || '';
+            document.getElementById('cedula').value = userData.personalInfo.cedula || '';
+            document.getElementById('birth-date').value = userData.personalInfo.birthDate ? userData.personalInfo.birthDate.substring(0, 10) : '';
+            document.getElementById('email').value = userData.email || '';
+            
+            const phoneInput = document.getElementById('phone');
+            if (phoneInput) {
+                phoneInput.value = userData.personalInfo.phone ? userData.personalInfo.phone.replace('+58', '').replace(/\D/g, '').substring(0, 10) : '';
+                formatPhoneNumber({ target: phoneInput });
+            }
             renderPhoneVerificationStatus(userData.personalInfo.isPhoneVerified, userData.personalInfo.phone);
         }
-
-        // ==========================================================
-        //  INICIO DE LA MODIFICACIÓN (Mostrar enlace de Admin)
-        // ==========================================================
         
-        // Revisa si el usuario tiene el rol de "admin" (que pusimos en MongoDB)
         if (userData.role === 'admin') {
             const adminLink = document.getElementById('admin-panel-link');
-            if (adminLink) {
-                adminLink.style.display = 'flex'; // 'flex' porque es un <a> con <i
-            }
+            if (adminLink) adminLink.style.display = 'flex';
         }
-        
-        // ==========================================================
-        //  FIN DE LA MODIFICACIÓN
-        // ==========================================================
 
     } catch (error) {
+        console.error(error);
         showToast('Error al cargar datos de usuario. Intenta recargar.', 'error');
     }
 }
@@ -127,6 +118,7 @@ export async function loadPayoutMethods() {
     
     try {
         const response = await fetchWithAuth(`${API_BASE_URL}/payout-methods`); 
+        if (!response.ok) throw new Error('No se pudieron cargar los métodos de pago.');
         const methods = await response.json();
 
         listContainer.innerHTML = ''; 
@@ -165,7 +157,77 @@ export async function loadPayoutMethods() {
 }
 
 // =======================================================================
-//  3. LISTENERS Y MANEJADORES DE EVENTOS
+//  3. HISTORIAL DE APUESTAS (¡LA FUNCIÓN QUE FALTABA!)
+// =======================================================================
+
+/**
+ * Carga y renderiza el historial de apuestas del usuario.
+ * Esta función es la que main.js estaba intentando importar.
+ */
+export async function renderBetHistory() {
+    const historyLists = document.querySelectorAll('.history-list');
+    if (historyLists.length === 0) return;
+
+    // Seleccionar los contenedores de mensajes vacíos
+    const emptyMsgRecent = document.querySelector('.recent-history .empty-message-history');
+    const emptyMsgFull = document.querySelector('#historial-apuestas .empty-message-bets');
+
+    try {
+        // Llamar a la API del backend para obtener el historial real
+        const response = await fetchWithAuth(`${API_BASE_URL}/get-bets`); // Debes crear esta ruta en backend/routes/user.js
+        if (!response.ok) throw new Error('No se pudo cargar el historial de apuestas.');
+        
+        const betHistory = await response.json(); // Asume que la API devuelve un array
+
+        // Ocultar todos los mensajes vacíos
+        if (emptyMsgRecent) emptyMsgRecent.style.display = 'none';
+        if (emptyMsgFull) emptyMsgFull.style.display = 'none';
+
+        if (betHistory.length === 0) {
+            if (emptyMsgRecent) emptyMsgRecent.style.display = 'block';
+            if (emptyMsgFull) emptyMsgFull.style.display = 'block';
+            return;
+        }
+
+        // Iterar sobre todos los elementos <ul> (el del dashboard y el de la sección completa)
+        historyLists.forEach(list => {
+            list.innerHTML = ''; // Limpiar la lista (incluyendo el mensaje de vacío)
+            
+            // Determinar cuántas apuestas mostrar
+            const historyToShow = list.classList.contains('full-history') 
+                ? betHistory 
+                : betHistory.slice(0, 5); // Mostrar solo las 5 más recientes en el dashboard
+
+            // Renderizar las apuestas (asumiendo que las más nuevas vienen primero)
+            historyToShow.forEach(record => {
+                const betDescription = record.selections.map(b => b.team.split(' vs ')[0]).join(', ');
+                const statusClass = record.status.toLowerCase(); // 'won', 'lost', 'pending'
+                const winnings = record.potentialWinnings;
+
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    <span>Apuesta en: ${betDescription} (Bs. ${record.stake.toFixed(2)})</span>
+                    <div style="text-align: right;">
+                        <span class="status-tag ${statusClass}">${record.status.charAt(0).toUpperCase() + record.status.slice(1)}</span>
+                        ${record.status === 'won' ? `<span style="display: block; font-size: 0.8rem; color: var(--color-success);">+ Bs. ${winnings.toFixed(2)}</span>` : ''}
+                    </div>
+                `;
+                list.appendChild(listItem);
+            });
+        });
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message, 'error');
+        // Mostrar mensajes de error si falla la carga
+        if (emptyMsgRecent) emptyMsgRecent.textContent = 'Error al cargar apuestas.';
+        if (emptyMsgFull) emptyMsgFull.textContent = 'Error al cargar historial.';
+    }
+}
+
+
+// =======================================================================
+//  4. LISTENERS Y MANEJADORES DE EVENTOS
 // =======================================================================
 
 function handlePayoutMethodChange() {
@@ -243,7 +305,7 @@ function handleUserDataSubmit() {
         const birthDate = document.getElementById('birth-date').value;
         const ageWarning = document.getElementById('age-warning');
 
-        if (!isOver18(birthDate)) {
+        if (birthDate && !isOver18(birthDate)) { // Solo valida si se ingresó una fecha
             ageWarning.classList.remove('hidden');
             submitButton.disabled = false;
             return;
@@ -258,7 +320,7 @@ function handleUserDataSubmit() {
                 fullName: formData.get('full-name'),
                 cedula: formData.get('cedula'),
                 birthDate: birthDate,
-                phone: phoneValue ? `+58${phoneValue}` : '' // Asegura el formato +58
+                phone: phoneValue ? `+58${phoneValue}` : ''
             };
 
             const response = await fetchWithAuth(`${API_BASE_URL}/user-data`, {
@@ -269,7 +331,7 @@ function handleUserDataSubmit() {
             if (!response.ok) throw new Error(result.message);
 
             showToast(result.message || 'Datos actualizados con éxito.', 'success');
-            await loadUserData(); // Recargar los datos después de guardar
+            await loadUserData();
         } catch (error) {
             showToast(error.message || 'Error al guardar los datos.', 'error');
         } finally {
@@ -280,9 +342,6 @@ function handleUserDataSubmit() {
     document.getElementById('phone')?.addEventListener('input', formatPhoneNumber);
 }
 
-// ==========================================================
-//  INICIO DE LA MODIFICACIÓN (Lógica de Teléfono Completa)
-// ==========================================================
 function renderPhoneVerificationStatus(isVerified, phone) {
     const statusContainer = document.getElementById('phone-verification-status');
     const verifyBtn = document.getElementById('verify-phone-btn');
@@ -300,8 +359,8 @@ function renderPhoneVerificationStatus(isVerified, phone) {
 
     if (isVerified) {
         statusContainer.innerHTML = `<p class="status-icon verified"><i class="fa-solid fa-circle-check"></i> Teléfono Verificado</p>`;
-        verifyBtn.textContent = 'Modificar'; // O 'Verificado' y deshabilitado
-        verifyBtn.disabled = true; // Opcional: deshabilitar si ya está verificado
+        verifyBtn.textContent = 'Verificado';
+        verifyBtn.disabled = true;
     } else {
         statusContainer.innerHTML = `<p class="status-icon unverified"><i class="fa-solid fa-triangle-exclamation"></i> Pendiente de Verificación</p>`;
         verifyBtn.textContent = 'Verificar Ahora';
@@ -314,7 +373,7 @@ async function handlePhoneVerification() {
     if (!verifyBtn) return;
 
     verifyBtn.addEventListener('click', async () => {
-        if (verifyBtn.disabled) return; // No hacer nada si está deshabilitado
+        if (verifyBtn.disabled) return;
         
         verifyBtn.disabled = true;
         showToast('Solicitando código de verificación...');
@@ -333,7 +392,6 @@ async function handlePhoneVerification() {
         }
     });
 
-    // Añadir listener para el modal de verificación telefónica
     const phoneVerificationForm = document.getElementById('phone-verification-form');
     phoneVerificationForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -364,9 +422,6 @@ async function handlePhoneVerification() {
         }
     });
 }
-// ==========================================================
-//  FIN DE LA MODIFICACIÓN
-// ==========================================================
 
 function handlePasswordChange() {
     const passwordChangeForm = document.getElementById('password-change-form');
@@ -394,7 +449,6 @@ function handlePasswordChange() {
 
         if (!isCodeStep) {
             try {
-                // Paso 1: Validar contraseña actual y solicitar código
                 await fetchWithAuth(`${API_BASE_URL}/validate-current-password`, {
                     method: 'POST',
                     body: JSON.stringify({ currentPassword })
@@ -415,7 +469,6 @@ function handlePasswordChange() {
                 submitButton.innerHTML = isCodeStep ? 'Confirmar Cambio' : originalBtnText;
             }
         } else {
-            // Paso 2: Confirmar el cambio con el código
             const code = document.getElementById('confirmation-code').value;
             try {
                 const response = await fetchWithAuth(`${API_BASE_URL}/change-password`, {
@@ -441,7 +494,6 @@ function handlePasswordChange() {
 }
 
 function handle2FASetup() {
-    // (Tu lógica de simulación de 2FA está bien como placeholder)
     const statusContainer = document.getElementById('2fa-status-container');
     if (!statusContainer) return;
     const is2FAActive = localStorage.getItem('is2FAActive') === 'true';
@@ -490,18 +542,31 @@ export async function initAccountDashboard() {
         if (targetLink) targetLink.click();
     }
 
-    // Cargar datos principales
     await loadUserData();
     await loadPayoutMethods();
+    await renderBetHistory(); // <-- ¡Añadido!
 
-    // Inicializar listeners
     handleUserDataSubmit();
-    handlePhoneVerification(); // <-- Llamada a la nueva función
+    handlePhoneVerification();
     handlePasswordChange();
     handlePayoutMethodChange();
     handle2FASetup();
 
-    // Listener para botones de eliminar/primario
+    // Redirigir el enlace de "Administrar métodos" del modal de retiro
+    const editMethodLink = document.querySelector('.edit-method-link');
+    if (editMethodLink) {
+        editMethodLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const withdrawModal = document.getElementById('withdraw-modal');
+            if (withdrawModal) closeModal(withdrawModal);
+            
+            const targetLink = document.querySelector(`.account-menu-link[data-target="mis-datos"]`);
+            if (targetLink) {
+                 setTimeout(() => targetLink.click(), 50); 
+            }
+        });
+    }
+
     document.getElementById('payout-methods-list')?.addEventListener('click', async (e) => {
         const deleteBtn = e.target.closest('.delete-method-btn');
         const setPrimaryBtn = e.target.closest('.set-primary-btn');
