@@ -36,7 +36,6 @@
                                 <li><a href="#" class="account-menu-link" data-target="seguridad"><i class="fa-solid fa-lock"></i> Seguridad</a></li>
                                 <li><a href="#" class="account-menu-link" data-target="historial-transacciones"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transacciones</a></li>
                                 <li><a href="#" class="account-menu-link" data-target="historial-apuestas"><i class="fa-solid fa-dice"></i> Historial de Apuestas</a></li>
-                                <!-- CORREGIDO: La ruta ahora empieza con "/" para ser absoluta -->
                                 <li id="admin-panel-link" style="display: none;"><a href="/admin/index.html" class="account-menu-link" target="_blank"><i class="fa-solid fa-gear"></i> Panel de Admin</a></li>
                                 <li><button id="logout-btn" class="account-menu-link"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</button></li>
                             </ul>
@@ -44,7 +43,6 @@
                     </aside>
 
                     <section class="account-content">
-                        <!-- Cada sección ahora tiene un título claro y está separada -->
                         <div id="mi-panel" class="account-section active">
                             <h2>Resumen de la Cuenta</h2>
                             <div class="quick-info-grid">
@@ -105,20 +103,106 @@
 
                             <h2 class="mt-40">Mis Métodos de Retiro</h2>
                             <div id="payout-methods-list" class="card">
-                                <p class="empty-message empty-message-payout" style="display: block;">Aún no tienes métodos de retiro.</p>
+                                <p class="empty-message empty-message-payout" style="display: block;">Aún no tienes métodos de retiro. Añade uno para poder retirar tus ganancias.</p>
                             </div>
 
                             <h3 class="mt-40">Añadir Nuevo Método</h3>
                             <form id="payout-method-form" class="auth-form form-grid">
-                                <!-- Contenido del formulario de métodos de pago -->
+                                <div class="form-group grid-span-2">
+                                    <label for="method-type">Tipo de Método</label>
+                                    <div class="select-wrapper">
+                                        <select id="method-type" name="method-type" required>
+                                            <option value="">Selecciona un tipo</option>
+                                            <option value="pago_movil">Pago Móvil</option>
+                                            <option value="zelle">Zelle</option>
+                                            <option value="usdt">USDT (Cripto)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div id="pago_movil-fields" class="form-dynamic-fields hidden grid-span-2 form-grid">
+                                    <div class="form-group">
+                                        <label for="bank">Banco</label>
+                                        <input type="text" id="bank" name="bank" placeholder="Ej: Banco de Venezuela">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cedula-pm">Cédula Asociada</label>
+                                        <input type="text" id="cedula-pm" name="cedula" placeholder="V-12345678">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="phone-pm">Teléfono Asociado</label>
+                                        <input type="tel" id="phone-pm" name="phone" placeholder="04141234567" pattern="[0-9]{11}" title="11 dígitos sin guiones">
+                                    </div>
+                                </div>
+
+                                <div id="zelle-fields" class="form-dynamic-fields hidden grid-span-2 form-grid">
+                                    <div class="form-group">
+                                        <label for="zelle-email">Correo Electrónico Zelle</label>
+                                        <input type="email" id="zelle-email" name="email" placeholder="ejemplo@correo.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="zelle-name">Nombre en Cuenta</label>
+                                        <input type="text" id="zelle-name" name="name" placeholder="Tu Nombre Apellido">
+                                    </div>
+                                </div>
+
+                                <div id="usdt-fields" class="form-dynamic-fields hidden grid-span-2 form-grid">
+                                    <div class="form-group">
+                                        <label for="usdt-network">Red</label>
+                                        <div class="select-wrapper">
+                                            <select id="usdt-network" name="network">
+                                                <option value="">Selecciona una red</option>
+                                                <option value="trc20">TRC20</option>
+                                                <option value="erc20">ERC20</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="usdt-address">Dirección de Billetera</label>
+                                        <input type="text" id="usdt-address" name="address" placeholder="Trc20AddressHere...">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group checkbox-group grid-span-2">
+                                    <input type="checkbox" id="is-primary" name="is-primary">
+                                    <label for="is-primary">Establecer como método principal</label>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary btn-cta grid-span-2" id="add-method-btn">Añadir Método</button>
                             </form>
                         </div>
 
                         <div id="seguridad" class="account-section">
                             <h2>Cambiar Contraseña</h2>
                             <form id="password-change-form" class="auth-form form-grid">
-                                <!-- Contenido del formulario de seguridad -->
+                                <div class="form-group">
+                                    <label for="current-password">Contraseña Actual</label>
+                                    <div class="input-wrapper">
+                                        <input type="password" id="current-password" name="current-password" placeholder="Tu contraseña actual" required>
+                                        <button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña"><i class="fa-solid fa-eye"></i></button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-password">Nueva Contraseña</label>
+                                    <div class="input-wrapper">
+                                        <input type="password" id="new-password" name="new-password" placeholder="Mínimo 8 caracteres" required>
+                                        <button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña"><i class="fa-solid fa-eye"></i></button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirm-new-password">Confirmar Nueva Contraseña</label>
+                                    <div class="input-wrapper">
+                                        <input type="password" id="confirm-new-password" name="confirm-new-password" placeholder="Repite la nueva contraseña" required>
+                                        <button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña"><i class="fa-solid fa-eye"></i></button>
+                                    </div>
+                                </div>
+                                <div id="confirmation-code-group" class="form-group hidden">
+                                    <label for="confirmation-code">Código de Confirmación</label>
+                                    <input type="text" id="confirmation-code" name="confirmation-code" placeholder="Código de 6 dígitos" maxlength="6">
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-cta grid-span-2" id="change-password-btn">Cambiar Contraseña</button>
                             </form>
+
                             <h2 class="mt-40">Autenticación de Dos Factores (2FA)</h2>
                             <div class="card security-card" id="2fa-status-container"></div>
                         </div>
