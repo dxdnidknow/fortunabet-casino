@@ -45,7 +45,7 @@ function formatPhoneNumber(event) {
 
 export async function loadUserData() {
     try {
-        const response = await fetchWithAuth(`${API_BASE_URL}/user-data`);
+        const response = await fetchWithAuth(`${API_BASE_URL}/user/user-data`);
         if (!response.ok) throw new Error('No se pudieron cargar los datos del usuario.');
         const userData = await response.json();
         
@@ -117,7 +117,7 @@ export async function loadPayoutMethods() {
     if (!listContainer) return;
     
     try {
-        const response = await fetchWithAuth(`${API_BASE_URL}/payout-methods`); 
+        const response = await fetchWithAuth(`${API_BASE_URL}/user/payout-methods`); 
         if (!response.ok) throw new Error('No se pudieron cargar los métodos de pago.');
         const methods = await response.json();
 
@@ -171,7 +171,7 @@ export async function renderBetHistory() {
     const emptyMsgFull = document.querySelector('#historial-apuestas .empty-message-bets');
 
     try {
-        const response = await fetchWithAuth(`${API_BASE_URL}/get-bets`);
+        const response = await fetchWithAuth(`${API_BASE_URL}/user/get-bets`);
         if (!response.ok) throw new Error('No se pudo cargar el historial de apuestas.');
         
         const betHistory = await response.json(); 
@@ -227,7 +227,7 @@ export async function renderTransactionHistory() {
     const emptyMsg = document.querySelector('.empty-message-transactions');
 
     try {
-        const response = await fetchWithAuth(`${API_BASE_URL}/transactions`); 
+        const response = await fetchWithAuth(`${API_BASE_URL}/user/transactions`); 
         if (!response.ok) throw new Error('No se pudo cargar el historial de transacciones.');
         
         const transactions = await response.json();
@@ -322,7 +322,7 @@ function handlePayoutMethodChange() {
                 data.details.address = formData.get('address');
             }
 
-            const response = await fetchWithAuth(`${API_BASE_URL}/payout-methods`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/user/payout-methods`, {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
@@ -371,7 +371,7 @@ function handleUserDataSubmit() {
                 phone: phoneValue ? `+58${phoneValue}` : ''
             };
 
-            const response = await fetchWithAuth(`${API_BASE_URL}/user-data`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/user/user-data`, {
                 method: 'PUT',
                 body: JSON.stringify(data)
             });
@@ -427,7 +427,7 @@ async function handlePhoneVerification() {
         showToast('Solicitando código de verificación...');
         
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/request-phone-verification`, { method: 'POST' });
+            const response = await fetchWithAuth(`${API_BASE_URL}/user/request-phone-verification`, { method: 'POST' });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
             
@@ -451,7 +451,7 @@ async function handlePhoneVerification() {
         errorEl.textContent = '';
 
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/verify-phone-code`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/user/verify-phone-code`, {
                 method: 'POST',
                 body: JSON.stringify({ code: codeInput.value })
             });
@@ -474,15 +474,6 @@ async function handlePhoneVerification() {
 function handlePasswordChange() {
     const passwordChangeForm = document.getElementById('password-change-form');
     if (!passwordChangeForm) return;
-
-    // ===================================================================
-    // ADVERTENCIA: La lógica de esta función está SIMULADA.
-    // Requiere la creación de nuevas rutas en el backend para funcionar:
-    // 1. Una ruta para verificar la contraseña actual.
-    // 2. Una ruta para enviar un código de confirmación al email.
-    // 3. Una ruta para verificar el código y cambiar la contraseña.
-    // Sin estas rutas, esta funcionalidad NO ES REAL.
-    // ===================================================================
 
     let isCodeStep = false;
     const confirmationGroup = document.getElementById('confirmation-code-group');
@@ -521,13 +512,6 @@ function handlePasswordChange() {
 function handle2FASetup() {
     const statusContainer = document.getElementById('2fa-status-container');
     if (!statusContainer) return;
-
-    // ===================================================================
-    // ADVERTENCIA: Esta funcionalidad de 2FA es 100% SIMULADA.
-    // Usa localStorage, lo cual NO PROVEE NINGUNA SEGURIDAD REAL.
-    // Para una implementación real se necesita un backend que maneje
-    // la generación de secretos (QR), y la validación de códigos TOTP.
-    // ===================================================================
 
     let is2FAActive = localStorage.getItem('is2FAActive_simulated') === 'true';
     function render2FAState() {
@@ -610,7 +594,7 @@ export async function initAccountDashboard() {
             const methodId = deleteBtn.dataset.id;
              if (!confirm('¿Estás seguro de que quieres eliminar este método de retiro?')) return;
             try {
-                const response = await fetchWithAuth(`${API_BASE_URL}/payout-methods/${methodId}`, { method: 'DELETE' }); 
+                const response = await fetchWithAuth(`${API_BASE_URL}/user/payout-methods/${methodId}`, { method: 'DELETE' }); 
                 if (!response.ok) throw new Error((await response.json()).message || 'Error al eliminar');
                 showToast('Método eliminado con éxito.', 'success');
                 loadPayoutMethods();
@@ -620,7 +604,7 @@ export async function initAccountDashboard() {
         } else if (setPrimaryBtn) {
             const methodId = setPrimaryBtn.dataset.id;
             try {
-                const response = await fetchWithAuth(`${API_BASE_URL}/payout-methods/${methodId}/primary`, { method: 'POST' }); 
+                const response = await fetchWithAuth(`${API_BASE_URL}/user/payout-methods/${methodId}/primary`, { method: 'POST' }); 
                 if (!response.ok) throw new Error((await response.json()).message || 'Error al establecer principal');
                 showToast('Método establecido como principal.', 'success');
                 loadPayoutMethods();
@@ -629,4 +613,4 @@ export async function initAccountDashboard() {
             }
         }
     });
-}
+}   

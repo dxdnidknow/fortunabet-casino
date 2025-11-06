@@ -1,9 +1,9 @@
 // Archivo: js/bet.js (MODIFICADO Y COMPLETO)
 
 import { showToast } from './ui.js';
-import { fetchWithAuth } from './auth.js'; // <-- AÑADIDO
-import { API_BASE_URL } from './config.js'; // <-- AÑADIDO
-import { openModal } from './modal.js'; // <-- AÑADIDO
+import { fetchWithAuth } from './auth.js';
+import { API_BASE_URL } from './config.js';
+import { openModal } from './modal.js';
 
 let bets = JSON.parse(localStorage.getItem('fortunaBetCoupon')) || [];
 
@@ -64,13 +64,11 @@ function calculateWinnings() {
     }
     const stake = parseFloat(stakeInputEl.value) || 0;
     
-    // Cálculo de Parley (multiplicador)
     const totalOdds = bets.reduce((acc, bet) => acc * bet.odds, 1);
     const potentialWinnings = stake * totalOdds;
     
     winningsEl.textContent = `Bs. ${potentialWinnings.toFixed(2)}`;
     
-    // Reiniciar la animación de resaltado
     winningsEl.classList.remove('highlight'); 
     void winningsEl.offsetWidth; 
     winningsEl.classList.add('highlight');
@@ -81,21 +79,17 @@ function saveBetsToLocalStorage() {
 }
 
 export function addBet(betInfo) {
-    // Busca si ya existe una apuesta para el mismo evento (basado en el 'team' que es el ID del partido)
     const existingBetIndex = bets.findIndex(bet => bet.team.split(' - ')[0] === betInfo.team.split(' - ')[0]);
     
     if (existingBetIndex !== -1) {
-        // Si la apuesta es exactamente la misma, la elimina
         if (bets[existingBetIndex].id === betInfo.id) {
             bets.splice(existingBetIndex, 1);
             showToast('Selección eliminada del cupón');
         } else {
-            // Si es una apuesta diferente para el mismo partido, la reemplaza
             bets[existingBetIndex] = { ...betInfo, id: betInfo.id || Date.now() };
             showToast('Selección actualizada en el cupón');
         }
     } else {
-        // Si es un partido nuevo, la añade
         bets.push({ ...betInfo, id: betInfo.id || Date.now() });
         showToast('Selección añadida al cupón');
     }
@@ -106,7 +100,6 @@ export function addBet(betInfo) {
 }
 
 function removeBetById(betIdToRemove) {
-    // Asegurarse de comparar el ID correcto
     bets = bets.filter(bet => bet.id.toString() !== betIdToRemove.toString());
     saveBetsToLocalStorage();
     showToast('Apuesta eliminada del cupón');
@@ -129,9 +122,6 @@ export function initBetSlip() {
         }
     });
 
-    // ==========================================================
-    //  INICIO DE LA MODIFICACIÓN (Llamada a la API para apostar)
-    // ==========================================================
     document.getElementById('place-bet-btn')?.addEventListener('click', async () => {
         const stakeInput = document.querySelector('.stake-input');
         const stake = parseFloat(stakeInput.value) || 0;
@@ -149,7 +139,7 @@ export function initBetSlip() {
         const currentUser = localStorage.getItem('fortunaUser');
         if (!currentUser) {
             showToast('Debes iniciar sesión para realizar una apuesta.', 'info');
-            openModal(document.getElementById('login-modal')); // Abre el modal de login
+            openModal(document.getElementById('login-modal'));
             return;
         }
 
@@ -158,12 +148,11 @@ export function initBetSlip() {
         placeBetBtn.innerHTML = '<span class="spinner-sm"></span> Apostando...';
 
         try {
-            // Esta es la nueva ruta del backend que debes crear en routes/user.js
-            const response = await fetchWithAuth(`${API_BASE_URL}/place-bet`, {
+            const response = await fetchWithAuth(`${API_BASE_URL}/user/place-bet`, {
                 method: 'POST',
                 body: JSON.stringify({
-                    bets: bets, // El array de selecciones
-                    stake: stake // El monto
+                    bets: bets,
+                    stake: stake
                 })
             });
             
@@ -172,7 +161,6 @@ export function initBetSlip() {
 
             showToast(data.message, 'success');
 
-            // Limpiar el cupón solo si la apuesta fue exitosa
             bets = [];
             saveBetsToLocalStorage();
             renderBetSlip();
@@ -185,7 +173,4 @@ export function initBetSlip() {
             placeBetBtn.innerHTML = originalBtnText;
         }
     });
-    // ==========================================================
-    //  FIN DE LA MODIFICACIÓN
-    // ==========================================================
 }

@@ -1,4 +1,4 @@
-// Archivo: backend/server.js (CORREGIDO PARA RENDER Y ORDEN DE RUTAS)
+// Archivo: backend/server.js (CORRECCIÓN FINAL DE RUTAS)
 // =======================================================================
 //  CONFIGURACIÓN INICIAL Y DEPENDENCIAS
 // =======================================================================
@@ -26,15 +26,8 @@ const port = process.env.PORT || 3001;
 // =======================================================================
 app.use(cors());
 app.use(express.json());
-
-// =======================================================================
-//  CORRECCIÓN PARA RENDER (TRUST PROXY)
-// =======================================================================
-// Esta línea es crucial para que express-rate-limit funcione detrás de un proxy.
 app.set('trust proxy', 1);
-// =======================================================================
 
-// Middleware para hacer 'db' accesible en todas las peticiones
 app.use((req, res, next) => {
     req.db = getDb();
     next();
@@ -44,8 +37,8 @@ app.use((req, res, next) => {
 //  CONFIGURACIÓN DE SEGURIDAD: RATE LIMITER
 // =======================================================================
 const sportsApiLimiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutos
-	max: 100, // 100 peticiones por IP cada 15 minutos
+	windowMs: 15 * 60 * 1000,
+	max: 100,
 	standardHeaders: true,
 	legacyHeaders: false,
     message: { message: 'Demasiadas peticiones a la API de deportes. Intente de nuevo en 15 minutos.' }
@@ -56,16 +49,25 @@ const sportsApiLimiter = rateLimit({
 // =======================================================================
 const API_KEY = process.env.ODDS_API_KEY;
 if (!API_KEY) { console.error('❌ Error: La variable de entorno ODDS_API_KEY no está definida.'); process.exit(1); }
-const eventsCache = new NodeCache({ stdTTL: 600 }); // Cache de 10 minutos
+const eventsCache = new NodeCache({ stdTTL: 600 });
 
 // =======================================================================
-//  RUTAS DE LA APLICACIÓN (ORDEN CORREGIDO)
+//  RUTAS DE LA APLICACIÓN (ORDEN CORREGIDO Y RUTAS ESPECÍFICAS)
 // =======================================================================
 
-// --- Rutas Públicas de Autenticación ---
-app.use('/api', authRoutes);
+// --- Rutas Públicas (Autenticación y Deportes) ---
+app.use('/api', authRoutes); // Contiene /register, /login, etc.
 
-// --- Rutas Públicas de Deportes (AHORA VAN ANTES QUE LAS DE USUARIO) ---
+app.get('/api/sports', sportsApiLimiter, async (req, res) => {
+    try {
+        const cachedSports = eventsCache.get('sportsList');
+        if (cachedSports) { return res.json(cachedSports); }
+        const response = await axios.get('https://api.the-odds-api.com/v4/sports', { params: { apiKey: API_KEY } });
+        eventsCache.set('sportsList', response.data, 3600);
+        res.json(response.data);
+    } catch (error) { handleApiError(error, res); }
+});
+
 app.get('/api/events/:sportKey', sportsApiLimiter, async (req, res) => {
     try {
         const { sportKey } = req.params;
@@ -75,16 +77,6 @@ app.get('/api/events/:sportKey', sportsApiLimiter, async (req, res) => {
             params: { apiKey: API_KEY, regions: 'us,eu,uk', markets: 'h2h,totals', oddsFormat: 'decimal' }
         });
         eventsCache.set(sportKey, response.data);
-        res.json(response.data);
-    } catch (error) { handleApiError(error, res); }
-});
-
-app.get('/api/sports', sportsApiLimiter, async (req, res) => {
-    try {
-        const cachedSports = eventsCache.get('sportsList');
-        if (cachedSports) { return res.json(cachedSports); }
-        const response = await axios.get('https://api.the-odds-api.com/v4/sports', { params: { apiKey: API_KEY } });
-        eventsCache.set('sportsList', response.data, 3600); // Cache de 1 hora
         res.json(response.data);
     } catch (error) { handleApiError(error, res); }
 });
@@ -99,8 +91,9 @@ app.get('/api/event/:sportKey/:eventId', sportsApiLimiter, (req, res) => {
     res.status(404).json({ message: 'Evento no encontrado o caché expirado.' });
 });
 
-// --- Rutas Protegidas de Usuario (AHORA VAN DESPUÉS DE LAS PÚBLICAS) ---
-app.use('/api', userRoutes);
+// --- Rutas Protegidas de Usuario ---
+// Ahora todas las rutas dentro de 'userRoutes' comenzarán con /api/user/
+app.use('/api/user', userRoutes);
 
 // --- Rutas Protegidas de Administrador ---
 app.use('/api/admin', adminRoutes);
@@ -122,7 +115,7 @@ function handleApiError(error, res) {
 //  INICIO DEL SERVIDOR
 // =======================================================================
 connectDB().then(() => {
-    app.listen(port, '0.0.0.0', () => { // Escuchar en 0.0.0.0 para compatibilidad con Render/Netlify
+    app.listen(port, '0.0.0.0', () => {
         console.log('-------------------------------------------');
         console.log(`🚀 Servidor backend de FortunaBet`);
         console.log(`   Escuchando en el puerto: ${port}`);

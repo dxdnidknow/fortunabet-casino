@@ -1,4 +1,4 @@
-// Archivo: js/payments.js (MODIFICADO Y COMPLETO)
+// Archivo: js/payments.js (COMPLETO Y MODIFICADO)
 
 import { showToast } from './ui.js';
 import { fetchWithAuth } from './auth.js'; 
@@ -17,7 +17,7 @@ function showStep(stepNumber) {
 }
 
 function showInstructions(method) {
-    currentMethod = method; // Guardamos el método actual (ej: 'pago-movil')
+    currentMethod = method;
     document.querySelectorAll('.payment-instructions').forEach(inst => inst.classList.remove('active'));
     const instructions = document.querySelector(`#instructions-${method}`);
     if (instructions) {
@@ -28,7 +28,6 @@ function showInstructions(method) {
 
 export function initPaymentModals() {
     const depositModal = document.getElementById('deposit-modal');
-    
     if (!depositModal) return;
 
     depositModal.addEventListener('click', (e) => {
@@ -78,7 +77,7 @@ export function initPaymentModals() {
         submitButton.innerHTML = '<span class="spinner-sm"></span> Reportando...';
 
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/request-deposit`, { 
+            const response = await fetchWithAuth(`${API_BASE_URL}/user/request-deposit`, { 
                 method: 'POST',
                 body: JSON.stringify({
                     amount: amount,
@@ -104,20 +103,15 @@ export function initPaymentModals() {
         }
     });
     
-    // ==========================================================
-    //  LÓGICA DE RETIRO
-    // ==========================================================
     const withdrawForm = document.getElementById('withdraw-form');
     const withdrawModal = document.getElementById('withdraw-modal');
 
-    // Listener para abrir el modal de retiro
     document.body.addEventListener('click', (e) => {
         if (e.target.closest('[data-modal-target="withdraw-modal"]')) {
             e.preventDefault();
             const modal = document.getElementById('withdraw-modal');
             if(modal) {
                 openModal(modal);
-                // IMPORTANTE: Recargamos los métodos de pago cada vez que se abre el modal
                 loadPayoutMethods(); 
             }
         }
@@ -148,10 +142,7 @@ export function initPaymentModals() {
         submitButton.innerHTML = '<span class="spinner-sm"></span> Procesando...';
 
         try {
-            // ==========================================================
-            //  CORREGIDO: La ruta ahora es /withdraw
-            // ==========================================================
-            const response = await fetchWithAuth(`${API_BASE_URL}/withdraw`, { 
+            const response = await fetchWithAuth(`${API_BASE_URL}/user/withdraw`, { 
                 method: 'POST',
                 body: JSON.stringify({
                     amount: amount,
