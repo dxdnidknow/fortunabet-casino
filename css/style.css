@@ -470,128 +470,130 @@ a:hover { color: var(--color-primary-light); }
 
 .account-dashboard-grid {
     display: grid;
-    grid-template-columns: 250px 1fr;
+    grid-template-columns: 280px 1fr; /* Columna fija para el menú, el resto es flexible */
     gap: 30px;
     align-items: start;
 }
 
+/* --- Menú de la Izquierda --- */
 .account-sidebar {
-    background-color: var(--color-surface-1);
-    border-radius: var(--border-radius-md);
-    padding: 20px;
     position: sticky;
-    top: calc(var(--header-height) + var(--top-bar-height) + 25px);
+    top: calc(var(--header-height) + var(--top-bar-height) + 25px); /* Se queda fijo al hacer scroll */
 }
 
-.account-sidebar ul {
+.user-info-card {
+    background-color: var(--color-surface-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    padding: 25px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+.user-info-card .user-avatar { font-size: 4rem; margin-bottom: 15px; color: var(--color-text-secondary); }
+.user-info-card h3 { font-size: 1.2rem; margin-bottom: 5px; }
+.user-info-card .user-balance { color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: 20px; }
+.user-info-card .user-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.account-menu ul {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 5px;
 }
 
-.account-sidebar ul a {
+/* Estilo de los botones del menú */
+.account-menu ul a,
+.account-menu ul button {
     display: flex;
+    width: 100%;
     align-items: center;
     gap: 15px;
-    padding: 12px 15px;
+    padding: 14px 20px;
     color: var(--color-text-secondary);
     font-weight: 500;
     border-radius: var(--border-radius-sm);
     transition: var(--main-transition);
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    text-align: left;
 }
 
-.account-sidebar ul a:hover {
-    background-color: var(--color-surface-2);
+.account-menu ul a:hover,
+.account-menu ul button:hover {
+    background-color: var(--color-surface-1);
     color: var(--color-text-primary);
 }
 
-.account-sidebar ul a.active {
+.account-menu ul a.active {
     background-color: var(--color-primary);
     color: #000;
     font-weight: 600;
 }
+.account-menu ul a.active i { color: #000; }
 
-.account-sidebar ul a i {
-    width: 20px;
-    text-align: center;
+.account-menu ul i { width: 20px; text-align: center; }
+
+/* --- Panel de Contenido de la Derecha (LA MAGIA ESTÁ AQUÍ) --- */
+.account-content {
+    background-color: var(--color-surface-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    padding: 40px;
+    min-height: 500px;
 }
 
-.account-section {
-    display: none; /* Ocultamos todas las secciones por defecto */
-}
+.account-section { display: none; }
+.account-section.active { display: block; animation: fadeIn 0.5s ease; }
 
-.account-section.active {
-    display: block; /* Mostramos solo la activa */
-    animation: fadeIn 0.5s ease;
-}
-
-.account-card .card-subtitle {
-    color: var(--color-text-secondary);
-    margin-top: -15px;
+.account-section h2 {
+    font-size: 1.8rem;
+    padding-bottom: 15px;
     margin-bottom: 30px;
-    font-size: 0.95rem;
+    border-bottom: 1px solid var(--color-border);
 }
 
-.form-grid {
+.quick-info-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
 }
+.info-card {
+    background-color: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    padding: 25px;
+}
+.info-card h3 { font-size: 1rem; color: var(--color-text-secondary); margin-bottom: 15px; }
+.balance-amount { font-size: 2.2rem; font-weight: 700; color: var(--color-primary); margin-bottom: 20px; }
+.card-actions { display: flex; gap: 10px; }
+.info-card ul { list-style: none; display: flex; flex-direction: column; gap: 15px; }
+.link-action { color: var(--color-text-primary); font-weight: 500; display: flex; align-items: center; gap: 10px; }
+.link-action i { color: var(--color-primary); }
 
-/* --- Responsividad del Dashboard --- */
+.card {
+    background-color: var(--color-surface-2);
+    padding: 25px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--color-border);
+}
+
+.mt-40 { margin-top: 40px !important; }
+.mt-15 { margin-top: 15px !important; }
+.grid-span-2 { grid-column: 1 / -1; }
+
+/* --- Responsividad del Panel de Cuenta --- */
 @media (max-width: 900px) {
     .account-dashboard-grid {
         grid-template-columns: 1fr;
-        gap: 25px; /* Espacio entre el menú y el contenido */
     }
-    .account-content {
-        grid-row: 2; /* El contenido va en la segunda fila */
-    }
-    
-    /* === INICIO DE LA NUEVA SOLUCIÓN (REEMPLAZA ESTO) === */
-
     .account-sidebar {
-        grid-row: 1; /* El menú va en la primera fila */
-        position: static; /* Quitamos el 'sticky' en móvil */
-        background: none;
-        padding: 0;
-        border: none;
-        margin-bottom: 0;
+        position: static;
+        margin-bottom: 30px;
     }
-    
-    .account-sidebar ul {
-        display: flex;
-        flex-direction: column; /* CLAVE: Apila los elementos verticalmente */
-        gap: 10px; /* Espacio entre cada botón del menú */
-        
-        /* Eliminamos todo lo que forzaba el scroll horizontal */
-        overflow-x: hidden; 
-        white-space: normal; 
-        border-bottom: none;
-    }
-
-    .account-sidebar ul a {
-        /* Hacemos que los enlaces se vean como botones apilados */
-        padding: 12px 15px;
-        color: var(--color-text-secondary);
-        background: var(--color-surface-2); /* Damos un fondo para que se distingan */
-        border-radius: var(--border-radius-sm); /* Bordes redondeados */
-        border-bottom: none;
-    }
-
-    .account-sidebar ul a.active {
-        /* El estilo activo sigue siendo el mismo, lo cual es perfecto */
-        color: #000;
-        background-color: var(--color-primary);
-        border-bottom-color: transparent; /* Nos aseguramos de que no haya línea de tab */
-    }
-}
-
-@media (max-width: 600px) {
-    .form-grid {
-        grid-template-columns: 1fr; /* Un campo por fila en móvil */
-    }
+    .account-content { padding: 25px; }
 }
 /* ==========================================================================
    16. MODALES DE DEPÓSITO Y RETIRO

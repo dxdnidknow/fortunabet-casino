@@ -36,6 +36,7 @@
                                 <li><a href="#" class="account-menu-link" data-target="seguridad"><i class="fa-solid fa-lock"></i> Seguridad</a></li>
                                 <li><a href="#" class="account-menu-link" data-target="historial-transacciones"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transacciones</a></li>
                                 <li><a href="#" class="account-menu-link" data-target="historial-apuestas"><i class="fa-solid fa-dice"></i> Historial de Apuestas</a></li>
+                                <!-- CORREGIDO: La ruta ahora empieza con "/" para ser absoluta -->
                                 <li id="admin-panel-link" style="display: none;"><a href="/admin/index.html" class="account-menu-link" target="_blank"><i class="fa-solid fa-gear"></i> Panel de Admin</a></li>
                                 <li><button id="logout-btn" class="account-menu-link"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</button></li>
                             </ul>
@@ -43,36 +44,34 @@
                     </aside>
 
                     <section class="account-content">
-                        <!-- ======================================================= -->
-                        <!--       ESTE ES TODO EL CONTENIDO INTERNO QUE FALTABA     -->
-                        <!-- ======================================================= -->
+                        <!-- Cada sección ahora tiene un título claro y está separada -->
                         <div id="mi-panel" class="account-section active">
                             <h2>Resumen de la Cuenta</h2>
-                            <div class="form-grid">
-                                <div class="account-card">
+                            <div class="quick-info-grid">
+                                <div class="info-card">
                                     <h3>Balance Actual</h3>
-                                    <p class="balance" id="dashboard-balance">Bs. 0.00</p>
-                                    <div class="account-buttons">
-                                        <button class="btn btn-primary" data-modal-trigger="deposit-modal">Depositar</button>
-                                        <button class="btn btn-secondary" data-modal-trigger="withdraw-modal">Retirar</button>
+                                    <p class="balance-amount" id="dashboard-balance">Bs. 0.00</p>
+                                    <div class="card-actions">
+                                        <button class="btn btn-primary btn-sm" data-modal-trigger="deposit-modal">Depositar</button>
+                                        <button class="btn btn-secondary btn-sm" data-modal-trigger="withdraw-modal">Retirar</button>
                                     </div>
                                 </div>
-                                <div class="account-card">
+                                <div class="info-card">
                                     <h3>Acciones Rápidas</h3>
                                     <ul>
-                                        <li><a href="#" class="account-menu-link" data-target="historial-apuestas">Ver Historial de Apuestas</a></li>
-                                        <li><a href="#" class="account-menu-link" data-target="historial-transacciones">Ver Últimas Transacciones</a></li>
-                                        <li><a href="#" class="account-menu-link" data-target="mis-datos">Añadir Método de Retiro</a></li>
+                                        <li><a href="#" class="link-action account-menu-link" data-target="historial-apuestas"><i class="fa-solid fa-chart-line"></i> Ver Historial de Apuestas</a></li>
+                                        <li><a href="#" class="link-action account-menu-link" data-target="historial-transacciones"><i class="fa-solid fa-receipt"></i> Ver Últimas Transacciones</a></li>
+                                        <li><a href="#" class="link-action account-menu-link" data-target="mis-datos"><i class="fa-solid fa-credit-card"></i> Añadir Método de Retiro</a></li>
                                     </ul>
                                 </div>
                             </div>
                             
-                            <h3 style="margin-top: 30px;">Últimas Apuestas</h3>
-                            <div class="history-list">
-                                <ul class="recent-bets"></ul>
+                            <h3 class="mt-40">Últimas Apuestas</h3>
+                            <div class="recent-history card">
+                                <ul class="history-list recent-bets"></ul>
                                 <p class="empty-message empty-message-history" style="display: block;">No tienes apuestas recientes.</p>
+                                <a href="#" class="btn btn-secondary btn-sm mt-15 account-menu-link" data-target="historial-apuestas">Ver Historial Completo →</a>
                             </div>
-                            <a href="#" class="btn btn-secondary" data-target="historial-apuestas" style="margin-top: 15px;">Ver Historial Completo →</a>
                         </div>
 
                         <div id="mis-datos" class="account-section">
@@ -97,11 +96,21 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="phone">Teléfono (+58)</label>
+                                    <input type="tel" id="phone" name="phone" placeholder="414-123-4567" maxlength="13">
                                     <div id="phone-verification-status"></div>
-                                    <input type="tel" id="phone" name="phone" placeholder="414-123-4567" pattern="[0-9]{3}-[0-9]{3}-[0-9]{2}-[0-9]{2}" title="Formato: 414-123-4567" maxlength="13">
-                                    <button type="button" class="btn btn-secondary btn-sm" id="verify-phone-btn" style="display: none; margin-top: 10px;">Verificar Ahora</button>
+                                    <button type="button" class="btn btn-secondary btn-sm mt-10" id="verify-phone-btn" style="display: none;">Verificar Ahora</button>
                                 </div>
-                                <button type="submit" class="btn btn-primary btn-cta" id="save-data-btn" style="grid-column: 1 / -1;">Guardar Cambios</button>
+                                <button type="submit" class="btn btn-primary btn-cta grid-span-2" id="save-data-btn">Guardar Cambios</button>
+                            </form>
+
+                            <h2 class="mt-40">Mis Métodos de Retiro</h2>
+                            <div id="payout-methods-list" class="card">
+                                <p class="empty-message empty-message-payout" style="display: block;">Aún no tienes métodos de retiro.</p>
+                            </div>
+
+                            <h3 class="mt-40">Añadir Nuevo Método</h3>
+                            <form id="payout-method-form" class="auth-form form-grid">
+                                <!-- Contenido del formulario de métodos de pago -->
                             </form>
                         </div>
 
@@ -110,18 +119,22 @@
                             <form id="password-change-form" class="auth-form form-grid">
                                 <!-- Contenido del formulario de seguridad -->
                             </form>
+                            <h2 class="mt-40">Autenticación de Dos Factores (2FA)</h2>
+                            <div class="card security-card" id="2fa-status-container"></div>
                         </div>
 
                         <div id="historial-transacciones" class="account-section">
                             <h2>Historial de Transacciones</h2>
-                            <div class="history-list">
+                            <div class="recent-history card">
+                                <ul class="history-list"></ul>
                                 <p class="empty-message empty-message-transactions" style="display: block;">No hay transacciones recientes.</p>
                             </div>
                         </div>
 
                         <div id="historial-apuestas" class="account-section">
                             <h2>Historial de Apuestas</h2>
-                            <div class="history-list full-history">
+                            <div class="recent-history card">
+                                <ul class="history-list full-history"></ul>
                                 <p class="empty-message empty-message-bets" style="display: block;">No tienes apuestas registradas.</p>
                             </div>
                         </div>
