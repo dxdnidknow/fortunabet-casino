@@ -91,11 +91,9 @@ function renderPayoutMethod(method) {
         detailsHtml = `Banco: ${details.bank || 'N/A'} / Cédula: ${details.cedula || 'N/A'} / Teléfono: ${details.phone || 'N/A'}`;
     } else if (method.methodType === 'zelle') {
         detailsHtml = `Email: ${details.email || 'N/A'} / Nombre: ${details.name || 'N/A'}`;
-    } else if (method.methodType === 'usdt') {
-        detailsHtml = `Red: ${details.network || 'N/A'} / Dirección: <code>${(details.address || 'N/A').substring(0, 10)}...</code>`;
     }
     
-    const li = document.createElement('li');
+    const li = document.createElement('div'); // Cambiado a div para mayor flexibilidad
     li.classList.add('data-list-item', method.isPrimary ? 'primary-method' : '');
     li.dataset.id = method._id;
     li.innerHTML = `
@@ -104,8 +102,8 @@ function renderPayoutMethod(method) {
             <p>${detailsHtml}</p>
         </div>
         <div class="item-action">
-            <button class="btn btn-secondary btn-sm delete-method-btn" data-id="${method._id}">Eliminar</button>
-            ${method.isPrimary ? '<span class="tag tag-primary">Principal</span>' : `<button class="btn btn-secondary btn-sm set-primary-btn" data-id="${method._id}">Establecer Principal</button>`}
+            ${method.isPrimary ? '<span class="tag tag-primary">Principal</span>' : `<button class="btn btn-secondary btn-sm set-primary-btn" data-id="${method._id}">Hacer Principal</button>`}
+            <button class="btn btn-danger btn-sm delete-method-btn" data-id="${method._id}"><i class="fa-solid fa-trash"></i></button>
         </div>
     `;
     return li;
@@ -122,28 +120,22 @@ export async function loadPayoutMethods() {
         const methods = await response.json();
 
         listContainer.innerHTML = ''; 
-        const emptyMessage = document.querySelector('.empty-message-payout');
         if (withdrawSelect) withdrawSelect.innerHTML = '';
 
         if (methods.length === 0) {
-            if (emptyMessage) emptyMessage.style.display = 'block';
-             if (withdrawSelect) withdrawSelect.innerHTML = '<option value="">Añade un método en Mi Cuenta</option>';
+            listContainer.innerHTML = '<p class="empty-message empty-message-payout">Aún no tienes métodos de retiro. Añade uno para poder retirar tus ganancias.</p>';
+            if (withdrawSelect) withdrawSelect.innerHTML = '<option value="">Añade un método en Mi Cuenta</option>';
             return;
         }
 
-        if (emptyMessage) emptyMessage.style.display = 'none';
-        const ul = document.createElement('ul');
-        ul.classList.add('payout-list');
-
         methods.forEach(method => {
-            ul.appendChild(renderPayoutMethod(method));
+            listContainer.appendChild(renderPayoutMethod(method));
             if (withdrawSelect) {
                 const option = document.createElement('option');
                 const details = method.details;
                 let text = '';
                 if (method.methodType === 'pago_movil') text = `Pago Móvil (${details.bank} - ...${details.phone.slice(-4)})`;
                 else if (method.methodType === 'zelle') text = `Zelle (${details.email})`;
-                else if (method.methodType === 'usdt') text = `USDT ${details.network.toUpperCase()} (...${details.address.slice(-6)})`;
                 
                 option.value = method._id;
                 option.textContent = text + (method.isPrimary ? ' (Principal)' : '');
@@ -153,7 +145,6 @@ export async function loadPayoutMethods() {
                 withdrawSelect.appendChild(option);
             }
         });
-        listContainer.appendChild(ul);
     } catch (error) {
         showToast(`Error al cargar métodos: ${error.message || 'Error de conexión'}`, 'error');
     }
@@ -317,9 +308,6 @@ function handlePayoutMethodChange() {
             } else if (methodType === 'zelle') {
                 data.details.email = formData.get('email');
                 data.details.name = formData.get('name');
-            } else if (methodType === 'usdt') {
-                data.details.network = formData.get('network');
-                data.details.address = formData.get('address');
             }
 
             const response = await fetchWithAuth(`${API_BASE_URL}/user/payout-methods`, {
@@ -613,4 +601,4 @@ export async function initAccountDashboard() {
             }
         }
     });
-}   
+}
