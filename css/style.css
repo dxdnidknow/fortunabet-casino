@@ -1293,3 +1293,144 @@ body.user-logged-in .logged-out-only {
     justify-content: center;
     align-items: center;
 }
+/* ==========================================================================
+   style.css (VERSIÓN FINAL, COMPLETA Y RECONSTRUIDA)
+   ========================================================================== */
+
+/* ... (Todas las secciones 1 a 27 permanecen exactamente iguales) ... */
+
+/* ==========================================================================
+   28. SECCIÓN DE MÉTODOS DE PAGO (MI CUENTA) - ¡DISEÑO NUEVO!
+   ========================================================================== */
+
+/* Estilo para la lista de métodos ya guardados */
+#payout-methods-list .card {
+    padding: 10px; /* Reducimos el padding para que las tarjetas internas se ajusten mejor */
+}
+
+/* Estilo para cada tarjeta de método individual */
+.data-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background-color: var(--color-surface-2);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 10px;
+    border: 1px solid var(--color-border);
+}
+.data-list-item:last-child {
+    margin-bottom: 0;
+}
+
+.item-info h4 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+.item-info i {
+    color: var(--color-primary);
+}
+.item-info p {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    word-break: break-all;
+}
+
+.item-action {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+/* Estilo para la etiqueta "Principal" (tag) */
+.tag {
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+.tag-primary {
+    background-color: var(--color-primary);
+    color: #000;
+}
+
+/* Estilos para los botones de acción dentro de la tarjeta */
+.item-action .btn-sm {
+    padding: 8px 15px;
+}
+
+/* Estilo para el checkbox personalizado */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+/* Oculta el checkbox nativo */
+.checkbox-group input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    position: absolute;
+    opacity: 0;
+}
+
+/* Estiliza la etiqueta para que parezca el checkbox */
+.checkbox-group label {
+    color: var(--color-text-primary);
+    position: relative;
+    padding-left: 30px; /* Espacio para el checkbox falso */
+    cursor: pointer;
+}
+
+/* Crea el checkbox falso con un pseudo-elemento */
+.checkbox-group label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    background-color: var(--color-background);
+    border: 2px solid var(--color-border);
+    border-radius: 4px;
+    transition: var(--main-transition);
+}
+
+/* Estilo del checkmark (oculto por defecto) */
+.checkbox-group label::after {
+    content: '\f00c'; /* Código del icono de check de Font Awesome */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%) scale(0);
+    font-size: 14px;
+    color: #000;
+    transition: var(--main-transition);
+}
+
+/* Cuando el checkbox está seleccionado... */
+.checkbox-group input[type="checkbox"]:checked + label::before {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.checkbox-group input[type="checkbox"]:checked + label::after {
+    transform: translateY(-50%) scale(1);
+}
+
+/* Efecto focus para accesibilidad */
+.checkbox-group input[type="checkbox"]:focus-visible + label::before {
+    outline: 2px solid var(--color-primary-light);
+    outline-offset: 2px;
+}

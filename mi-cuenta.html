@@ -115,7 +115,6 @@
                                             <option value="">Selecciona un tipo</option>
                                             <option value="pago_movil">Pago Móvil</option>
                                             <option value="zelle">Zelle</option>
-                                            <option value="usdt">USDT (Cripto)</option>
                                         </select>
                                     </div>
                                 </div>
@@ -123,7 +122,18 @@
                                 <div id="pago_movil-fields" class="form-dynamic-fields hidden grid-span-2 form-grid">
                                     <div class="form-group">
                                         <label for="bank">Banco</label>
-                                        <input type="text" id="bank" name="bank" placeholder="Ej: Banco de Venezuela">
+                                        <div class="select-wrapper">
+                                            <select id="bank" name="bank">
+                                                <option value="">Selecciona un banco</option>
+                                                <option value="0102 - Banco de Venezuela">Banco de Venezuela</option>
+                                                <option value="0105 - Mercantil">Mercantil</option>
+                                                <option value="0108 - Provincial">Provincial</option>
+                                                <option value="0134 - Banesco">Banesco</option>
+                                                <option value="0191 - BNC">BNC</option>
+                                                <option value="0114 - Bancaribe">Bancaribe</option>
+                                                <option value="0175 - Bicentenario">Bicentenario</option>
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="form-group">
                                         <label for="cedula-pm">Cédula Asociada</label>
@@ -143,23 +153,6 @@
                                     <div class="form-group">
                                         <label for="zelle-name">Nombre en Cuenta</label>
                                         <input type="text" id="zelle-name" name="name" placeholder="Tu Nombre Apellido">
-                                    </div>
-                                </div>
-
-                                <div id="usdt-fields" class="form-dynamic-fields hidden grid-span-2 form-grid">
-                                    <div class="form-group">
-                                        <label for="usdt-network">Red</label>
-                                        <div class="select-wrapper">
-                                            <select id="usdt-network" name="network">
-                                                <option value="">Selecciona una red</option>
-                                                <option value="trc20">TRC20</option>
-                                                <option value="erc20">ERC20</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="usdt-address">Dirección de Billetera</label>
-                                        <input type="text" id="usdt-address" name="address" placeholder="Trc20AddressHere...">
                                     </div>
                                 </div>
                                 
