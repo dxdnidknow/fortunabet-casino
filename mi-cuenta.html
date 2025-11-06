@@ -1,296 +1,251 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
-	<title>Mi Cuenta - FortunaBet</title>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-	<link rel="stylesheet" href="css/style.css">
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Cuenta - FortunaBet</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body>
-<div id="page-backdrop" class="page-backdrop"></div>
-    <div id="page-wrapper">
-        <div id="header-placeholder"></div>
-
-        <div class="body-container">
-            <div class="page-container">
-                <h1 class="page-title">Panel de Usuario</h1>
-                
-                <div class="account-dashboard-grid">
-                    
-                    <aside class="account-menu">
-                        <div class="user-card-small">
-                            <i class="fa-solid fa-user-circle"></i>
-                            <h4 id="user-display-name">...</h4>
-                            <p id="user-display-balance" class="balance-tag">Bs. 0.00</p>
-                        </div>
-                        <nav>
-                            <a href="#dashboard" class="account-menu-link active" data-target="dashboard"><i class="fa-solid fa-house-chimney"></i> Mi Panel</a>
-                            <a href="#mis-datos" class="account-menu-link" data-target="mis-datos"><i class="fa-solid fa-address-card"></i> Mis Datos</a>
-                            <a href="#seguridad" class="account-menu-link" data-target="seguridad"><i class="fa-solid fa-lock"></i> Seguridad</a>
-                            <a href="#historial-transacciones" class="account-menu-link" data-target="historial-transacciones"><i class="fa-solid fa-receipt"></i> Transacciones</a>
-                            <a href="#bonos" class="account-menu-link" data-target="bonos"><i class="fa-solid fa-gift"></i> Bonos y Promociones</a>
-                            <a href="#historial-apuestas" class="account-menu-link" data-target="historial-apuestas"><i class="fa-solid fa-chart-bar"></i> Historial de Apuestas</a>
-
-
-                            <a href="/admin/index.html" id="admin-panel-link" class="account-menu-link" style="display: none; background-color: var(--color-accent-gold); color: #000; font-weight: 700;">
-    <i class="fa-solid fa-user-shield"></i> Panel de Admin
-</a>
-                        </nav>
-                        <button id="logout-btn" class="btn btn-secondary btn-full mt-20">Cerrar Sesión</button>
-                    </aside>
-                    
-                    <main class="account-content">
-                        
-                        <section id="dashboard" class="account-section active">
-                            <div class="account-card main-balance">
-                                <h3>Balance Actual</h3>
-                                <p id="dashboard-balance" class="balance-large">Bs. 0.00</p>
-                                <div class="action-buttons">
-                                    <button class="btn btn-primary" data-modal="deposit-modal">Depositar</button>
-                                    <button class="btn btn-secondary" data-modal="withdraw-modal">Retirar</button>
-                                </div>
-                            </div>
-                            
-                            <div class="account-card quick-links">
-                                <h3>Acciones Rápidas</h3>
-                                <ul>
-                                    <li><a href="#historial-apuestas" class="account-menu-link" data-target="historial-apuestas"><i class="fa-solid fa-baseball-bat-ball"></i> Ver Historial de Apuestas</a></li>
-                                    <li><a href="#historial-transacciones" class="account-menu-link" data-target="historial-transacciones"><i class="fa-solid fa-receipt"></i> Ver Últimas Transacciones</a></li>
-                                    <li><a href="#mis-datos" class="account-menu-link" data-target="mis-datos"><i class="fa-solid fa-credit-card"></i> Añadir Método de Retiro</a></li>
-                                </ul>
-                            </div>
-                            
-                            <div class="account-card recent-history">
-                                <h3>Últimas Apuestas</h3>
-                                <ul class="history-list recent-bets">
-                                    <p class="empty-message-history">No tienes apuestas recientes.</p>
-                                </ul>
-                                <a href="#historial-apuestas" class="btn btn-link account-menu-link" data-target="historial-apuestas">Ver Historial Completo &rarr;</a>
-                            </div>
-                        </section>
-
-                        <section id="mis-datos" class="account-section">
-                            
-                            <div class="account-card">
-                                <h3><i class="fa-solid fa-address-card"></i> Información Personal</h3>
-                                <form id="user-data-form">
-                                    <div class="form-grid">
-                                        <div class="form-group">
-                                            <label for="full-name">Nombre Completo</label>
-                                            <input type="text" id="full-name" name="full-name" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="cedula">Cédula de Identidad</label>
-                                            <input type="text" id="cedula" name="cedula" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="birth-date">Fecha de Nacimiento</label>
-                                            <input type="date" id="birth-date" name="birth-date" required>
-                                            <small id="age-warning" class="error-message hidden">Debes ser mayor de 18 años.</small>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="email">Correo Electrónico (No modificable)</label>
-                                            <input type="email" id="email" name="email" disabled>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Teléfono Móvil</label>
-                                        <div class="phone-input-container">
-                                            <span class="phone-code">+58</span>
-                                            <div class="phone-input-group">
-                                                <input type="tel" id="phone" name="phone" placeholder="412-123-4567" maxlength="13">
-                                            </div>
-                                            <button type="button" class="btn btn-secondary btn-sm" id="verify-phone-btn">Verificar</button>
-                                        </div>
-                                        <div id="phone-verification-status">
-                                            <p class="status-icon unverified"><i class="fa-solid fa-triangle-exclamation"></i> Pendiente de Verificación</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <button type="submit" class="btn btn-primary mt-10" id="save-data-btn">Guardar Cambios</button>
-                                </form>
-                            </div>
-                            
-                            <div class="account-card">
-                                <h3><i class="fa-solid fa-credit-card"></i> Métodos de Retiro</h3>
-                                
-                                <div id="payout-methods-list" class="data-list-container">
-                                    <p class="empty-message-payout" style="text-align: center;">Aún no has añadido métodos de retiro.</p>
-                                </div>
-
-                                <form id="payout-method-form" class="mt-20">
-                                    <hr class="separator">
-                                    <h4>Añadir Nuevo Método</h4>
-                                    
-                                    <div class="form-group">
-                                        <label for="method-type">Tipo de Pago</label>
-                                        <select id="method-type" name="method-type" required>
-                                            <option value="">Selecciona un método</option>
-                                            <option value="pago_movil">Pago Móvil / Transferencia</option>
-                                            <option value="zelle">Zelle</option>
-                                            <option value="usdt">USDT (Crypto)</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div id="pago-movil-fields" class="form-dynamic-fields hidden">
-                                        <div class="form-group">
-                                            <label for="pago-movil-bank">Banco</label>
-                                            <select id="pago-movil-bank" name="bank" required>
-                                                <option value="">Selecciona un banco</option>
-                                                <option value="banesco">Banesco</option>
-                                                <option value="mercantil">Mercantil</option>
-                                                <option value="provincial">Provincial</option>
-                                                </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="pago-movil-cedula">Cédula</label>
-                                            <input type="text" id="pago-movil-cedula" name="cedula" placeholder="V-12345678" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="pago-movil-phone">Teléfono (10 dígitos)</label>
-                                            <input type="tel" id="pago-movil-phone" name="phone" maxlength="11" placeholder="4121234567" required>
-                                        </div>
-                                    </div>
-
-                                    <div id="zelle-fields" class="form-dynamic-fields hidden">
-                                        <div class="form-group">
-                                            <label for="zelle-email">Correo Zelle</label>
-                                            <input type="email" id="zelle-email" name="email" placeholder="tu@emailzelle.com" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="zelle-name">Nombre de Cuenta</label>
-                                            <input type="text" id="zelle-name" name="name" placeholder="Tu Nombre Completo" required>
-                                        </div>
-                                    </div>
-
-                                    <div id="usdt-fields" class="form-dynamic-fields hidden">
-                                        <div class="form-group">
-                                            <label for="usdt-network">Red (Recomendado: Tron TRC-20)</label>
-                                            <select id="usdt-network" name="network" required>
-                                                <option value="trc20">Tron (TRC-20)</option>
-                                                <option value="erc20">Ethereum (ERC-20)</option>
-                                                </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="usdt-address">Dirección de Billetera USDT</label>
-                                            <input type="text" id="usdt-address" name="address" placeholder="T..." required>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group form-check-group">
-                                        <input type="checkbox" id="is-primary" name="is-primary">
-                                        <label for="is-primary">Establecer como método de retiro principal</label>
-                                    </div>
-
-                                    <button type="submit" class="btn btn-primary btn-cta mt-10" id="add-method-btn">Añadir Método</button>
-                                </form>
-                            </div>
-                        </section>
-
-                        <section id="seguridad" class="account-section">
-                            <div class="account-card">
-                                <h3><i class="fa-solid fa-key"></i> Cambiar Contraseña</h3>
-                                <form id="password-change-form">
-                                    <div class="form-group">
-                                        <label for="current-password">Contraseña Actual</label>
-                                        <div class="input-wrapper">
-                                            <input type="password" id="current-password" name="current-password" required>
-                                            <i class="fa-solid fa-eye toggle-password"></i>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="new-password">Nueva Contraseña</label>
-                                        <div class="input-wrapper">
-                                            <input type="password" id="new-password" name="new-password" required>
-                                            <i class="fa-solid fa-eye toggle-password"></i>
-                                        </div>
-                                        <small class="password-req">Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo.</small>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="confirm-new-password">Confirmar Nueva Contraseña</label>
-                                        <div class="input-wrapper">
-                                            <input type="password" id="confirm-new-password" name="confirm-new-password" required>
-                                            <i class="fa-solid fa-eye toggle-password"></i>
-                                        </div>
-                                    </div>
-                                    
-                                    <div id="confirmation-code-group" class="form-group hidden">
-                                        <label for="confirmation-code">Código de Verificación (Email)</label>
-                                        <input type="text" id="confirmation-code" name="confirmation-code" placeholder="Introduce el código enviado">
-                                    </div>
-
-                                    <button type="submit" class="btn btn-primary mt-10" id="change-password-btn">Cambiar Contraseña</button>
-                                </form>
-                            </div>
-                            
-                            <div class="account-card">
-                                <h3><i class="fa-solid fa-shield-halved"></i> Autenticación de Dos Factores (2FA)</h3>
-                                <p>Añade una capa extra de seguridad a tu cuenta.</p>
-                                <div id="2fa-status-container">
-                                    </div>
-                            </div>
-                        </section>
-
-                        <section id="historial-transacciones" class="account-section">
-                            <div class="account-card">
-                                <h3>Historial de Movimientos</h3>
-                                <ul class="history-list full-history">
-                                     <p class="empty-message-transactions">No tienes transacciones registradas.</p>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <section id="bonos" class="account-section">
-                            <div class="account-card">
-                                <h3>Mis Promociones Activas</h3>
-                                <ul class="promo-list">
-                                    <li class="promo-item active">
-                                        <div class="promo-item-info">
-                                            <h4>Bono de Bienvenida Activo</h4>
-                                            <p>Rollover restante: $50 / $200</p>
-                                        </div>
-                                        <div class="promo-item-action">
-                                            <span class="tag tag-primary">Activo</span>
-                                        </div>
-                                    </li>
-                                    <li class="promo-item">
-                                        <div class="promo-item-info">
-                                            <h4>Giro Gratis Slot de la Semana</h4>
-                                            <p>10 giros gratis en la tragamonedas "Book of Fortuna".</p>
-                                        </div>
-                                        <div class="promo-item-action">
-                                            <span class="promo-status expired">Expirado</span>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </section>
-                        
-                        <section id="historial-apuestas" class="account-section">
-                            <div class="account-card">
-                                <h3>Historial Completo de Apuestas</h3>
-                                <ul class="history-list full-history">
-                                     <p class="empty-message-bets">No tienes apuestas registradas.</p>
-                                </ul>
-                            </div>
-                        </section>
-                    </main>
-                </div>
-            </div>
-        </div>
-        <div id="footer-placeholder"></div>
+    <div id="loader" class="loader-overlay hidden">
+        <div class="spinner"></div>
     </div>
+    
+    <header id="main-header"></header>
+    <nav id="mobile-menu"></nav>
 
-    <div id="mobile-menu-placeholder"></div>
-    <div id="sports-panel-placeholder"></div>
-    <div id="modals-placeholder"></div> <div id="help-widget-placeholder"></div>
-	<script src="js/main.js" type="module"></script>
+    <main class="main-container account-page">
+        <div class="page-header">
+            <h1 class="page-title">Panel de Usuario</h1>
+        </div>
+
+        <div class="account-dashboard-grid">
+            <aside class="account-sidebar">
+                <div class="user-info-card">
+                    <i class="fa-solid fa-user-circle user-avatar"></i>
+                    <h3 id="user-display-name">Cargando...</h3>
+                    <p class="user-balance">Balance Actual: <span id="user-display-balance">Bs. 0.00</span></p>
+                    <div class="user-actions">
+                        <button class="btn btn-primary btn-sm" data-modal-target="deposit-modal">Depositar</button>
+                        <button class="btn btn-secondary btn-sm" data-modal-target="withdraw-modal">Retirar</button>
+                    </div>
+                </div>
+
+                <nav class="account-menu">
+                    <ul>
+                        <li><a href="#" class="account-menu-link active" data-target="mi-panel"><i class="fa-solid fa-gauge-high"></i> Mi Panel</a></li>
+                        <li><a href="#" class="account-menu-link" data-target="mis-datos"><i class="fa-solid fa-user"></i> Mis Datos</a></li>
+                        <li><a href="#" class="account-menu-link" data-target="seguridad"><i class="fa-solid fa-lock"></i> Seguridad</a></li>
+                        <li><a href="#" class="account-menu-link" data-target="historial-transacciones"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transacciones</a></li>
+                        <li><a href="#" class="account-menu-link" data-target="historial-apuestas"><i class="fa-solid fa-dice"></i> Historial de Apuestas</a></li>
+                        <li id="admin-panel-link" style="display: none;"><a href="admin.html" class="account-menu-link" target="_blank"><i class="fa-solid fa-gear"></i> Panel de Admin</a></li>
+                        <li><button id="logout-btn" class="account-menu-link"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</button></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <section class="account-content">
+                <div id="mi-panel" class="account-section active">
+                    <h2>Resumen de la Cuenta</h2>
+                    <div class="quick-info-grid">
+                        <div class="info-card">
+                            <h3>Balance Actual</h3>
+                            <p class="balance-amount" id="dashboard-balance">Bs. 0.00</p>
+                            <div class="card-actions">
+                                <button class="btn btn-primary btn-sm" data-modal-target="deposit-modal">Depositar</button>
+                                <button class="btn btn-secondary btn-sm" data-modal-target="withdraw-modal">Retirar</button>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <h3>Acciones Rápidas</h3>
+                            <ul>
+                                <li><a href="#" class="link-action account-menu-link" data-target="historial-apuestas"><i class="fa-solid fa-chart-line"></i> Ver Historial de Apuestas</a></li>
+                                <li><a href="#" class="link-action account-menu-link" data-target="historial-transacciones"><i class="fa-solid fa-receipt"></i> Ver Últimas Transacciones</a></li>
+                                <li><a href="#" class="link-action account-menu-link" data-target="mis-datos"><i class="fa-solid fa-credit-card"></i> Añadir Método de Retiro</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <h3>Últimas Apuestas</h3>
+                    <div class="recent-history card">
+                        <ul class="history-list recent-bets">
+                            </ul>
+                        <p class="empty-message empty-message-history" style="display: block;">No tienes apuestas recientes.</p>
+                        <a href="#" class="btn btn-secondary btn-sm mt-15 account-menu-link" data-target="historial-apuestas">Ver Historial Completo →</a>
+                    </div>
+                </div>
+
+                <div id="mis-datos" class="account-section">
+                    <h2>Mis Datos Personales</h2>
+                    <form id="user-data-form" class="auth-form form-grid">
+                        <div class="form-group">
+                            <label for="full-name">Nombre Completo</label>
+                            <input type="text" id="full-name" name="full-name" placeholder="Tu nombre y apellido" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cedula">Cédula de Identidad</label>
+                            <input type="text" id="cedula" name="cedula" placeholder="V-12345678" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="birth-date">Fecha de Nacimiento</label>
+                            <input type="date" id="birth-date" name="birth-date" required>
+                            <p id="age-warning" class="error-message hidden">Debes ser mayor de 18 años.</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Correo Electrónico</label>
+                            <input type="email" id="email" name="email" placeholder="tu@correo.com" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Teléfono (+58)</label>
+                            <input type="tel" id="phone" name="phone" placeholder="414-123-4567" pattern="[0-9]{3}-[0-9]{3}-[0-9]{2}-[0-9]{2}" title="Formato: 414-123-4567" maxlength="13">
+                            <div id="phone-verification-status">
+                                </div>
+                            <button type="button" class="btn btn-secondary btn-sm mt-10" id="verify-phone-btn" style="display: none;">Verificar Ahora</button>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-cta grid-span-2" id="save-data-btn">Guardar Cambios</button>
+                    </form>
+
+                    <h2 class="mt-40">Mis Métodos de Retiro</h2>
+                    <div id="payout-methods-list" class="card">
+                        <p class="empty-message empty-message-payout" style="display: block;">Aún no tienes métodos de retiro. Añade uno para poder retirar tus ganancias.</p>
+                    </div>
+
+                    <h3 class="mt-40">Añadir Nuevo Método</h3>
+                    <form id="payout-method-form" class="auth-form form-grid">
+                        <div class="form-group grid-span-2">
+                            <label for="method-type">Tipo de Método</label>
+                            <div class="select-wrapper">
+                                <select id="method-type" name="method-type" required>
+                                    <option value="">Selecciona un tipo</option>
+                                    <option value="pago_movil">Pago Móvil</option>
+                                    <option value="zelle">Zelle</option>
+                                    <option value="usdt">USDT (Cripto)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="pago_movil-fields" class="form-dynamic-fields hidden grid-span-2">
+                            <div class="form-group">
+                                <label for="bank">Banco</label>
+                                <input type="text" id="bank" name="bank" placeholder="Ej: Banco de Venezuela">
+                            </div>
+                            <div class="form-group">
+                                <label for="cedula-pm">Cédula Asociada</label>
+                                <input type="text" id="cedula-pm" name="cedula" placeholder="V-12345678">
+                            </div>
+                            <div class="form-group">
+                                <label for="phone-pm">Teléfono Asociado</label>
+                                <input type="tel" id="phone-pm" name="phone" placeholder="0414-1234567" pattern="[0-9]{10}" title="10 dígitos sin guiones">
+                            </div>
+                        </div>
+
+                        <div id="zelle-fields" class="form-dynamic-fields hidden grid-span-2">
+                            <div class="form-group">
+                                <label for="zelle-email">Correo Electrónico Zelle</label>
+                                <input type="email" id="zelle-email" name="email" placeholder="ejemplo@correo.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="zelle-name">Nombre en Cuenta</label>
+                                <input type="text" id="zelle-name" name="name" placeholder="Tu Nombre Apellido">
+                            </div>
+                        </div>
+
+                        <div id="usdt-fields" class="form-dynamic-fields hidden grid-span-2">
+                            <div class="form-group">
+                                <label for="usdt-network">Red</label>
+                                <div class="select-wrapper">
+                                    <select id="usdt-network" name="network">
+                                        <option value="">Selecciona una red</option>
+                                        <option value="trc20">TRC20</option>
+                                        <option value="erc20">ERC20</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="usdt-address">Dirección de Billetera</label>
+                                <input type="text" id="usdt-address" name="address" placeholder="Trc20AddressHere...">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group checkbox-group grid-span-2">
+                            <input type="checkbox" id="is-primary" name="is-primary">
+                            <label for="is-primary">Establecer como método principal</label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-cta grid-span-2" id="add-method-btn">Añadir Método</button>
+                    </form>
+                </div>
+
+                <div id="seguridad" class="account-section">
+                    <h2>Cambiar Contraseña</h2>
+                    <form id="password-change-form" class="auth-form form-grid">
+                        <div class="form-group">
+                            <label for="current-password">Contraseña Actual</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="current-password" name="current-password" placeholder="Tu contraseña actual" required autocomplete="current-password">
+                                <button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
+                                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">Nueva Contraseña</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="new-password" name="new-password" placeholder="Mínimo 8 caracteres" required autocomplete="new-password" title="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.">
+                                <button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
+                                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-new-password">Confirmar Nueva Contraseña</label>
+                            <div class="input-wrapper">
+                                <input type="password" id="confirm-new-password" name="confirm-new-password" placeholder="Repite la nueva contraseña" required autocomplete="new-password" title="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.">
+                                <button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
+                                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="confirmation-code-group" class="form-group hidden">
+                            <label for="confirmation-code">Código de Confirmación</label>
+                            <input type="text" id="confirmation-code" name="confirmation-code" placeholder="Código de 6 dígitos" maxlength="6">
+                            <p class="small-notice">Revisa tu correo para el código de confirmación.</p>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-cta grid-span-2" id="change-password-btn">Cambiar Contraseña</button>
+                    </form>
+
+                    <h2 class="mt-40">Autenticación de Dos Factores (2FA)</h2>
+                    <div class="card security-card" id="2fa-status-container">
+                        </div>
+                </div>
+
+                <div id="historial-transacciones" class="account-section">
+                    <h2>Historial de Transacciones</h2>
+                    <div class="recent-history card">
+                        <ul class="history-list">
+                            </ul>
+                        <p class="empty-message empty-message-transactions" style="display: block;">No hay transacciones recientes.</p>
+                    </div>
+                </div>
+
+                <div id="historial-apuestas" class="account-section">
+                    <h2>Historial de Apuestas</h2>
+                    <div class="recent-history card">
+                        <ul class="history-list full-history">
+                            </ul>
+                        <p class="empty-message empty-message-bets" style="display: block;">No tienes apuestas registradas.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer id="main-footer"></footer>
+
+    <div id="modals-container"></div>
+
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
