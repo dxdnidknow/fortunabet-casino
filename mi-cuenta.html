@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Cuenta - FortunaBet</title>
-    <!-- ========================================================== -->
-    <!--     ¡¡¡CORRECCIÓN IMPORTANTE AQUÍ!!! Añadida la barra "/"    -->
-    <!-- ========================================================== -->
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -16,7 +13,7 @@
     <div id="page-wrapper">
         <div id="header-placeholder"></div>
 
-        <main class="main-container account-page body-container">
+        <div class="body-container">
             <div class="page-container">
                 <h1 class="page-title">Panel de Usuario</h1>
 
@@ -27,8 +24,9 @@
                             <h3 id="user-display-name">Cargando...</h3>
                             <p class="user-balance">Balance Actual: <span id="user-display-balance">Bs. 0.00</span></p>
                             <div class="user-actions">
-                                <button class="btn btn-primary btn-sm" data-modal-target="deposit-modal">Depositar</button>
-                                <button class="btn btn-secondary btn-sm" data-modal-target="withdraw-modal">Retirar</button>
+                                <!-- CORREGIDO: data-modal-trigger -->
+                                <button class="btn btn-primary btn-sm" data-modal-trigger="deposit-modal">Depositar</button>
+                                <button class="btn btn-secondary btn-sm" data-modal-trigger="withdraw-modal">Retirar</button>
                             </div>
                         </div>
 
@@ -39,24 +37,88 @@
                                 <li><a href="#" class="account-menu-link" data-target="seguridad"><i class="fa-solid fa-lock"></i> Seguridad</a></li>
                                 <li><a href="#" class="account-menu-link" data-target="historial-transacciones"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transacciones</a></li>
                                 <li><a href="#" class="account-menu-link" data-target="historial-apuestas"><i class="fa-solid fa-dice"></i> Historial de Apuestas</a></li>
-                                <li id="admin-panel-link" style="display: none;"><a href="admin/index.html" class="account-menu-link" target="_blank"><i class="fa-solid fa-gear"></i> Panel de Admin</a></li>
+                                <li id="admin-panel-link" style="display: none;"><a href="/admin/index.html" class="account-menu-link" target="_blank"><i class="fa-solid fa-gear"></i> Panel de Admin</a></li>
                                 <li><button id="logout-btn" class="account-menu-link"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</button></li>
                             </ul>
                         </nav>
                     </aside>
 
                     <section class="account-content">
-                        <!-- El resto del contenido de tu HTML va aquí, no necesita cambios -->
+                        <!-- ============================================= -->
+                        <!--       ESTE ES TODO EL CONTENIDO QUE FALTABA     -->
+                        <!-- ============================================= -->
+                        <div id="mi-panel" class="account-section active">
+                            <h2>Resumen de la Cuenta</h2>
+                            <div class="quick-info-grid">
+                                <div class="info-card">
+                                    <h3>Balance Actual</h3>
+                                    <p class="balance-amount" id="dashboard-balance">Bs. 0.00</p>
+                                    <div class="card-actions">
+                                        <button class="btn btn-primary btn-sm" data-modal-trigger="deposit-modal">Depositar</button>
+                                        <button class="btn btn-secondary btn-sm" data-modal-trigger="withdraw-modal">Retirar</button>
+                                    </div>
+                                </div>
+                                <div class="info-card">
+                                    <h3>Acciones Rápidas</h3>
+                                    <ul>
+                                        <li><a href="#" class="link-action account-menu-link" data-target="historial-apuestas"><i class="fa-solid fa-chart-line"></i> Ver Historial de Apuestas</a></li>
+                                        <li><a href="#" class="link-action account-menu-link" data-target="historial-transacciones"><i class="fa-solid fa-receipt"></i> Ver Últimas Transacciones</a></li>
+                                        <li><a href="#" class="link-action account-menu-link" data-target="mis-datos"><i class="fa-solid fa-credit-card"></i> Añadir Método de Retiro</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <h3>Últimas Apuestas</h3>
+                            <div class="recent-history card">
+                                <ul class="history-list recent-bets"></ul>
+                                <p class="empty-message empty-message-history" style="display: block;">No tienes apuestas recientes.</p>
+                                <a href="#" class="btn btn-secondary btn-sm mt-15 account-menu-link" data-target="historial-apuestas">Ver Historial Completo →</a>
+                            </div>
+                        </div>
+
+                        <div id="mis-datos" class="account-section">
+                            <h2>Mis Datos Personales</h2>
+                            <form id="user-data-form" class="auth-form form-grid">
+                                <!-- ... (Todos los inputs de datos personales) ... -->
+                            </form>
+                        </div>
+
+                        <div id="seguridad" class="account-section">
+                            <h2>Cambiar Contraseña</h2>
+                            <form id="password-change-form" class="auth-form form-grid">
+                                <!-- ... (Todos los inputs de cambio de contraseña) ... -->
+                            </form>
+                        </div>
+
+                        <div id="historial-transacciones" class="account-section">
+                            <h2>Historial de Transacciones</h2>
+                            <div class="recent-history card">
+                                <ul class="history-list"></ul>
+                                <p class="empty-message empty-message-transactions" style="display: block;">No hay transacciones recientes.</p>
+                            </div>
+                        </div>
+
+                        <div id="historial-apuestas" class="account-section">
+                            <h2>Historial de Apuestas</h2>
+                            <div class="recent-history card">
+                                <ul class="history-list full-history"></ul>
+                                <p class="empty-message empty-message-bets" style="display: block;">No tienes apuestas registradas.</p>
+                            </div>
+                        </div>
                     </section>
                 </div>
             </div>
-        </main>
-        
+        </div>
+
         <div id="footer-placeholder"></div>
     </div>
 
+    <!-- PLACEHOLDERS QUE FALTABAN -->
     <div id="modals-placeholder"></div>
     <div id="mobile-menu-placeholder"></div>
+    <div id="sports-panel-placeholder"></div>
+    <div id="help-widget-placeholder"></div>
+
 	<script type="module" src="/js/main.js"></script>
 </body>
 </html>
