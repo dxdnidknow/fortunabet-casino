@@ -113,7 +113,7 @@ function renderPayoutMethod(method) {
 
 export async function loadPayoutMethods() {
     const listContainer = document.getElementById('payout-methods-list');
-    const withdrawSelect = document.getElementById('withdraw-method'); // <- El select del modal de retiro
+    const withdrawSelect = document.getElementById('withdraw-method');
     if (!listContainer) return;
     
     try {
@@ -123,7 +123,7 @@ export async function loadPayoutMethods() {
 
         listContainer.innerHTML = ''; 
         const emptyMessage = document.querySelector('.empty-message-payout');
-        if (withdrawSelect) withdrawSelect.innerHTML = ''; // Limpia el select
+        if (withdrawSelect) withdrawSelect.innerHTML = '';
 
         if (methods.length === 0) {
             if (emptyMessage) emptyMessage.style.display = 'block';
@@ -137,19 +137,18 @@ export async function loadPayoutMethods() {
 
         methods.forEach(method => {
             ul.appendChild(renderPayoutMethod(method));
-            // AÑADE el método como una <option> en el select del modal de retiro
             if (withdrawSelect) {
                 const option = document.createElement('option');
                 const details = method.details;
                 let text = '';
-                if (method.methodType === 'pago_movil') text = `Pago Móvil (${details.bank} - ...${details.cedula.slice(-4)})`;
+                if (method.methodType === 'pago_movil') text = `Pago Móvil (${details.bank} - ...${details.phone.slice(-4)})`;
                 else if (method.methodType === 'zelle') text = `Zelle (${details.email})`;
                 else if (method.methodType === 'usdt') text = `USDT ${details.network.toUpperCase()} (...${details.address.slice(-6)})`;
                 
                 option.value = method._id;
                 option.textContent = text + (method.isPrimary ? ' (Principal)' : '');
                 if (method.isPrimary) {
-                    option.selected = true; // Selecciona el principal por defecto
+                    option.selected = true;
                 }
                 withdrawSelect.appendChild(option);
             }
@@ -194,7 +193,7 @@ export async function renderBetHistory() {
 
             historyToShow.forEach(record => {
                 const betDescription = record.selections.map(b => b.team).join(', ');
-                const statusClass = record.status.toLowerCase(); // 'won', 'lost', 'pending'
+                const statusClass = record.status.toLowerCase();
                 const winnings = record.potentialWinnings;
 
                 const listItem = document.createElement('li');
@@ -218,12 +217,9 @@ export async function renderBetHistory() {
 }
 
 // =======================================================================
-//  4. HISTORIAL DE TRANSACCIONES (¡NUEVA FUNCIÓN!)
+//  4. HISTORIAL DE TRANSACCIONES
 // =======================================================================
 
-/**
- * Carga y renderiza el historial de transacciones (depósitos/retiros).
- */
 export async function renderTransactionHistory() {
     const listContainer = document.querySelector('#historial-transacciones .history-list');
     if (!listContainer) return;
@@ -231,7 +227,6 @@ export async function renderTransactionHistory() {
     const emptyMsg = document.querySelector('.empty-message-transactions');
 
     try {
-        // 1. Llamar a la nueva ruta del backend
         const response = await fetchWithAuth(`${API_BASE_URL}/transactions`); 
         if (!response.ok) throw new Error('No se pudo cargar el historial de transacciones.');
         
@@ -244,16 +239,15 @@ export async function renderTransactionHistory() {
             return;
         }
 
-        listContainer.innerHTML = ''; // Limpiar
+        listContainer.innerHTML = '';
 
         transactions.forEach(tx => {
-            // Asumimos que los retiros YA están guardados como negativos
             const isDeposit = tx.type === 'deposit';
             const amount = tx.amount; 
-            const statusClass = tx.status.toLowerCase(); // 'approved', 'rejected', 'pending'
+            const statusClass = tx.status.toLowerCase();
             const icon = isDeposit ? 'fa-arrow-down' : 'fa-arrow-up';
             const color = isDeposit ? 'var(--color-success)' : 'var(--color-loss)';
-            const date = tx.createdAt || tx.date; // Compatibilidad
+            const date = tx.createdAt || tx.date;
 
             const listItem = document.createElement('li');
             listItem.innerHTML = `
@@ -338,7 +332,7 @@ function handlePayoutMethodChange() {
             showToast('Método de retiro añadido con éxito.', 'success');
             payoutMethodForm.reset();
             methodTypeSelect.dispatchEvent(new Event('change'));
-            loadPayoutMethods(); // Recarga la lista
+            loadPayoutMethods();
         } catch (error) {
             showToast(error.message || 'Error al añadir método de retiro.', 'error');
         } finally {
@@ -385,7 +379,7 @@ function handleUserDataSubmit() {
             if (!response.ok) throw new Error(result.message);
 
             showToast(result.message || 'Datos actualizados con éxito.', 'success');
-            await loadUserData(); // Recarga los datos para mostrar cambios
+            await loadUserData();
         } catch (error) {
             showToast(error.message || 'Error al guardar los datos.', 'error');
         } finally {
@@ -467,7 +461,7 @@ async function handlePhoneVerification() {
             showToast(data.message, 'success');
             closeModal(document.getElementById('phone-verification-modal'));
             codeInput.value = '';
-            await loadUserData(); // Recargar los datos para mostrar "Verificado"
+            await loadUserData();
 
         } catch (error) {
             errorEl.textContent = error.message;
@@ -481,6 +475,15 @@ function handlePasswordChange() {
     const passwordChangeForm = document.getElementById('password-change-form');
     if (!passwordChangeForm) return;
 
+    // ===================================================================
+    // ADVERTENCIA: La lógica de esta función está SIMULADA.
+    // Requiere la creación de nuevas rutas en el backend para funcionar:
+    // 1. Una ruta para verificar la contraseña actual.
+    // 2. Una ruta para enviar un código de confirmación al email.
+    // 3. Una ruta para verificar el código y cambiar la contraseña.
+    // Sin estas rutas, esta funcionalidad NO ES REAL.
+    // ===================================================================
+
     let isCodeStep = false;
     const confirmationGroup = document.getElementById('confirmation-code-group');
     const submitButton = document.getElementById('change-password-btn');
@@ -488,7 +491,6 @@ function handlePasswordChange() {
     passwordChangeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const currentPassword = document.getElementById('current-password').value;
         const newPassword = document.getElementById('new-password').value;
         const confirmNewPassword = document.getElementById('confirm-new-password').value;
 
@@ -498,49 +500,20 @@ function handlePasswordChange() {
         }
 
         submitButton.disabled = true;
-        const originalBtnText = submitButton.textContent;
-        submitButton.innerHTML = '<span class="spinner-sm"></span>';
 
         if (!isCodeStep) {
-            try {
-                // Esta lógica depende de rutas que no están en tu auth.js
-                // Simularemos que funciona por ahora
-                // await fetchWithAuth(`${API_BASE_URL}/validate-current-password`, {
-                //     method: 'POST',
-                //     body: JSON.stringify({ currentPassword })
-                // });
-                // await fetchWithAuth(`${API_BASE_URL}/request-password-change-code`, { method: 'POST' });
-                
-                showToast('Código de confirmación enviado a tu email (Simulado).', 'info');
-                confirmationGroup.classList.remove('hidden');
-                submitButton.textContent = 'Confirmar Cambio';
-                isCodeStep = true;
-            } catch (error) {
-                showToast(error.message, 'error');
-            } finally {
-                submitButton.disabled = false;
-                submitButton.innerHTML = isCodeStep ? 'Confirmar Cambio' : originalBtnText;
-            }
+            showToast('Funcionalidad en desarrollo (Simulado).', 'info');
+            confirmationGroup.classList.remove('hidden');
+            submitButton.textContent = 'Confirmar Cambio';
+            isCodeStep = true;
+            submitButton.disabled = false;
         } else {
-            const code = document.getElementById('confirmation-code').value;
-            try {
-                // Esta lógica depende de rutas que no están en tu auth.js
-                // await fetchWithAuth(`${API_BASE_URL}/change-password`, {
-                //     method: 'POST',
-                //     body: JSON.stringify({ currentPassword, newPassword, code })
-                // });
-                
-                showToast('Contraseña cambiada con éxito (Simulado).', 'success');
-                passwordChangeForm.reset();
-                confirmationGroup.classList.add('hidden');
-                submitButton.textContent = 'Cambiar Contraseña';
-                isCodeStep = false;
-            } catch (error) {
-                showToast(error.message, 'error');
-            } finally {
-                submitButton.disabled = false;
-                submitButton.innerHTML = originalBtnText;
-            }
+            showToast('Contraseña cambiada con éxito (Simulado).', 'success');
+            passwordChangeForm.reset();
+            confirmationGroup.classList.add('hidden');
+            submitButton.textContent = 'Cambiar Contraseña';
+            isCodeStep = false;
+            submitButton.disabled = false;
         }
     });
 }
@@ -548,10 +521,18 @@ function handlePasswordChange() {
 function handle2FASetup() {
     const statusContainer = document.getElementById('2fa-status-container');
     if (!statusContainer) return;
-    const is2FAActive = localStorage.getItem('is2FAActive') === 'true';
+
+    // ===================================================================
+    // ADVERTENCIA: Esta funcionalidad de 2FA es 100% SIMULADA.
+    // Usa localStorage, lo cual NO PROVEE NINGUNA SEGURIDAD REAL.
+    // Para una implementación real se necesita un backend que maneje
+    // la generación de secretos (QR), y la validación de códigos TOTP.
+    // ===================================================================
+
+    let is2FAActive = localStorage.getItem('is2FAActive_simulated') === 'true';
     function render2FAState() {
         if (is2FAActive) {
-            statusContainer.innerHTML = `<p class="status-icon verified"><i class="fa-solid fa-circle-check"></i> 2FA Activo</p><p>Tu cuenta está protegida.</p><button class="btn btn-secondary mt-10" id="disable-2fa-btn">Desactivar 2FA</button>`;
+            statusContainer.innerHTML = `<p class="status-icon verified"><i class="fa-solid fa-circle-check"></i> 2FA Activo (Simulado)</p><p>Tu cuenta está protegida.</p><button class="btn btn-secondary mt-10" id="disable-2fa-btn">Desactivar 2FA</button>`;
         } else {
             statusContainer.innerHTML = `<p class="status-icon unverified"><i class="fa-solid fa-triangle-exclamation"></i> 2FA Desactivado</p><p>Añade 2FA para una mayor seguridad.</p><button class="btn btn-primary mt-10" id="enable-2fa-btn">Activar 2FA</button>`;
         }
@@ -560,11 +541,13 @@ function handle2FASetup() {
     statusContainer.addEventListener('click', (e) => {
         if (e.target.id === 'enable-2fa-btn') {
             showToast('Simulando activación de 2FA...', 'success');
-            localStorage.setItem('is2FAActive', 'true');
+            localStorage.setItem('is2FAActive_simulated', 'true');
+            is2FAActive = true;
             render2FAState();
         } else if (e.target.id === 'disable-2fa-btn') {
-            showToast('2FA desactivado.', 'warning');
-            localStorage.setItem('is2FAActive', 'false');
+            showToast('2FA desactivado (Simulado).', 'warning');
+            localStorage.setItem('is2FAActive_simulated', 'false');
+            is2FAActive = false;
             render2FAState();
         }
     });
@@ -597,7 +580,7 @@ export async function initAccountDashboard() {
     await loadUserData();
     await loadPayoutMethods();
     await renderBetHistory();
-    await renderTransactionHistory(); // <-- ¡AÑADIDA LA LLAMADA!
+    await renderTransactionHistory();
 
     handleUserDataSubmit();
     handlePhoneVerification();
@@ -605,8 +588,6 @@ export async function initAccountDashboard() {
     handlePayoutMethodChange();
     handle2FASetup();
 
-    // Redirigir el enlace de "Administrar métodos" del modal de retiro
-    // Este listener ahora debe estar en el body porque el modal se carga dinámicamente
     document.body.addEventListener('click', (e) => {
         if (e.target.classList.contains('edit-method-link')) {
             e.preventDefault();
@@ -632,7 +613,7 @@ export async function initAccountDashboard() {
                 const response = await fetchWithAuth(`${API_BASE_URL}/payout-methods/${methodId}`, { method: 'DELETE' }); 
                 if (!response.ok) throw new Error((await response.json()).message || 'Error al eliminar');
                 showToast('Método eliminado con éxito.', 'success');
-                loadPayoutMethods(); // Recarga la lista
+                loadPayoutMethods();
             } catch (error) {
                 showToast(error.message, 'error');
             }
@@ -642,7 +623,7 @@ export async function initAccountDashboard() {
                 const response = await fetchWithAuth(`${API_BASE_URL}/payout-methods/${methodId}/primary`, { method: 'POST' }); 
                 if (!response.ok) throw new Error((await response.json()).message || 'Error al establecer principal');
                 showToast('Método establecido como principal.', 'success');
-                loadPayoutMethods(); // Recarga la lista
+                loadPayoutMethods();
             } catch (error) {
                 showToast(error.message, 'error');
             }

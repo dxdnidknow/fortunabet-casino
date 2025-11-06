@@ -1,4 +1,4 @@
-// Archivo: js/main.js (COMPLETO Y CORREGIDO - ¡CON PRIORIDAD #3!)
+// Archivo: js/main.js (COMPLETO Y CORREGIDO)
 
 import { API_BASE_URL } from './config.js';
 import { addBet, initBetSlip, subscribe, getBets } from './bet.js';
@@ -6,7 +6,7 @@ import { initModals, openModal } from './modal.js';
 import { initSharedComponents } from './loader.js';
 import { fetchLiveEvents, fetchEventDetails } from './api.js';
 import { initAuth } from './auth.js';
-import { initAccountDashboard, renderBetHistory } from './account.js';
+import { initAccountDashboard } from './account.js';
 import { sportTranslations } from './translations.js';
 import { initPaymentModals } from './payments.js'; 
 import { initHelpWidget } from './help-widget.js';
@@ -132,21 +132,18 @@ function renderEvents(allEvents) {
     updateFavoritesUI();
     updateSelectedOddsUI();
 }
-// Nueva función para el homepage
+
 async function loadFeaturedEvents() {
     const container = document.getElementById('featured-events-container');
     const loader = document.getElementById('loader-featured');
     if (!container || !loader) return;
 
     try {
-        // Pedimos eventos de una liga popular, por ejemplo, la Premier League de Inglaterra
         const events = await fetchLiveEvents('soccer_epl');
         
         if (events && events.length > 0) {
-            // Mostramos solo los primeros 6 partidos
             const featured = events.slice(0, 6); 
             container.innerHTML = featured.map(renderEventCard).join('');
-            // Importante: Llama a esto para que los botones de cuotas funcionen
             updateSelectedOddsUI(); 
         } else {
             container.innerHTML = '<p class="empty-message">No hay partidos destacados disponibles en este momento.</p>';
@@ -154,7 +151,7 @@ async function loadFeaturedEvents() {
     } catch (error) {
         container.innerHTML = '<p class="error-message">No se pudieron cargar los partidos.</p>';
     } finally {
-        loader.style.display = 'none'; // Ocultamos el loader
+        loader.style.display = 'none';
     }
 }
 
@@ -484,17 +481,17 @@ function setupEventListeners() {
         
         const oddsButton = target.closest('.odds-button');
         if (oddsButton) {
-            // --- Lógica de Prioridad #3: "Jugar Ahora" en Home para Apuestas ---
             const isLoggedIn = localStorage.getItem('fortunaUser');
             
             if (!isLoggedIn) {
-                openModal(document.getElementById('register-modal')); // Abre el modal de registro/login
-                return; // Detiene el procesamiento posterior de la apuesta
+                // ==========================================================
+                //  CORREGIDO: Abre el modal de LOGIN en lugar de registro.
+                // ==========================================================
+                openModal(document.getElementById('login-modal'));
+                return;
             }
-            // Si está logueado, procede a añadir la apuesta
             addBet({ team: oddsButton.dataset.team, odds: parseFloat(oddsButton.dataset.odds), id: `${oddsButton.dataset.team}-${oddsButton.dataset.odds}` });
             
-            // Si la apuesta se realizó desde la portada, puede redirigir
             if (oddsButton.closest('#featured-events-container')) {
                 window.location.href = 'deportes.html';
             }
@@ -559,11 +556,13 @@ function setupEventListeners() {
         const gameCard = target.closest('.game-card');
         if (gameCard) {
             event.preventDefault();
-            // --- Lógica de Prioridad #3: "Jugar Ahora" en Home para Casino ---
             const isLoggedIn = localStorage.getItem('fortunaUser');
             
             if (!isLoggedIn) {
-                openModal(document.getElementById('login-modal')); // Abre el modal de login/registro
+                // ==========================================================
+                //  CORREGIDO: Abre el modal de LOGIN en lugar de registro.
+                // ==========================================================
+                openModal(document.getElementById('login-modal'));
             } else {
                 const gameUrl = gameCard.dataset.gameUrl;
                 if (gameUrl) {
@@ -619,22 +618,24 @@ async function main() {
     subscribe(updateSelectedOddsUI);
 
     if (window.location.pathname.includes('deportes.html')) {
-        showInitialMessage();
+        const urlParams = new URLSearchParams(window.location.search);
+        const sportKeyFromUrl = urlParams.get('sport');
+        if (sportKeyFromUrl) {
+            const loader = document.getElementById('loader-live');
+            if(loader) loader.style.display = 'flex';
+            const events = await fetchLiveEvents(sportKeyFromUrl);
+            if(loader) loader.style.display = 'none';
+            renderEvents(events);
+        } else {
+            showInitialMessage();
+        }
     }
     
     if (window.location.pathname.includes('mi-cuenta.html')) {
         const loggedInUser = localStorage.getItem('fortunaUser');
         
         if (!loggedInUser) {
-            const dashboard = document.querySelector('.account-dashboard-grid');
-            if (dashboard) dashboard.style.display = 'none';
-            document.querySelector('h1.page-title').style.display = 'none';
-            
-            setTimeout(() => {
-                const registerModal = document.getElementById('register-modal');
-                if (registerModal) openModal(registerModal);
-            }, 100);
-
+            window.location.href = 'index.html';
         } else {
             await initAccountDashboard(); 
         }
