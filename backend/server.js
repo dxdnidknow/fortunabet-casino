@@ -1,4 +1,4 @@
-// Archivo: backend/server.js (CORREGIDO Y LIMPIO)
+// Archivo: backend/server.js (CORREGIDO PARA RENDER Y ORDEN DE RUTAS)
 // =======================================================================
 //  CONFIGURACIÓN INICIAL Y DEPENDENCIAS
 // =======================================================================
@@ -27,6 +27,13 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// =======================================================================
+//  CORRECCIÓN PARA RENDER (TRUST PROXY)
+// =======================================================================
+// Esta línea es crucial para que express-rate-limit funcione detrás de un proxy.
+app.set('trust proxy', 1);
+// =======================================================================
+
 // Middleware para hacer 'db' accesible en todas las peticiones
 app.use((req, res, next) => {
     req.db = getDb();
@@ -52,19 +59,13 @@ if (!API_KEY) { console.error('❌ Error: La variable de entorno ODDS_API_KEY no
 const eventsCache = new NodeCache({ stdTTL: 600 }); // Cache de 10 minutos
 
 // =======================================================================
-//  RUTAS DE LA APLICACIÓN
+//  RUTAS DE LA APLICACIÓN (ORDEN CORREGIDO)
 // =======================================================================
 
 // --- Rutas Públicas de Autenticación ---
 app.use('/api', authRoutes);
 
-// --- Rutas Protegidas de Usuario ---
-app.use('/api', userRoutes);
-
-// --- Rutas Protegidas de Administrador ---
-app.use('/api/admin', adminRoutes);
-
-// --- Rutas Públicas de Deportes (Protegidas con Rate Limiter) ---
+// --- Rutas Públicas de Deportes (AHORA VAN ANTES QUE LAS DE USUARIO) ---
 app.get('/api/events/:sportKey', sportsApiLimiter, async (req, res) => {
     try {
         const { sportKey } = req.params;
@@ -98,9 +99,11 @@ app.get('/api/event/:sportKey/:eventId', sportsApiLimiter, (req, res) => {
     res.status(404).json({ message: 'Evento no encontrado o caché expirado.' });
 });
 
-// ===== RUTAS DUPLICADAS ELIMINADAS DE AQUÍ =====
-// Toda la lógica de payout-methods, phone-verification y withdraw ahora reside
-// exclusivamente en 'backend/routes/user.js' para evitar conflictos.
+// --- Rutas Protegidas de Usuario (AHORA VAN DESPUÉS DE LAS PÚBLICAS) ---
+app.use('/api', userRoutes);
+
+// --- Rutas Protegidas de Administrador ---
+app.use('/api/admin', adminRoutes);
 
 // =======================================================================
 //  FUNCIÓN DE MANEJO DE ERRORES
