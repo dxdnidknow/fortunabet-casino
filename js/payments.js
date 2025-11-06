@@ -167,4 +167,4 @@ export function initPaymentModals() {
             submitButton.innerHTML = originalBtnText;
         }
     });
-}
+}   
