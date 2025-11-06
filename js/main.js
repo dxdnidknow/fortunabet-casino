@@ -1,4 +1,4 @@
-// Archivo: js/main.js (COMPLETO Y MODIFICADO)
+// Archivo: js/main.js (COMPLETO Y CORREGIDO - ¡CON PRIORIDAD #3!)
 
 import { API_BASE_URL } from './config.js';
 import { addBet, initBetSlip, subscribe, getBets } from './bet.js';
@@ -374,29 +374,24 @@ function initGameSlider() {
     startAutoPlay();
 }
 
-// =======================================================================
-//  NUEVA FUNCIÓN: FILTROS DE CASINO (PRIORIDAD #4A)
-// =======================================================================
 function initCasinoFilters() {
     const filterContainer = document.querySelector('.game-filters');
     const gameGrid = document.querySelector('.game-grid');
 
-    if (!filterContainer || !gameGrid) return; // No estamos en una página de casino
+    if (!filterContainer || !gameGrid) return; 
 
     filterContainer.addEventListener('click', (e) => {
         const filterBtn = e.target.closest('.filter-btn');
         if (!filterBtn) return;
 
-        // 1. Manejar el botón activo
         filterContainer.querySelector('.filter-btn.active')?.classList.remove('active');
         filterBtn.classList.add('active');
 
         const filterValue = filterBtn.dataset.filter;
         const gameCards = gameGrid.querySelectorAll('.game-card');
 
-        // 2. Mostrar/Ocultar juegos
         gameCards.forEach(card => {
-            const categories = card.dataset.category.split(' '); // "slots popular"
+            const categories = card.dataset.category.split(' '); 
             
             if (filterValue === 'all' || categories.includes(filterValue)) {
                 card.style.display = 'block';
@@ -489,19 +484,19 @@ function setupEventListeners() {
         
         const oddsButton = target.closest('.odds-button');
         if (oddsButton) {
-            const isFeaturedEvent = oddsButton.closest('#featured-events-container');
-
-            if (isFeaturedEvent) {
-                const isLoggedIn = localStorage.getItem('fortunaUser');
-                if (isLoggedIn) {
-                    addBet({ team: oddsButton.dataset.team, odds: parseFloat(oddsButton.dataset.odds), id: `${oddsButton.dataset.team}-${oddsButton.dataset.odds}` });
-                    window.location.href = 'deportes.html';
-                } else {
-                    const registerModal = document.getElementById('register-modal');
-                    if (registerModal) openModal(registerModal);
-                }
-            } else {
-                addBet({ team: oddsButton.dataset.team, odds: parseFloat(oddsButton.dataset.odds), id: `${oddsButton.dataset.team}-${oddsButton.dataset.odds}` });
+            // --- Lógica de Prioridad #3: "Jugar Ahora" en Home para Apuestas ---
+            const isLoggedIn = localStorage.getItem('fortunaUser');
+            
+            if (!isLoggedIn) {
+                openModal(document.getElementById('register-modal')); // Abre el modal de registro/login
+                return; // Detiene el procesamiento posterior de la apuesta
+            }
+            // Si está logueado, procede a añadir la apuesta
+            addBet({ team: oddsButton.dataset.team, odds: parseFloat(oddsButton.dataset.odds), id: `${oddsButton.dataset.team}-${oddsButton.dataset.odds}` });
+            
+            // Si la apuesta se realizó desde la portada, puede redirigir
+            if (oddsButton.closest('#featured-events-container')) {
+                window.location.href = 'deportes.html';
             }
             return;
         }
@@ -553,7 +548,7 @@ function setupEventListeners() {
                 const loader = document.getElementById('loader-live');
                 if (loader) loader.style.display = 'flex';
                 const events = await fetchLiveEvents(activeSportKey);
-                if (loader) loader.style.display = 'none';
+                if (loader) loader.style.display('none');
                 renderEvents(events);
             }
             document.querySelector('.event-tabs').classList.remove('hidden');
@@ -564,13 +559,11 @@ function setupEventListeners() {
         const gameCard = target.closest('.game-card');
         if (gameCard) {
             event.preventDefault();
-            const currentUser = localStorage.getItem('fortunaUser');
+            // --- Lógica de Prioridad #3: "Jugar Ahora" en Home para Casino ---
+            const isLoggedIn = localStorage.getItem('fortunaUser');
             
-            if (!currentUser) {
-                const loginModal = document.getElementById('login-modal');
-                if (loginModal) {
-                    openModal(loginModal);
-                }
+            if (!isLoggedIn) {
+                openModal(document.getElementById('login-modal')); // Abre el modal de login/registro
             } else {
                 const gameUrl = gameCard.dataset.gameUrl;
                 if (gameUrl) {
@@ -616,7 +609,7 @@ async function main() {
     initAuth();
     handleActiveNav();
     initGameSlider();
-    initCasinoFilters(); // <-- ¡AÑADIDA LA LLAMADA!
+    initCasinoFilters();
     initBetSlip();
     initHelpWidget();
     initPaymentModals();    
@@ -644,7 +637,6 @@ async function main() {
 
         } else {
             await initAccountDashboard(); 
-            // renderBetHistory(); // 'initAccountDashboard' ya llama a esto
         }
     }
     if (document.getElementById('featured-events-container')) {
