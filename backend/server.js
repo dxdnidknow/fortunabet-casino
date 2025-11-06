@@ -1,4 +1,4 @@
-// Archivo: backend/server.js (CORREGIDO)
+// Archivo: backend/server.js (CORREGIDO Y LIMPIO)
 // =======================================================================
 //  CONFIGURACIÓN INICIAL Y DEPENDENCIAS
 // =======================================================================
@@ -8,22 +8,18 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const NodeCache = require('node-cache');
-const { connectDB, getDb, client } = require('./db'); // Asegúrate de exportar 'client' desde db.js para las transacciones
-const { ObjectId } = require('mongodb'); // Importa ObjectId
+const { connectDB, getDb } = require('./db');
+const rateLimit = require('express-rate-limit');
 
 // =======================================================================
-//  IMPORTACIÓN DE MIDDLEWARE (RUTA CORREGIDA)
+//  IMPORTACIÓN DE RUTAS MODULARES
 // =======================================================================
-const authenticateToken = require('./middleware/authMiddleware');
-// =======================================================================
-
-// Importamos nuestras rutas modulares
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
-const port = process.env.PORT || 3001; // Usar el puerto de Render o 3001
+const port = process.env.PORT || 3001;
 
 // =======================================================================
 //  MIDDLEWARES GENERALES
@@ -38,27 +34,38 @@ app.use((req, res, next) => {
 });
 
 // =======================================================================
+//  CONFIGURACIÓN DE SEGURIDAD: RATE LIMITER
+// =======================================================================
+const sportsApiLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutos
+	max: 100, // 100 peticiones por IP cada 15 minutos
+	standardHeaders: true,
+	legacyHeaders: false,
+    message: { message: 'Demasiadas peticiones a la API de deportes. Intente de nuevo en 15 minutos.' }
+});
+
+// =======================================================================
 //  CONFIGURACIÓN DE API DE DEPORTES
 // =======================================================================
 const API_KEY = process.env.ODDS_API_KEY;
 if (!API_KEY) { console.error('❌ Error: La variable de entorno ODDS_API_KEY no está definida.'); process.exit(1); }
-const eventsCache = new NodeCache({ stdTTL: 600 });
+const eventsCache = new NodeCache({ stdTTL: 600 }); // Cache de 10 minutos
 
 // =======================================================================
 //  RUTAS DE LA APLICACIÓN
 // =======================================================================
 
 // --- Rutas Públicas de Autenticación ---
-app.use('/api', authRoutes); // Usa todas las rutas de /routes/auth.js
+app.use('/api', authRoutes);
 
 // --- Rutas Protegidas de Usuario ---
-app.use('/api', userRoutes); // Usa todas las rutas de /routes/user.js
+app.use('/api', userRoutes);
 
 // --- Rutas Protegidas de Administrador ---
-app.use('/api/admin', adminRoutes); // Usa todas las rutas de /routes/admin.js
+app.use('/api/admin', adminRoutes);
 
-// --- Rutas Públicas de Deportes ---
-app.get('/api/events/:sportKey', async (req, res) => {
+// --- Rutas Públicas de Deportes (Protegidas con Rate Limiter) ---
+app.get('/api/events/:sportKey', sportsApiLimiter, async (req, res) => {
     try {
         const { sportKey } = req.params;
         const cachedEvents = eventsCache.get(sportKey);
@@ -71,17 +78,17 @@ app.get('/api/events/:sportKey', async (req, res) => {
     } catch (error) { handleApiError(error, res); }
 });
 
-app.get('/api/sports', async (req, res) => {
+app.get('/api/sports', sportsApiLimiter, async (req, res) => {
     try {
         const cachedSports = eventsCache.get('sportsList');
         if (cachedSports) { return res.json(cachedSports); }
         const response = await axios.get('https://api.the-odds-api.com/v4/sports', { params: { apiKey: API_KEY } });
-        eventsCache.set('sportsList', response.data, 3600);
+        eventsCache.set('sportsList', response.data, 3600); // Cache de 1 hora
         res.json(response.data);
     } catch (error) { handleApiError(error, res); }
 });
 
-app.get('/api/event/:sportKey/:eventId', (req, res) => {
+app.get('/api/event/:sportKey/:eventId', sportsApiLimiter, (req, res) => {
     const { sportKey, eventId } = req.params;
     const sportEventsList = eventsCache.get(sportKey);
     if (sportEventsList) {
@@ -91,224 +98,9 @@ app.get('/api/event/:sportKey/:eventId', (req, res) => {
     res.status(404).json({ message: 'Evento no encontrado o caché expirado.' });
 });
 
-// =======================================================================
-//  RUTAS DE MÉTODOS DE PAGO (payoutMethods)
-// =======================================================================
-// (Estas rutas usan 'authenticateToken' importado arriba)
-
-// 1. OBTENER todos los métodos de retiro del usuario
-app.get('/api/payout-methods', authenticateToken, async (req, res) => {
-    try {
-        const userId = new ObjectId(req.user.id);
-        const db = getDb(); // Obtener db de la conexión
-        const payoutMethods = await db.collection('payoutMethods').find({ userId }).toArray();
-        res.status(200).json(payoutMethods);
-    } catch (error) {
-        console.error('[ERROR] al obtener métodos de pago:', error);
-        res.status(500).json({ message: 'Error interno al cargar los métodos de pago.' });
-    }
-});
-
-// 2. AÑADIR un nuevo método de retiro
-app.post('/api/payout-methods', authenticateToken, async (req, res) => {
-    try {
-        const userId = new ObjectId(req.user.id);
-        const { methodType, isPrimary, details } = req.body;
-        const db = getDb();
-
-        if (!methodType || !details) {
-            return res.status(400).json({ message: 'Faltan datos requeridos para el método de pago.' });
-        }
-        const newMethod = { userId, methodType, details, isPrimary: !!isPrimary, createdAt: new Date() };
-
-        if (newMethod.isPrimary) {
-            await db.collection('payoutMethods').updateMany(
-                { userId, isPrimary: true },
-                { $set: { isPrimary: false } }
-            );
-        }
-        const result = await db.collection('payoutMethods').insertOne(newMethod);
-        res.status(201).json({ message: 'Método de retiro añadido con éxito.', _id: result.insertedId });
-    } catch (error) {
-        console.error('[ERROR] al añadir método de pago:', error);
-        res.status(500).json({ message: 'Error interno al añadir el método de pago.' });
-    }
-});
-
-// 3. ESTABLECER un método como principal
-app.post('/api/payout-methods/:id/primary', authenticateToken, async (req, res) => {
-    try {
-        const userId = new ObjectId(req.user.id);
-        const methodId = new ObjectId(req.params.id);
-        const db = getDb();
-
-        await db.collection('payoutMethods').updateMany(
-            { userId, isPrimary: true },
-            { $set: { isPrimary: false } }
-        );
-        const result = await db.collection('payoutMethods').updateOne(
-            { _id: methodId, userId },
-            { $set: { isPrimary: true } }
-        );
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ message: 'Método no encontrado o no pertenece al usuario.' });
-        }
-        res.status(200).json({ message: 'Método establecido como principal.' });
-    } catch (error) {
-        console.error('[ERROR] al establecer primario:', error);
-        res.status(500).json({ message: 'Error interno al establecer el método principal.' });
-    }
-});
-
-// 4. ELIMINAR un método de retiro
-app.delete('/api/payout-methods/:id', authenticateToken, async (req, res) => {
-    try {
-        const userId = new ObjectId(req.user.id);
-        const methodId = new ObjectId(req.params.id);
-        const db = getDb();
-
-        const result = await db.collection('payoutMethods').deleteOne({ _id: methodId, userId: userId });
-        if (result.deletedCount === 0) {
-            return res.status(404).json({ message: 'Método no encontrado o no pertenece al usuario.' });
-        }
-        res.status(200).json({ message: 'Método de retiro eliminado con éxito.' });
-    } catch (error) {
-        console.error('[ERROR] al eliminar método de pago:', error);
-        res.status(500).json({ message: 'Error interno al eliminar el método de pago.' });
-    }
-});
-// =======================================================================
-//  RUTAS DE VERIFICACIÓN TELEFÓNICA (¡NUEVAS!)
-// =======================================================================
-
-// 1. SOLICITAR CÓDIGO SMS (Llamado por account.js)
-app.post('/api/request-phone-verification', authenticateToken, async (req, res) => {
-    const userId = new ObjectId(req.user.id);
-    const db = getDb();
-
-    try {
-        const user = await db.collection('users').findOne({ _id: userId });
-        const phone = user?.personalInfo?.phone; // Asume que el teléfono está guardado
-        
-        if (!phone || !phone.startsWith('+58')) {
-            return res.status(400).json({ message: "Añade un número de teléfono válido (+58) en 'Mis Datos' primero." });
-        }
-        
-        // (Tu código de Twilio/SendGrid para enviar SMS iría aquí)
-        // Por ahora, simularemos el envío y guardaremos un código falso
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
-        
-        await db.collection('users').updateOne(
-            { _id: userId },
-            { $set: { 'personalInfo.phoneOtp': otp, 'personalInfo.phoneOtpExpires': otpExpires } }
-        );
-        
-        console.log(`[SIMULACIÓN] Código SMS para ${phone} es: ${otp}`);
-        
-        res.status(200).json({ message: `Se ha enviado un código de verificación a ${phone}.` });
-    } catch (error) {
-        console.error("Error al enviar código de teléfono:", error);
-        res.status(500).json({ message: "No se pudo enviar el código. Verifica que el número sea válido." });
-    }
-});
-
-// 2. VERIFICAR CÓDIGO SMS (Llamado por account.js)
-app.post('/api/verify-phone-code', authenticateToken, async (req, res) => {
-    const userId = new ObjectId(req.user.id);
-    const { code } = req.body;
-    const db = getDb();
-
-    try {
-        const user = await db.collection('users').findOne({ _id: userId });
-        const phoneInfo = user?.personalInfo;
-
-        if (!phoneInfo || !phoneInfo.phoneOtp) {
-            return res.status(400).json({ message: "No hay una verificación de teléfono pendiente." });
-        }
-
-        if (phoneInfo.phoneOtp !== code) {
-            return res.status(400).json({ message: "El código de verificación es incorrecto." });
-        }
-
-        if (new Date() > phoneInfo.phoneOtpExpires) {
-            return res.status(400).json({ message: "El código de verificación ha expirado." });
-        }
-
-        // --- ÉXITO ---
-        await db.collection('users').updateOne(
-            { _id: userId },
-            { 
-                $set: { 'personalInfo.isPhoneVerified': true },
-                $unset: { 'personalInfo.phoneOtp': "", 'personalInfo.phoneOtpExpires': "" } 
-            }
-        );
-        
-        res.status(200).json({ message: "¡Teléfono verificado con éxito!" });
-    } catch (error) {
-        console.error("Error al verificar código de teléfono:", error);
-        res.status(500).json({ message: "Error al verificar el código." });
-    }
-});
-// =======================================================================
-//  RUTA DE RETIRO (WITHDRAW)
-// =======================================================================
-app.post('/api/withdraw', authenticateToken, async (req, res) => {
-    const session = client.startSession(); // Asumiendo que 'client' se exporta desde db.js
-    
-    try {
-        session.startTransaction();
-        const userId = new ObjectId(req.user.id);
-        const { amount, methodId } = req.body;
-        const db = getDb();
-
-        const withdrawalAmount = parseFloat(amount);
-        if (isNaN(withdrawalAmount) || withdrawalAmount <= 0) {
-            await session.abortTransaction();
-            return res.status(400).json({ message: 'Monto de retiro inválido.' });
-        }
-        if (withdrawalAmount < 10) { 
-            await session.abortTransaction();
-            return res.status(400).json({ message: 'El retiro mínimo es de Bs. 10.00' });
-        }
-
-        const user = await db.collection('users').findOne({ _id: userId }, { session });
-        if (!user || user.balance < withdrawalAmount) {
-            await session.abortTransaction();
-            return res.status(400).json({ message: 'Fondos insuficientes para realizar el retiro.' });
-        }
-        
-        const method = await db.collection('payoutMethods').findOne({ _id: new ObjectId(methodId), userId }, { session });
-        if (!method) {
-            await session.abortTransaction();
-            return res.status(404).json({ message: 'Método de retiro no encontrado o no pertenece a tu cuenta.' });
-        }
-
-        await db.collection('users').updateOne(
-            { _id: userId },
-            { $inc: { balance: -withdrawalAmount } },
-            { session }
-        );
-
-        const transactionRecord = { userId, type: 'withdrawal', amount: -withdrawalAmount, status: 'pending', method: method.methodType, date: new Date() };
-        await db.collection('transactions').insertOne(transactionRecord, { session });
-        
-        const withdrawalRequest = { userId, username: user.username, amount: withdrawalAmount, methodDetails: method.details, methodType: method.methodType, status: 'pending', requestedAt: new Date() };
-        await db.collection('withdrawalRequests').insertOne(withdrawalRequest, { session });
-
-        await session.commitTransaction();
-        res.status(200).json({ message: 'Solicitud de retiro enviada. Se procesará en breve.' });
-    } catch (error) {
-        if (session.inTransaction()) {
-            await session.abortTransaction();
-        }
-        console.error('[ERROR] en /api/withdraw:', error);
-        res.status(500).json({ message: 'Error interno al procesar el retiro. Intenta de nuevo.' });
-    } finally {
-        await session.endSession();
-    }
-});
-
+// ===== RUTAS DUPLICADAS ELIMINADAS DE AQUÍ =====
+// Toda la lógica de payout-methods, phone-verification y withdraw ahora reside
+// exclusivamente en 'backend/routes/user.js' para evitar conflictos.
 
 // =======================================================================
 //  FUNCIÓN DE MANEJO DE ERRORES
@@ -327,9 +119,9 @@ function handleApiError(error, res) {
 //  INICIO DEL SERVIDOR
 // =======================================================================
 connectDB().then(() => {
-    app.listen(port, '0.0.0.0', () => { // Escuchar en 0.0.0.0 para compatibilidad con Render
+    app.listen(port, '0.0.0.0', () => { // Escuchar en 0.0.0.0 para compatibilidad con Render/Netlify
         console.log('-------------------------------------------');
-        console.log(`🚀 Servidor backend de FortunaBet (Refactorizado)`);
+        console.log(`🚀 Servidor backend de FortunaBet`);
         console.log(`   Escuchando en el puerto: ${port}`);
         console.log('-------------------------------------------');
     });
