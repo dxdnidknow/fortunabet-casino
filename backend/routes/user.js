@@ -5,7 +5,7 @@ const { ObjectId } = require('mongodb');
 const authenticateToken = require('../middleware/authMiddleware');
 const rateLimit = require('express-rate-limit');
 const { client } = require('../db');
-const twilio = require('twilio');
+const twilio = require('twilio'); // <-- 1. IMPORTAR TWILIO
 
 const router = express.Router();
 
@@ -14,6 +14,7 @@ const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 router.use(authenticateToken);
 
 // --- Inicializar Cliente de Twilio ---
+// Las variables deben estar en el .env y en Render
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
@@ -90,24 +91,28 @@ router.post('/request-phone-verification', authLimiter, async (req, res) => {
             return res.status(400).json({ message: "Añade un número de teléfono válido (+58) en 'Mis Datos' primero." });
         }
         
+        // --- LÓGICA REAL DE TWILIO ---
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
         
+        // 1. Guardar el código en la BD
         await db.collection('users').updateOne(
             { _id: userId },
             { $set: { 'personalInfo.phoneOtp': otp, 'personalInfo.phoneOtpExpires': otpExpires } }
         );
         
+        // 2. Enviar el SMS
         await twilioClient.messages.create({
             body: `Tu código de verificación para FortunaBet es: ${otp}`,
             from: twilioPhoneNumber,
-            to: phone
+            to: phone // El número del usuario (ej: +58414...)
         });
         
         res.status(200).json({ message: `Se ha enviado un código de verificación a tu teléfono.` });
 
     } catch (error) {
         console.error("Error al enviar código con Twilio:", error);
+        // Twilio devuelve errores útiles si el número no es válido
         if (error.code === 21211) {
              return res.status(400).json({ message: "El número de teléfono proporcionado no es válido." });
         }

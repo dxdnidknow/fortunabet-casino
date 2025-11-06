@@ -1,4 +1,4 @@
-// Archivo: js/auth.js (MODIFICADO Y COMPLETO)
+// Archivo: js/auth.js (COMPLETO Y MODIFICADO)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -8,7 +8,7 @@ import { openModal, closeModal } from './modal.js';
 const RESEND_COOLDOWN_SECONDS = 60;
 let isResendCoolingDown = false;
 
-// --- Funciones de Sesión (Sin cambios) ---
+// --- Funciones de Sesión ---
 function getToken() {
     return localStorage.getItem('fortunaToken');
 }
@@ -42,7 +42,6 @@ function updateLoginState(user) {
     }
     document.body.classList.add('user-logged-in');
     
-    // Oculta/muestra los botones de login/logout en el header (de components/header.html)
     const authButtons = document.querySelector('.auth-wrapper .auth-buttons');
     const userInfo = document.querySelector('.auth-wrapper .user-info');
     if (authButtons) authButtons.classList.add('hidden');
@@ -52,7 +51,6 @@ function updateLoginState(user) {
         if (welcomeMsg) welcomeMsg.textContent = `Hola, ${user.username}`;
     }
 
-    // Oculta/muestra los botones en el menú móvil (de components/mobile-menu.html)
     const mobileAuthButtons = document.querySelector('.mobile-menu-auth .auth-buttons');
     const mobileUserInfo = document.querySelector('.mobile-menu-auth .user-info');
     if (mobileAuthButtons) mobileAuthButtons.style.display = 'none';
@@ -62,7 +60,6 @@ function updateLoginState(user) {
         if (mobileWelcomeMsg) mobileWelcomeMsg.textContent = `Hola, ${user.username}`;
     }
 }
-
 
 async function handleRegisterSubmit(event) {
     event.preventDefault();
@@ -89,7 +86,7 @@ async function handleRegisterSubmit(event) {
     submitButton.innerHTML = '<span class="spinner-sm"></span>';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/register`, { // Asumiendo que esta ruta está en routes/auth.js
+        const response = await fetch(`${API_BASE_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -101,7 +98,6 @@ async function handleRegisterSubmit(event) {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Ocurrió un error.');
 
-        // Guardamos el email para usarlo en la siguiente pantalla
         sessionStorage.setItem('emailForVerification', emailInput.value);
 
         const registerModal = document.getElementById('register-modal');
@@ -137,7 +133,7 @@ async function handleOtpSubmit(event) {
     submitButton.innerHTML = '<span class="spinner-sm"></span>';
 
     try {
-        const response = await fetch(`${API_BASE_URL}/verify-email`, { // Esta ruta la modificamos en server.js
+        const response = await fetch(`${API_BASE_URL}/verify-email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, otp })
@@ -145,40 +141,20 @@ async function handleOtpSubmit(event) {
         
         const data = await response.json();
         
-        // ==========================================================
-        //  INICIO DE LA MODIFICACIÓN (Manejo de success: false)
-        // ==========================================================
-        
-        // Tu backend ahora envía 200 OK con { success: false } si el código es malo.
-        // Ya no usamos !response.ok, sino que revisamos el JSON.
         if (data.success === false) {
             throw new Error(data.message || 'Error al verificar.');
         }
-        
-        // ==========================================================
-        //  FIN DE LA MODIFICACIÓN
-        // ==========================================================
 
         if (!data.token || !data.user) {
             throw new Error('La respuesta del servidor no incluyó los datos de sesión.');
         }
 
-        // --- ÉXITO ---
         localStorage.setItem('fortunaToken', data.token);
         localStorage.setItem('fortunaUser', JSON.stringify(data.user));
-
-        // ==========================================================
-        //  INICIO DE LA MODIFICACIÓN (Limpiar email SOLO en éxito)
-        // ==========================================================
         sessionStorage.removeItem('emailForVerification');
-        // ==========================================================
-        //  FIN DE LA MODIFICACIÓN
-        // ==========================================================
 
         const otpModal = document.getElementById('email-verification-modal');
-        if (otpModal) {
-            closeModal(otpModal);
-        }
+        if (otpModal) closeModal(otpModal);
 
         updateLoginState(data.user);
         showToast(`¡Bienvenido a FortunaBet, ${data.user.username}!`);
@@ -195,23 +171,13 @@ async function handleResendOtp(event) {
     event.preventDefault();
     const link = event.target.closest('#resend-otp-link');
     const email = sessionStorage.getItem('emailForVerification');
-
-    // ==========================================================
-    //  INICIO DE LA MODIFICACIÓN (Cooldown de 60 segundos)
-    // ==========================================================
     
-    if (!email) {
-        showToast('No se pudo identificar el correo para reenviar.', 'error');
-        return;
-    }
-    
-    if (isResendCoolingDown || !link) {
+    if (!email || isResendCoolingDown || !link) {
         return;
     }
 
-    // 1. Iniciar Cooldown Visual
     isResendCoolingDown = true;
-    link.classList.add('disabled'); // Usa la clase CSS
+    link.classList.add('disabled');
     
     let timer = RESEND_COOLDOWN_SECONDS;
     const initialText = link.textContent;
@@ -228,7 +194,6 @@ async function handleResendOtp(event) {
         }
     }, 1000);
 
-    // 2. Llamar a la API (que también tiene su propio limiter)
     try {
         const response = await fetch(`${API_BASE_URL}/resend-otp`, {
             method: 'POST',
@@ -239,7 +204,6 @@ async function handleResendOtp(event) {
         const data = await response.json();
         
         if (!response.ok) {
-            // Si la API falla (ej. 429 Too Many Requests), detenemos el timer
             clearInterval(interval);
             link.textContent = initialText;
             link.classList.remove('disabled');
@@ -248,21 +212,15 @@ async function handleResendOtp(event) {
         }
         
         showToast(data.message, 'success');
-        // Si la API tiene éxito, el timer sigue corriendo
 
     } catch (error) {
-        // Si el fetch falla, detenemos el timer
         clearInterval(interval);
         link.textContent = initialText;
         link.classList.remove('disabled');
         isResendCoolingDown = false;
         showToast(error.message, 'error');
     }
-    // ==========================================================
-    //  FIN DE LA MODIFICACIÓN
-    // ==========================================================
 }
-
 
 async function handleLoginSubmit(event) {
     event.preventDefault();
@@ -278,7 +236,7 @@ async function handleLoginSubmit(event) {
     submitButton.disabled = true;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/login`, { // Asumiendo que esta ruta está en routes/auth.js
+        const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -321,7 +279,7 @@ async function handleForgotPasswordSubmit(event) {
     submitButton.disabled = true;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/forgot-password`, { // Asumiendo que esta ruta está en routes/auth.js
+        const response = await fetch(`${API_BASE_URL}/forgot-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: emailInput.value })
@@ -360,7 +318,7 @@ async function handleResetPasswordSubmit(event) {
     submitButton.disabled = true;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/reset-password`, { // Asumiendo que esta ruta está en routes/auth.js
+        const response = await fetch(`${API_BASE_URL}/reset-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id, token, password: passwordInput.value })
@@ -376,12 +334,24 @@ async function handleResetPasswordSubmit(event) {
 }
 
 function handleLogout() {
+    // --- INICIO DE LA CORRECCIÓN ---
+    // 1. Limpia los datos de sesión del almacenamiento local
     localStorage.removeItem('fortunaToken');
     localStorage.removeItem('fortunaUser');
     
-    // Revierte los cambios de updateLoginState
+    // 2. Muestra la notificación de que la sesión se ha cerrado
+    showToast('Has cerrado sesión.');
+
+    // 3. Oculta el panel de usuario si estamos en esa página
+    if (window.location.pathname.includes('mi-cuenta.html')) {
+        const dashboard = document.querySelector('.account-dashboard-grid');
+        const pageTitle = document.querySelector('.page-title');
+        if (dashboard) dashboard.style.display = 'none';
+        if (pageTitle) pageTitle.style.display = 'none';
+    }
+
+    // 4. Actualiza el estado visual del header a "desconectado"
     document.body.classList.remove('user-logged-in');
-    
     const authButtons = document.querySelector('.auth-wrapper .auth-buttons');
     const userInfo = document.querySelector('.auth-wrapper .user-info');
     if (authButtons) authButtons.classList.remove('hidden');
@@ -389,14 +359,16 @@ function handleLogout() {
 
     const mobileAuthButtons = document.querySelector('.mobile-menu-auth .auth-buttons');
     const mobileUserInfo = document.querySelector('.mobile-menu-auth .user-info');
-    if (mobileAuthButtons) mobileAuthButtons.style.display = 'block';
+    if (mobileAuthButtons) mobileAuthButtons.style.display = 'flex';
     if (mobileUserInfo) mobileUserInfo.style.display = 'none';
 
-    showToast('Has cerrado sesión.');
+    // 5. Redirige al usuario a la página de inicio para evitar que se quede en una página privada
     if (window.location.pathname.includes('mi-cuenta.html')) {
-        window.location.href = 'index.html';
+        window.location.href = '/index.html';
     }
+    // --- FIN DE LA CORRECCIÓN ---
 }
+
 
 export async function fetchWithAuth(url, options = {}) {
     const token = getToken();
@@ -406,7 +378,6 @@ export async function fetchWithAuth(url, options = {}) {
     }
     const response = await fetch(url, { ...options, headers });
     if (response.status === 401 || response.status === 403) {
-        // Si la sesión expira o no es válida
         handleLogout();
         const loginModal = document.getElementById('login-modal');
         if (loginModal) openModal(loginModal);
@@ -420,7 +391,6 @@ export function initAuth() {
     if (currentUser) {
         updateLoginState(currentUser);
     } else {
-        // Asegurarse de que el estado de 'log-out' esté aplicado
         document.body.classList.remove('user-logged-in');
     }
     
@@ -454,7 +424,7 @@ export function initAuth() {
             if (loginModal) closeModal(loginModal); 
             if (forgotModal) openModal(forgotModal);
         }
-        if (event.target.id === 'logout-btn' || event.target.id === 'logout-btn-mobile') {
+        if (event.target.id === 'logout-btn' || event.target.id === 'logout-btn-mobile' || event.target.closest('#logout-btn')) {
             handleLogout();
         }
         const toggleIcon = event.target.closest('.toggle-password');
