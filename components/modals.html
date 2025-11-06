@@ -1,8 +1,3 @@
-<!-- ======================================================================= -->
-<!--             ARCHIVO components/modals.html (COMPLETO Y CORREGIDO)       -->
-<!-- ======================================================================= -->
-
-<!-- ===== MODAL DE REGISTRO ===== -->
 <div id="register-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
@@ -72,7 +67,6 @@
 	</div>
 </div>
 
-<!-- ===== MODAL DE INICIO DE SESIÓN ===== -->
 <div id="login-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
@@ -108,9 +102,6 @@
 	</div>
 </div>
 
-<!-- ======================================================================= -->
-<!--             MODAL DE OLVIDÉ MI CONTRASEÑA                               -->
-<!-- ======================================================================= -->
 <div id="forgot-password-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
@@ -141,9 +132,6 @@
 	</div>
 </div>
 
-<!-- ======================================================================= -->
-<!--             MODAL PARA RESTABLECER LA CONTRASEÑA                        -->
-<!-- ======================================================================= -->
 <div id="reset-password-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
@@ -185,9 +173,6 @@
 	</div>
 </div>
 
-<!-- ======================================================================= -->
-<!--                   MODAL DE DEPÓSITO                                     -->
-<!-- ======================================================================= -->
 <div id="deposit-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
@@ -261,9 +246,6 @@
 	</div>
 </div>
 
-<!-- ======================================================================= -->
-<!--                   MODAL DE RETIRO                                       -->
-<!-- ======================================================================= -->
 <div id="withdraw-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
@@ -271,26 +253,35 @@
 			<h2>Solicitar un Retiro</h2>
 			<p>Tu retiro será procesado en un plazo de 24 horas.</p>
 		</div>
-		<form id="withdraw-form" class="auth-form">
+		
+        <form id="withdraw-form" class="auth-form">
 			<div class="form-group">
 				<label for="withdraw-amount">Monto a Retirar (USD)</label>
-				<input type="number" id="withdraw-amount" placeholder="0.00" required>
+				<input type="number" id="withdraw-amount" name="withdraw-amount" placeholder="0.00" required>
 			</div>
-			<p><strong>Método de Pago Registrado:</strong></p>
-			<div class="registered-payment-method">
-				<p>Pago Móvil - Banco de Venezuela</p>
-				<p>0414-1234567</p>
-				<a href="#" class="edit-method-link">Editar</a>
+			
+			<div class="form-group">
+				<label for="withdraw-method">Método de Retiro</label>
+				<div class="select-wrapper">
+                     <select id="withdraw-method" name="withdraw-method" required>
+						<option value="">Cargando métodos...</option>
+					</select>
+				</div>
 			</div>
-			<p class="small-notice">Los retiros se procesan al método de pago que tengas configurado en "Mis Datos".</p>
+			
+			<p class="small-notice">
+				Los retiros se procesan al método de pago seleccionado. 
+                <a href="#mis-datos" class="edit-method-link account-menu-link" data-target="mis-datos">Administrar métodos</a>.
+			</p>
+			
+			<p id="withdraw-error-message" class="error-message" aria-live="polite"></p>
+
 			<button type="submit" class="btn btn-primary btn-cta">Solicitar Retiro</button>
 		</form>
-	</div>
+        </div>
 </div>
 
-<!-- ======================================================================= -->
-<!--                   MODAL DE JUEGO                                      -->
-<!-- ======================================================================= -->
+
 <div id="game-modal" class="modal-overlay">
 	<div class="game-container">
 		<button class="close-modal close-game-btn" aria-label="Cerrar Juego">&times;</button>
@@ -298,9 +289,6 @@
 	</div>
 </div>
 
-<!-- ======================================================================= -->
-<!--             MODAL DE VERIFICACIÓN DE CÓDIGO POR CORREO                  -->
-<!-- ======================================================================= -->
 <div id="email-verification-modal" class="modal-overlay" data-persistent="true">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
@@ -333,9 +321,6 @@
 	</div>
 </div>
 
-<!-- ======================================================================= -->
-<!--             MODAL DE VERIFICACIÓN DE CÓDIGO TELEFÓNICO                -->
-<!-- ======================================================================= -->
 <div id="phone-verification-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>

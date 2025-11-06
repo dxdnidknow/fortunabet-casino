@@ -1,4 +1,5 @@
-// Archivo: js/main.js (VERSIÓN FINAL COMPLETA)
+// Archivo: js/main.js (COMPLETO Y MODIFICADO)
+
 import { API_BASE_URL } from './config.js';
 import { addBet, initBetSlip, subscribe, getBets } from './bet.js';
 import { initModals, openModal } from './modal.js';
@@ -373,6 +374,39 @@ function initGameSlider() {
     startAutoPlay();
 }
 
+// =======================================================================
+//  NUEVA FUNCIÓN: FILTROS DE CASINO (PRIORIDAD #4A)
+// =======================================================================
+function initCasinoFilters() {
+    const filterContainer = document.querySelector('.game-filters');
+    const gameGrid = document.querySelector('.game-grid');
+
+    if (!filterContainer || !gameGrid) return; // No estamos en una página de casino
+
+    filterContainer.addEventListener('click', (e) => {
+        const filterBtn = e.target.closest('.filter-btn');
+        if (!filterBtn) return;
+
+        // 1. Manejar el botón activo
+        filterContainer.querySelector('.filter-btn.active')?.classList.remove('active');
+        filterBtn.classList.add('active');
+
+        const filterValue = filterBtn.dataset.filter;
+        const gameCards = gameGrid.querySelectorAll('.game-card');
+
+        // 2. Mostrar/Ocultar juegos
+        gameCards.forEach(card => {
+            const categories = card.dataset.category.split(' '); // "slots popular"
+            
+            if (filterValue === 'all' || categories.includes(filterValue)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+}
+
 function setupEventListeners() {
     document.body.addEventListener('click', async (event) => {
         const target = event.target;
@@ -429,21 +463,20 @@ function setupEventListeners() {
         }
 
         const mobileMenuLink = target.closest('#mobile-menu a');
-if (mobileMenuLink) {
-    const mobileMenu = document.getElementById('mobile-menu');
-    if (mobileMenu && mobileMenu.classList.contains('is-open')) {
-        // Cierra el menú explícitamente antes de que la página navegue
-        mobileMenu.classList.remove('is-open');
-        document.body.classList.remove('panel-open');
-        const toggleBtn = document.getElementById('mobile-menu-toggle');
-        if (toggleBtn) {
-            toggleBtn.classList.remove('is-active');
-            toggleBtn.setAttribute('aria-expanded', 'false');
+        if (mobileMenuLink) {
+            const mobileMenu = document.getElementById('mobile-menu');
+            if (mobileMenu && mobileMenu.classList.contains('is-open')) {
+                mobileMenu.classList.remove('is-open');
+                document.body.classList.remove('panel-open');
+                const toggleBtn = document.getElementById('mobile-menu-toggle');
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('is-active');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                }
+            }
+            return; 
         }
-    }
-    // No necesitamos event.preventDefault(), dejamos que el enlace funcione normalmente.
-    return; 
-}
+
         const tabLink = target.closest('.tab-link');
         if (tabLink) {
             if (tabLink.classList.contains('active')) return;
@@ -454,33 +487,24 @@ if (mobileMenuLink) {
             return;
         }
         
-const oddsButton = target.closest('.odds-button');
-if (oddsButton) {
-    // 1. Verificamos si el botón está en la sección de destacados de la página de inicio
-    const isFeaturedEvent = oddsButton.closest('#featured-events-container');
+        const oddsButton = target.closest('.odds-button');
+        if (oddsButton) {
+            const isFeaturedEvent = oddsButton.closest('#featured-events-container');
 
-    if (isFeaturedEvent) {
-        // Lógica especial para la página de inicio
-        const isLoggedIn = localStorage.getItem('fortunaUser');
-
-        if (isLoggedIn) {
-            // Si el usuario TIENE sesión: añade la apuesta y redirige
-            addBet({ team: oddsButton.dataset.team, odds: parseFloat(oddsButton.dataset.odds), id: `${oddsButton.dataset.team}-${oddsButton.dataset.odds}` });
-            window.location.href = 'deportes.html';
-        } else {
-            // Si el usuario NO TIENE sesión: abre el modal de registro
-            const registerModal = document.getElementById('register-modal');
-            if (registerModal) {
-                openModal(registerModal);
+            if (isFeaturedEvent) {
+                const isLoggedIn = localStorage.getItem('fortunaUser');
+                if (isLoggedIn) {
+                    addBet({ team: oddsButton.dataset.team, odds: parseFloat(oddsButton.dataset.odds), id: `${oddsButton.dataset.team}-${oddsButton.dataset.odds}` });
+                    window.location.href = 'deportes.html';
+                } else {
+                    const registerModal = document.getElementById('register-modal');
+                    if (registerModal) openModal(registerModal);
+                }
+            } else {
+                addBet({ team: oddsButton.dataset.team, odds: parseFloat(oddsButton.dataset.odds), id: `${oddsButton.dataset.team}-${oddsButton.dataset.odds}` });
             }
+            return;
         }
-    } else {
-        // Lógica normal para cualquier otra página (ej: deportes.html)
-        // Simplemente añade la apuesta al cupón, sin redirigir.
-        addBet({ team: oddsButton.dataset.team, odds: parseFloat(oddsButton.dataset.odds), id: `${oddsButton.dataset.team}-${oddsButton.dataset.odds}` });
-    }
-    return;
-}
 
         const accordion = target.closest('.accordion');
         if (accordion) {
@@ -543,22 +567,18 @@ if (oddsButton) {
             const currentUser = localStorage.getItem('fortunaUser');
             
             if (!currentUser) {
-                // Si no hay usuario, abrimos el modal de login (reutilizamos la lógica)
                 const loginModal = document.getElementById('login-modal');
                 if (loginModal) {
-                    loginModal.classList.add('active');
-                    document.body.classList.add('modal-open');
+                    openModal(loginModal);
                 }
             } else {
-                // Si hay usuario, abrimos el juego
                 const gameUrl = gameCard.dataset.gameUrl;
                 if (gameUrl) {
                     const gameModal = document.getElementById('game-modal');
                     const gameIframe = document.getElementById('game-iframe');
                     
-                    gameIframe.src = gameUrl; // Cargamos la URL del juego en el iframe
-                    gameModal.classList.add('active');
-                    document.body.classList.add('modal-open');
+                    gameIframe.src = gameUrl;
+                    openModal(gameModal);
                 }
             }
             return;
@@ -585,15 +605,9 @@ async function main() {
     if (action === 'reset' && userId && token) {
         const resetModal = document.getElementById('reset-password-modal');
         if (resetModal) {
-            // Guardamos el id y el token en el modal para usarlos después al enviar el formulario
             resetModal.dataset.id = userId;
             resetModal.dataset.token = token;
-            
-            // Abrimos el modal automáticamente
-            resetModal.classList.add('active');
-            document.body.classList.add('modal-open');
-
-            // Limpiamos la URL para que no se quede el token visible
+            openModal(resetModal);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
@@ -602,6 +616,7 @@ async function main() {
     initAuth();
     handleActiveNav();
     initGameSlider();
+    initCasinoFilters(); // <-- ¡AÑADIDA LA LLAMADA!
     initBetSlip();
     initHelpWidget();
     initPaymentModals();    
@@ -624,15 +639,12 @@ async function main() {
             
             setTimeout(() => {
                 const registerModal = document.getElementById('register-modal');
-                if (registerModal) {
-                    registerModal.classList.add('active');
-                    document.body.classList.add('modal-open');
-                }
+                if (registerModal) openModal(registerModal);
             }, 100);
 
         } else {
             await initAccountDashboard(); 
-        renderBetHistory();
+            // renderBetHistory(); // 'initAccountDashboard' ya llama a esto
         }
     }
     if (document.getElementById('featured-events-container')) {
@@ -642,7 +654,5 @@ async function main() {
 
 document.addEventListener('DOMContentLoaded', main);
 window.addEventListener('beforeunload', () => {
-    // Forzamos la limpieza del body justo antes de abandonar la página.
-    // Esto previene que las clases "sucias" se transfieran a la siguiente carga.
     document.body.classList.remove('modal-open', 'panel-open');
 });

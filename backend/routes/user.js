@@ -1,20 +1,16 @@
-// Archivo: backend/routes/user.js (CORREGIDO Y COMPLETO)
+// Archivo: backend/routes/user.js (COMPLETO, CORREGIDO Y REFACTORIZADO)
 
 const express = require('express');
-const bcrypt = require('bcrypt');
-const twilio = require('twilio');
 const { ObjectId } = require('mongodb');
-const authenticateToken = require('../middleware/authMiddleware'); // Middleware de usuario normal
+const authenticateToken = require('../middleware/authMiddleware');
 const rateLimit = require('express-rate-limit');
+const { client } = require('../db'); // <-- ¡IMPORTANTE! Para Transacciones
 
 const router = express.Router();
 
 // --- Constantes y Middlewares ---
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 router.use(authenticateToken); // ¡IMPORTANTE! Todas las rutas en este archivo requieren autenticación.
-
-// (Aquí iría la lógica de Twilio si la implementas, por ahora la omitimos)
 
 // =======================================================================
 //  RUTAS DE DATOS DE USUARIO (MI CUENTA)
@@ -44,8 +40,6 @@ router.put('/user-data', authLimiter, async (req, res) => {
         const { fullName, cedula, birthDate, phone } = req.body;
         const db = req.db;
 
-        // (Aquí puedes añadir más validaciones, ej. isOver18)
-
         const updateData = {
             'personalInfo.fullName': fullName,
             'personalInfo.cedula': cedula,
@@ -54,7 +48,11 @@ router.put('/user-data', authLimiter, async (req, res) => {
         
         if (phone) {
              updateData['personalInfo.phone'] = phone;
-             // (Aquí podrías añadir lógica para marcar 'phoneVerified' como false si el número cambió)
+             // Si el número de teléfono cambia, debemos marcarlo como no verificado
+             const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+             if (user.personalInfo.phone !== phone) {
+                 updateData['personalInfo.isPhoneVerified'] = false;
+             }
         }
 
         await db.collection('users').updateOne(
@@ -69,7 +67,76 @@ router.put('/user-data', authLimiter, async (req, res) => {
     }
 });
 
-// (Aquí irían las rutas de cambio de contraseña, pero ya están en auth.js)
+// =======================================================================
+//  RUTAS DE VERIFICACIÓN TELEFÓNICA (MOVIDAS DESDE SERVER.JS)
+// =======================================================================
+
+// POST /api/request-phone-verification
+router.post('/request-phone-verification', authLimiter, async (req, res) => {
+    const userId = new ObjectId(req.user.id);
+    const db = req.db;
+
+    try {
+        const user = await db.collection('users').findOne({ _id: userId });
+        const phone = user?.personalInfo?.phone;
+        
+        if (!phone || !phone.startsWith('+58')) {
+            return res.status(400).json({ message: "Añade un número de teléfono válido (+58) en 'Mis Datos' primero." });
+        }
+        
+        // (Aquí iría tu código de Twilio)
+        // Por ahora, simularemos el envío y guardaremos un código falso
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+        
+        await db.collection('users').updateOne(
+            { _id: userId },
+            { $set: { 'personalInfo.phoneOtp': otp, 'personalInfo.phoneOtpExpires': otpExpires } }
+        );
+        
+        console.log(`[SIMULACIÓN] Código SMS para ${phone} es: ${otp}`);
+        
+        res.status(200).json({ message: `Se ha enviado un código de verificación a ${phone}.` });
+    } catch (error) {
+        console.error("Error al enviar código de teléfono:", error);
+        res.status(500).json({ message: "No se pudo enviar el código. Verifica que el número sea válido." });
+    }
+});
+
+// POST /api/verify-phone-code
+router.post('/verify-phone-code', authLimiter, async (req, res) => {
+    const userId = new ObjectId(req.user.id);
+    const { code } = req.body;
+    const db = req.db;
+
+    try {
+        const user = await db.collection('users').findOne({ _id: userId });
+        const phoneInfo = user?.personalInfo;
+
+        if (!phoneInfo || !phoneInfo.phoneOtp) {
+            return res.status(400).json({ message: "No hay una verificación de teléfono pendiente." });
+        }
+        if (phoneInfo.phoneOtp !== code) {
+            return res.status(400).json({ message: "El código de verificación es incorrecto." });
+        }
+        if (new Date() > phoneInfo.phoneOtpExpires) {
+            return res.status(400).json({ message: "El código de verificación ha expirado." });
+        }
+
+        await db.collection('users').updateOne(
+            { _id: userId },
+            { 
+                $set: { 'personalInfo.isPhoneVerified': true },
+                $unset: { 'personalInfo.phoneOtp': "", 'personalInfo.phoneOtpExpires': "" } 
+            }
+        );
+        
+        res.status(200).json({ message: "¡Teléfono verificado con éxito!" });
+    } catch (error) {
+        console.error("Error al verificar código de teléfono:", error);
+        res.status(500).json({ message: "Error al verificar el código." });
+    }
+});
 
 // =======================================================================
 //  RUTAS DE MÉTODOS DE PAGO (MOVIDAS DESDE SERVER.JS)
@@ -97,14 +164,7 @@ router.post('/payout-methods', authLimiter, async (req, res) => {
         if (!methodType || !details) {
             return res.status(400).json({ message: 'Faltan datos requeridos para el método de pago.' });
         }
-
-        const newMethod = {
-            userId,
-            methodType,
-            details,
-            isPrimary: !!isPrimary,
-            createdAt: new Date(),
-        };
+        const newMethod = { userId, methodType, details, isPrimary: !!isPrimary, createdAt: new Date() };
 
         if (newMethod.isPrimary) {
             await db.collection('payoutMethods').updateMany(
@@ -112,12 +172,8 @@ router.post('/payout-methods', authLimiter, async (req, res) => {
                 { $set: { isPrimary: false } }
             );
         }
-
         const result = await db.collection('payoutMethods').insertOne(newMethod);
-        res.status(201).json({ 
-            message: 'Método de retiro añadido con éxito.', 
-            _id: result.insertedId 
-        });
+        res.status(201).json({ message: 'Método de retiro añadido con éxito.', _id: result.insertedId });
     } catch (error) {
         console.error('[ERROR] al añadir método de pago:', error);
         res.status(500).json({ message: 'Error interno al añadir el método de pago.' });
@@ -139,7 +195,6 @@ router.post('/payout-methods/:id/primary', authLimiter, async (req, res) => {
             { _id: methodId, userId },
             { $set: { isPrimary: true } }
         );
-
         if (result.matchedCount === 0) {
             return res.status(404).json({ message: 'Método no encontrado o no pertenece al usuario.' });
         }
@@ -157,11 +212,7 @@ router.delete('/payout-methods/:id', authLimiter, async (req, res) => {
         const methodId = new ObjectId(req.params.id);
         const db = req.db;
 
-        const result = await db.collection('payoutMethods').deleteOne({
-            _id: methodId,
-            userId: userId,
-        });
-
+        const result = await db.collection('payoutMethods').deleteOne({ _id: methodId, userId: userId });
         if (result.deletedCount === 0) {
             return res.status(404).json({ message: 'Método no encontrado o no pertenece al usuario.' });
         }
@@ -181,13 +232,9 @@ router.post('/request-deposit', authLimiter, async (req, res) => {
     const { amount, method, reference } = req.body;
     const userId = req.user.id;
 
-    if (!amount || !method || !reference) {
-        return res.status(400).json({ message: 'Faltan datos (monto, método o referencia).' });
-    }
+    if (!amount || !method || !reference) return res.status(400).json({ message: 'Faltan datos (monto, método o referencia).' });
     const numericAmount = parseFloat(amount);
-    if (isNaN(numericAmount) || numericAmount <= 0) {
-        return res.status(400).json({ message: 'El monto no es válido.' });
-    }
+    if (isNaN(numericAmount) || numericAmount <= 0) return res.status(400).json({ message: 'El monto no es válido.' });
 
     try {
         await req.db.collection('transactions').insertOne({
@@ -206,60 +253,90 @@ router.post('/request-deposit', authLimiter, async (req, res) => {
     }
 });
 
-// POST /api/request-withdrawal (Llamada por payments.js)
-router.post('/request-withdrawal', authLimiter, async (req, res) => {
-    const { amount, methodId } = req.body;
-    const userId = new ObjectId(req.user.id);
-    const db = req.db;
-
-    const numericAmount = parseFloat(amount);
-    if (isNaN(numericAmount) || numericAmount <= 0.1) { // Límite de retiro mínimo
-        return res.status(400).json({ message: 'El monto a retirar no es válido.' });
-    }
-
+// POST /api/withdraw (¡CORREGIDO CON TRANSACCIÓN!)
+router.post('/withdraw', authLimiter, async (req, res) => {
+    const session = client.startSession();
+    
     try {
-        const user = await db.collection('users').findOne({ _id: userId });
-        const method = await db.collection('payoutMethods').findOne({ _id: new ObjectId(methodId), userId: userId });
-
-        if (!method) {
-            return res.status(404).json({ message: 'Método de pago no encontrado.' });
-        }
-        if (user.balance < numericAmount) {
-            return res.status(400).json({ message: 'Fondos insuficientes.' });
-        }
-
-        // --- INICIA TRANSACCIÓN (Metafóricamente, MongoDB lo hace atómico) ---
+        await session.startTransaction();
         
+        const userId = new ObjectId(req.user.id);
+        const { amount, methodId } = req.body;
+        const db = req.db;
+
+        const withdrawalAmount = parseFloat(amount);
+        if (isNaN(withdrawalAmount) || withdrawalAmount < 10) { // Límite mínimo de retiro
+            await session.abortTransaction();
+            return res.status(400).json({ message: 'El retiro mínimo es de Bs. 10.00' });
+        }
+
+        const user = await db.collection('users').findOne({ _id: userId }, { session });
+        if (!user || user.balance < withdrawalAmount) {
+            await session.abortTransaction();
+            return res.status(400).json({ message: 'Fondos insuficientes para realizar el retiro.' });
+        }
+        
+        const method = await db.collection('payoutMethods').findOne({ _id: new ObjectId(methodId), userId }, { session });
+        if (!method) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: 'Método de retiro no encontrado.' });
+        }
+
+        // --- INICIA OPERACIÓN ATÓMICA ---
+
         // 1. Restar el saldo al usuario
         await db.collection('users').updateOne(
             { _id: userId },
-            { $inc: { balance: -numericAmount } }
+            { $inc: { balance: -withdrawalAmount } },
+            { session }
         );
 
-        // 2. Crear la solicitud de retiro para el admin
-        await db.collection('transactions').insertOne({
-            userId: userId,
-            type: 'withdrawal',
-            status: 'pending', // El admin lo verá
-            amount: numericAmount, // Guardamos el monto en positivo
-            methodDetails: method, // Guardamos la info del método
-            createdAt: new Date()
-        });
+        // 2. Registrar la transacción en el historial
+        const transactionRecord = { 
+            userId, 
+            type: 'withdrawal', 
+            amount: -withdrawalAmount, // Se guarda como negativo
+            status: 'pending', 
+            method: method.methodType, 
+            createdAt: new Date() 
+        };
+        const insertTx = await db.collection('transactions').insertOne(transactionRecord, { session });
 
-        // --- FIN TRANSACCIÓN ---
-        
-        res.status(201).json({ message: 'Solicitud de retiro recibida. Se procesará en breve.' });
+        // 3. Crear la solicitud para el admin
+        const withdrawalRequest = { 
+            userId, 
+            username: user.username, 
+            amount: withdrawalAmount, // Se guarda en positivo para el admin
+            methodDetails: method.details, 
+            methodType: method.methodType, 
+            status: 'pending', 
+            requestedAt: new Date(),
+            transactionId: insertTx.insertedId // Vincula la solicitud a la transacción
+        };
+        await db.collection('withdrawalRequests').insertOne(withdrawalRequest, { session });
+
+        // --- FIN OPERACIÓN ATÓMICA ---
+
+        await session.commitTransaction();
+        res.status(200).json({ message: 'Solicitud de retiro enviada. Se procesará en breve.' });
     } catch (error) {
-        console.error('[ERROR] Solicitando retiro:', error);
-        res.status(500).json({ message: 'Error interno al solicitar el retiro.' });
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
+        console.error('[ERROR] en /api/withdraw:', error);
+        res.status(500).json({ message: 'Error interno al procesar el retiro. Intenta de nuevo.' });
+    } finally {
+        await session.endSession();
     }
 });
 
-// POST /api/place-bet (Llamada por bet.js)
+
+// POST /api/place-bet (¡CORREGIDO CON TRANSACCIÓN!)
 router.post('/place-bet', authLimiter, async (req, res) => {
     const { bets, stake } = req.body;
     const userId = new ObjectId(req.user.id);
     const db = req.db;
+    const session = client.startSession();
 
     const numericStake = parseFloat(stake);
     if (!bets || bets.length === 0 || !numericStake || numericStake <= 0) {
@@ -267,18 +344,22 @@ router.post('/place-bet', authLimiter, async (req, res) => {
     }
 
     try {
-        const user = await db.collection('users').findOne({ _id: userId });
+        await session.startTransaction();
+
+        const user = await db.collection('users').findOne({ _id: userId }, { session });
 
         if (user.balance < numericStake) {
+            await session.abortTransaction();
             return res.status(400).json({ message: 'Fondos insuficientes para esta apuesta.' });
         }
 
-        // --- INICIA TRANSACCIÓN ---
+        // --- INICIA OPERACIÓN ATÓMICA ---
 
         // 1. Restar el saldo al usuario
         await db.collection('users').updateOne(
             { _id: userId },
-            { $inc: { balance: -numericStake } }
+            { $inc: { balance: -numericStake } },
+            { session }
         );
 
         // 2. Calcular cuota total (Parley)
@@ -288,27 +369,31 @@ router.post('/place-bet', authLimiter, async (req, res) => {
         // 3. Guardar la apuesta en la base de datos
         await db.collection('bets').insertOne({
             userId: userId,
-            selections: bets, // Array de selecciones
+            selections: bets,
             stake: numericStake,
             totalOdds: totalOdds,
             potentialWinnings: potentialWinnings,
             status: 'pending', // 'pending', 'won', 'lost', 'void'
             createdAt: new Date()
-        });
+        }, { session });
 
-        // --- FIN TRANSACCIÓN ---
+        // --- FIN OPERACIÓN ATÓMICA ---
 
+        await session.commitTransaction();
         res.status(201).json({ message: '¡Apuesta realizada con éxito!' });
     } catch (error) {
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
         console.error('[ERROR] Realizando apuesta:', error);
         res.status(500).json({ message: 'Error interno al realizar la apuesta.' });
+    } finally {
+        await session.endSession();
     }
 });
 
-// Archivo: backend/routes/user.js (AÑADE ESTO AL FINAL)
-
 // =======================================================================
-//  RUTA DE HISTORIAL DE APUESTAS (¡NUEVA!)
+//  RUTAS DE HISTORIAL (¡NUEVAS!)
 // =======================================================================
 
 // GET /api/get-bets (Llamada por account.js en renderBetHistory)
@@ -319,8 +404,8 @@ router.get('/get-bets', async (req, res) => {
     try {
         const betHistory = await db.collection('bets')
             .find({ userId: userId })
-            .sort({ createdAt: -1 }) // Ordena de la más nueva a la más vieja
-            .limit(50) // Limita a las últimas 50 apuestas
+            .sort({ createdAt: -1 })
+            .limit(50)
             .toArray();
             
         res.status(200).json(betHistory);
@@ -330,4 +415,26 @@ router.get('/get-bets', async (req, res) => {
         res.status(500).json({ message: 'Error interno al obtener el historial.' });
     }
 });
+
+// GET /api/transactions (Llamada por account.js en renderTransactionHistory)
+router.get('/transactions', async (req, res) => {
+    const userId = new ObjectId(req.user.id);
+    const db = req.db;
+
+    try {
+        const transactions = await db.collection('transactions')
+            .find({ userId: userId })
+            .sort({ createdAt: -1 })
+            .limit(50) 
+            .toArray();
+            
+        res.status(200).json(transactions);
+
+    } catch (error) {
+        console.error('[ERROR] Obteniendo historial de transacciones:', error);
+        res.status(500).json({ message: 'Error interno al obtener transacciones.' });
+    }
+});
+
+
 module.exports = router;

@@ -1,4 +1,4 @@
-// Archivo: backend/routes/auth.js (CORREGIDO Y COMPLETO)
+// Archivo: backend/routes/auth.js (COMPLETO Y REVISADO)
 
 const express = require('express');
 const bcrypt = require('bcrypt');
@@ -11,7 +11,7 @@ const router = express.Router();
 
 // --- Constantes y Middlewares ---
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
-const usernameRegex = /^[a-zA-Z]{4,20}$/;
+const usernameRegex = /^[a-zA-Z]{4,20}$/; // 4-20 letras, sin números/espacios
 const JWT_SECRET = process.env.JWT_SECRET;
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -38,14 +38,21 @@ function generateOtp() {
 async function sendVerificationEmail(email, otp) {
     const msg = {
         to: email,
-        from: process.env.VERIFIED_SENDER_EMAIL, // Asegúrate que esta variable esté en tu .env
+        from: process.env.VERIFIED_SENDER_EMAIL, // Email verificado en SendGrid
         subject: 'Tu código de verificación para FortunaBet',
-        html: `<p>Tu código de verificación es: <strong>${otp}</strong></p><p>Expira en 10 minutos.</p>`,
+        html: `
+            <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+                <h2>¡Bienvenido a FortunaBet!</h2>
+                <p>Tu código de verificación es:</p>
+                <h1 style="color: #2ECC71; letter-spacing: 2px;">${otp}</h1>
+                <p>Este código expira en 10 minutos.</p>
+            </div>
+        `,
     };
     try {
         await sgMail.send(msg);
     } catch (error) {
-        console.error("Error enviando email con SendGrid:", error);
+        console.error("Error enviando email con SendGrid:", error.response.body);
     }
 }
 
@@ -61,7 +68,7 @@ router.post('/register', authLimiter, async (req, res) => {
 
         if (!username || !email || !password) return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
         if (!usernameRegex.test(username)) return res.status(400).json({ message: 'El usuario debe tener entre 4 y 20 letras, sin números ni espacios.' });
-        if (!passwordRegex.test(password)) return res.status(400).json({ message: 'La contraseña no cumple con los requisitos de seguridad.' });
+        if (!passwordRegex.test(password)) return res.status(400).json({ message: 'La contraseña no cumple con los requisitos de seguridad (mín. 8 caracteres, 1 mayúscula, 1 minúscula, 1 número, 1 símbolo).' });
 
         const usersCollection = db.collection('users');
         const existingUser = await usersCollection.findOne({ $or: [{ email: email.toLowerCase() }, { username: username }] });
@@ -69,7 +76,6 @@ router.post('/register', authLimiter, async (req, res) => {
             return res.status(409).json({ message: 'Este correo electrónico o nombre de usuario ya está registrado.' });
         }
         
-        // (Tu lógica de 'unverified_users' fue reemplazada por esta que es más simple)
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         const otp = generateOtp();
@@ -85,8 +91,7 @@ router.post('/register', authLimiter, async (req, res) => {
             otp: otp,
             otpExpires: otpExpires,
             createdAt: new Date(),
-            personalInfo: {},
-            payoutMethods: []
+            personalInfo: {}, // Objeto vacío para datos futuros
         });
 
         await sendVerificationEmail(email.toLowerCase(), otp);
@@ -111,7 +116,6 @@ router.post('/verify-email', authLimiter, async (req, res) => {
         const user = await db.collection('users').findOne({ email: email.toLowerCase() });
 
         if (!user) {
-            // No revelamos si el usuario existe o no
             return res.status(200).json({ success: false, message: 'El código es incorrecto o ha expirado.' });
         }
         
@@ -119,9 +123,7 @@ router.post('/verify-email', authLimiter, async (req, res) => {
              return res.status(200).json({ success: true, message: 'Tu cuenta ya está verificada.' });
         }
 
-        // LÓGICA DE CÓDIGO INCORRECTO O EXPIRADO
         if (user.otp !== otp || (user.otpExpires && user.otpExpires < new Date())) {
-            // Devuelve 200 OK con success: false (como lo pide auth.js)
             return res.status(200).json({ 
                 success: false, 
                 message: 'El código es incorrecto o ha expirado. Por favor, inténtalo de nuevo.' 
@@ -134,7 +136,7 @@ router.post('/verify-email', authLimiter, async (req, res) => {
             { $set: { isVerified: true }, $unset: { otp: "", otpExpires: "" } } // Limpia el OTP
         );
 
-        const payload = { id: user._id, username: user.username, email: user.email, role: user.role };
+        const payload = { id: user._id.toString(), username: user.username, email: user.email, role: user.role };
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
 
         res.status(201).json({
@@ -162,7 +164,6 @@ router.post('/resend-otp', resendOtpLimiter, async (req, res) => {
         const user = await db.collection('users').findOne({ email: email.toLowerCase() });
         
         if (!user || user.isVerified) {
-            // No revelamos información, solo decimos que se envió
             return res.status(200).json({ message: 'Se ha reenviado un nuevo código a tu correo.' });
         }
         
@@ -197,7 +198,6 @@ router.post('/login', authLimiter, async (req, res) => {
 
         // IMPORTANTE: Verificar si la cuenta está activada
         if (!user.isVerified) {
-            // Si no está verificada, reenviamos el código y pedimos que verifique
             const newOtp = generateOtp();
             const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
             await db.collection('users').updateOne({ _id: user._id }, { $set: { otp: newOtp, otpExpires: otpExpires } });
@@ -205,7 +205,7 @@ router.post('/login', authLimiter, async (req, res) => {
             
             return res.status(403).json({ 
                 message: 'Tu cuenta no está verificada. Te hemos enviado un nuevo código.',
-                needsVerification: true, // Una bandera para que el frontend abra el modal de OTP
+                needsVerification: true,
                 email: user.email 
             });
         }
@@ -213,7 +213,7 @@ router.post('/login', authLimiter, async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(401).json({ message: 'Credenciales inválidas.' });
         
-        const payload = { id: user._id, username: user.username, email: user.email, role: user.role };
+        const payload = { id: user._id.toString(), username: user.username, email: user.email, role: user.role };
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
         
         res.status(200).json({
@@ -235,22 +235,27 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
         const user = await db.collection('users').findOne({ email: email.toLowerCase() });
         
         if (!user) {
-            // No revelar si el usuario existe
             return res.status(200).json({ message: 'Si tu correo está registrado, recibirás un enlace.' });
         }
 
-        // Crea un token de reseteo especial que depende de la contraseña actual
         const secret = JWT_SECRET + user.password;
         const token = jwt.sign({ email: user.email, id: user._id.toString() }, secret, { expiresIn: '15m' });
         
-        // Asegúrate que FRONTEND_URL esté en tu .env
         const resetLink = `${process.env.FRONTEND_URL}/index.html?action=reset&id=${user._id}&token=${token}`;
 
         const msg = {
             to: user.email,
             from: process.env.VERIFIED_SENDER_EMAIL,
             subject: 'Restablece tu contraseña de FortunaBet',
-            html: `<p>Hola ${user.username},</p><p>Haz clic en el siguiente enlace para restablecer tu contraseña. El enlace es válido por 15 minutos:</p><a href="${resetLink}">Restablecer Contraseña</a>`,
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <p>Hola ${user.username},</p>
+                    <p>Haz clic en el siguiente enlace para restablecer tu contraseña. El enlace es válido por 15 minutos:</p>
+                    <a href="${resetLink}" style="background-color: #2ECC71; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
+                        Restablecer Contraseña
+                    </a>
+                </div>
+            `,
         };
         await sgMail.send(msg);
         res.status(200).json({ message: 'Si tu correo está registrado, recibirás un enlace.' });
@@ -274,7 +279,7 @@ router.post('/reset-password', authLimiter, async (req, res) => {
         if (!user) return res.status(400).json({ message: 'Usuario no válido.' });
 
         const secret = JWT_SECRET + user.password; // El secreto debe coincidir
-        jwt.verify(token, secret); // Si esto falla, lanza un error
+        jwt.verify(token, secret); // Si esto falla, lanza un error (que será capturado por el catch)
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);

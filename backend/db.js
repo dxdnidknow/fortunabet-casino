@@ -1,4 +1,5 @@
-// Archivo: backend/db.js
+// Archivo: backend/db.js (COMPLETO Y CORREGIDO)
+
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 
@@ -36,4 +37,5 @@ function getDb() {
     return _db;
 }
 
-module.exports = { connectDB, getDb };
+// ¡LA LÍNEA MÁS IMPORTANTE QUE FALTABA!
+module.exports = { connectDB, getDb, client };
