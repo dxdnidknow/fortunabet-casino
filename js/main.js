@@ -1,4 +1,4 @@
-// Archivo: js/main.js (COMPLETO Y CORREGIDO)
+// Archivo: js/main.js (COMPLETO Y CORREGIDO FINAL)
 
 import { API_BASE_URL } from './config.js';
 import { addBet, initBetSlip, subscribe, getBets } from './bet.js';
@@ -484,9 +484,6 @@ function setupEventListeners() {
             const isLoggedIn = localStorage.getItem('fortunaUser');
             
             if (!isLoggedIn) {
-                // ==========================================================
-                //  CORREGIDO: Abre el modal de LOGIN en lugar de registro.
-                // ==========================================================
                 openModal(document.getElementById('login-modal'));
                 return;
             }
@@ -559,9 +556,6 @@ function setupEventListeners() {
             const isLoggedIn = localStorage.getItem('fortunaUser');
             
             if (!isLoggedIn) {
-                // ==========================================================
-                //  CORREGIDO: Abre el modal de LOGIN en lugar de registro.
-                // ==========================================================
                 openModal(document.getElementById('login-modal'));
             } else {
                 const gameUrl = gameCard.dataset.gameUrl;
@@ -589,7 +583,7 @@ async function main() {
     document.body.classList.remove('modal-open', 'panel-open');
     await initSharedComponents();
     
-     const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(window.location.search);
     const action = urlParams.get('action');
     const userId = urlParams.get('id');
     const token = urlParams.get('token');
@@ -632,14 +626,15 @@ async function main() {
     }
     
     if (window.location.pathname.includes('mi-cuenta.html')) {
-        const loggedInUser = localStorage.getItem('fortunaUser');
+        const token = localStorage.getItem('fortunaToken');
         
-        if (!loggedInUser) {
-            window.location.href = 'index.html';
+        if (!token) {
+            window.location.href = '/index.html';
         } else {
             await initAccountDashboard(); 
         }
     }
+
     if (document.getElementById('featured-events-container')) {
         loadFeaturedEvents();
     }
