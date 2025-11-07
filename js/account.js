@@ -1,4 +1,4 @@
-// Archivo: js/account.js (COMPLETO Y MODIFICADO)
+// Archivo: js/account.js (COMPLETO Y VERIFICADO)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -93,7 +93,7 @@ function renderPayoutMethod(method) {
         detailsHtml = `Email: ${details.email || 'N/A'} / Nombre: ${details.name || 'N/A'}`;
     }
     
-    const li = document.createElement('div'); // Cambiado a div para mayor flexibilidad
+    const li = document.createElement('div');
     li.classList.add('data-list-item', method.isPrimary ? 'primary-method' : '');
     li.dataset.id = method._id;
     li.innerHTML = `
@@ -531,7 +531,9 @@ export async function initAccountDashboard() {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const targetId = e.currentTarget.dataset.target;
-            
+
+            if (!targetId) return;
+
             document.querySelectorAll('.account-section').forEach(section => section.classList.remove('active'));
             const targetSection = document.getElementById(targetId);
             if (targetSection) targetSection.classList.add('active');

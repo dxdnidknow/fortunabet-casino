@@ -1,4 +1,4 @@
-// Archivo: js/auth.js (COMPLETO Y MODIFICADO)
+// Archivo: js/auth.js (COMPLETO Y CORREGIDO)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -156,8 +156,8 @@ async function handleOtpSubmit(event) {
         const otpModal = document.getElementById('email-verification-modal');
         if (otpModal) closeModal(otpModal);
 
-        updateLoginState(data.user);
-        showToast(`¡Bienvenido a FortunaBet, ${data.user.username}!`);
+        // Recarga la página para asegurar que todo el estado se actualice correctamente
+        window.location.reload();
         
     } catch (error) {
         errorMessageEl.textContent = error.message;
@@ -246,7 +246,16 @@ async function handleLoginSubmit(event) {
         });
 
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Error en el inicio de sesión.');
+        if (!response.ok) {
+            // Manejo especial para la verificación de cuenta
+            if (data.needsVerification) {
+                sessionStorage.setItem('emailForVerification', data.email);
+                closeModal(document.getElementById('login-modal'));
+                openModal(document.getElementById('email-verification-modal'));
+                throw new Error(data.message);
+            }
+            throw new Error(data.message || 'Error en el inicio de sesión.');
+        }
         if (!data.token || !data.user) throw new Error('Respuesta del servidor incompleta. Inténtalo de nuevo.');
 
         localStorage.setItem('fortunaToken', data.token);
@@ -255,8 +264,8 @@ async function handleLoginSubmit(event) {
         const loginModal = document.getElementById('login-modal');
         if (loginModal) closeModal(loginModal);
 
-        updateLoginState(data.user);
-        showToast(`¡Hola de nuevo, ${data.user.username}!`);
+        // Recarga la página para asegurar que todo el estado se actualice correctamente
+        window.location.reload();
 
     } catch (error) {
         errorMessageEl.textContent = error.message;
@@ -334,41 +343,11 @@ async function handleResetPasswordSubmit(event) {
 }
 
 function handleLogout() {
-    // --- INICIO DE LA CORRECCIÓN ---
-    // 1. Limpia los datos de sesión del almacenamiento local
     localStorage.removeItem('fortunaToken');
     localStorage.removeItem('fortunaUser');
-    
-    // 2. Muestra la notificación de que la sesión se ha cerrado
     showToast('Has cerrado sesión.');
-
-    // 3. Oculta el panel de usuario si estamos en esa página
-    if (window.location.pathname.includes('mi-cuenta.html')) {
-        const dashboard = document.querySelector('.account-dashboard-grid');
-        const pageTitle = document.querySelector('.page-title');
-        if (dashboard) dashboard.style.display = 'none';
-        if (pageTitle) pageTitle.style.display = 'none';
-    }
-
-    // 4. Actualiza el estado visual del header a "desconectado"
-    document.body.classList.remove('user-logged-in');
-    const authButtons = document.querySelector('.auth-wrapper .auth-buttons');
-    const userInfo = document.querySelector('.auth-wrapper .user-info');
-    if (authButtons) authButtons.classList.remove('hidden');
-    if (userInfo) userInfo.classList.add('hidden');
-
-    const mobileAuthButtons = document.querySelector('.mobile-menu-auth .auth-buttons');
-    const mobileUserInfo = document.querySelector('.mobile-menu-auth .user-info');
-    if (mobileAuthButtons) mobileAuthButtons.style.display = 'flex';
-    if (mobileUserInfo) mobileUserInfo.style.display = 'none';
-
-    // 5. Redirige al usuario a la página de inicio para evitar que se quede en una página privada
-    if (window.location.pathname.includes('mi-cuenta.html')) {
-        window.location.href = '/index.html';
-    }
-    // --- FIN DE LA CORRECCIÓN ---
+    window.location.href = '/index.html'; 
 }
-
 
 export async function fetchWithAuth(url, options = {}) {
     const token = getToken();
