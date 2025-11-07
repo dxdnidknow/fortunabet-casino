@@ -156,7 +156,6 @@ async function handleOtpSubmit(event) {
         const otpModal = document.getElementById('email-verification-modal');
         if (otpModal) closeModal(otpModal);
 
-        // Recarga la página para asegurar que todo el estado se actualice correctamente
         window.location.reload();
         
     } catch (error) {
@@ -246,16 +245,24 @@ async function handleLoginSubmit(event) {
         });
 
         const data = await response.json();
+
+        // --- CORRECCIÓN IMPORTANTE ---
         if (!response.ok) {
-            // Manejo especial para la verificación de cuenta
             if (data.needsVerification) {
+                const otpModal = document.getElementById('email-verification-modal');
                 sessionStorage.setItem('emailForVerification', data.email);
-                closeModal(document.getElementById('login-modal'));
-                openModal(document.getElementById('email-verification-modal'));
+                if (otpModal) {
+                    // Aseguramos que el email se muestre en el modal
+                    otpModal.querySelector('#email-display').textContent = data.email;
+                    closeModal(document.getElementById('login-modal'));
+                    openModal(otpModal);
+                }
+                // Mostramos el error de que necesita verificación
                 throw new Error(data.message);
             }
             throw new Error(data.message || 'Error en el inicio de sesión.');
         }
+
         if (!data.token || !data.user) throw new Error('Respuesta del servidor incompleta. Inténtalo de nuevo.');
 
         localStorage.setItem('fortunaToken', data.token);
@@ -264,7 +271,6 @@ async function handleLoginSubmit(event) {
         const loginModal = document.getElementById('login-modal');
         if (loginModal) closeModal(loginModal);
 
-        // Recarga la página para asegurar que todo el estado se actualice correctamente
         window.location.reload();
 
     } catch (error) {

@@ -56,7 +56,6 @@ function resetModalForms(modal) {
     const errorMessages = modal.querySelectorAll('.error-message');
     errorMessages.forEach(msg => msg.textContent = '');
     
-    // Lógica específica para restaurar vistas de formularios (ej. modal de registro)
     if (modal.id === 'register-modal') {
         modal.querySelector('#register-form-container')?.classList.remove('hidden');
         modal.querySelector('#success-message')?.classList.add('hidden');
@@ -81,10 +80,10 @@ export function closeModal(modal) {
         if (gameIframe) gameIframe.src = '';
     }
     
-    // No reseteamos el formulario de OTP si se cierra con 'X'
-    if (modal.id !== 'email-verification-modal') {
-        resetModalForms(modal);
-    }
+    // --- CORRECCIÓN ---
+    // Se elimina la condición que evitaba que el modal de verificación se reseteara.
+    // Ahora TODOS los modales se resetean al cerrarse.
+    resetModalForms(modal);
 
     document.removeEventListener('keydown', focusTrap);
     if (lastActiveElement) lastActiveElement.focus();
@@ -115,26 +114,16 @@ export function initModals() {
             return;
         }
 
-        // ==========================================================
-        //  INICIO DE LA MODIFICACIÓN (Evitar cierre al hacer clic afuera)
-        // ==========================================================
         if (event.target.classList.contains('modal-overlay')) {
-            // Comprueba si el modal tiene el atributo 'data-persistent'
             if (event.target.dataset.persistent === "true") {
-                // Si es persistente, no hagas nada (no cierres el modal)
                 return; 
             }
-            // Si no es persistente, ciérralo
             closeModal(event.target);
         }
-        // ==========================================================
-        //  FIN DE LA MODIFICACIÓN
-        // ==========================================================
     });
 
     window.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && activeModal) {
-            // También respeta 'data-persistent' para la tecla Escape
             if (activeModal.dataset.persistent === "true") {
                 return;
             }
