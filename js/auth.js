@@ -1,4 +1,4 @@
-// Archivo: js/auth.js (COMPLETO Y CORREGIDO)
+// Archivo: js/auth.js (COMPLETO Y CORREGIDO PARA SESIONES FANTASMA)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -245,24 +245,19 @@ async function handleLoginSubmit(event) {
         });
 
         const data = await response.json();
-
-        // --- CORRECCIÓN IMPORTANTE ---
         if (!response.ok) {
             if (data.needsVerification) {
-                const otpModal = document.getElementById('email-verification-modal');
                 sessionStorage.setItem('emailForVerification', data.email);
+                const otpModal = document.getElementById('email-verification-modal');
                 if (otpModal) {
-                    // Aseguramos que el email se muestre en el modal
                     otpModal.querySelector('#email-display').textContent = data.email;
                     closeModal(document.getElementById('login-modal'));
                     openModal(otpModal);
                 }
-                // Mostramos el error de que necesita verificación
                 throw new Error(data.message);
             }
             throw new Error(data.message || 'Error en el inicio de sesión.');
         }
-
         if (!data.token || !data.user) throw new Error('Respuesta del servidor incompleta. Inténtalo de nuevo.');
 
         localStorage.setItem('fortunaToken', data.token);
@@ -362,12 +357,16 @@ export async function fetchWithAuth(url, options = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
     const response = await fetch(url, { ...options, headers });
-    if (response.status === 401 || response.status === 403) {
+
+    if (response.status === 401 || response.status === 403 || response.status === 404) {
+        if (response.status !== 404) {
+            const loginModal = document.getElementById('login-modal');
+            if (loginModal) openModal(loginModal);
+        }
         handleLogout();
-        const loginModal = document.getElementById('login-modal');
-        if (loginModal) openModal(loginModal);
-        throw new Error('Sesión expirada. Por favor, inicia sesión de nuevo.');
+        throw new Error('Sesión inválida o usuario no encontrado.');
     }
+    
     return response;
 }
 
