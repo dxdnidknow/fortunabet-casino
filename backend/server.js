@@ -1,4 +1,4 @@
-// Archivo: backend/server.js (CORRECCIÓN FINAL DE RUTAS)
+// Archivo: backend/server.js (CORRECCIÓN FINAL DE CORS)
 // =======================================================================
 //  CONFIGURACIÓN INICIAL Y DEPENDENCIAS
 // =======================================================================
@@ -24,7 +24,16 @@ const port = process.env.PORT || 3001;
 // =======================================================================
 //  MIDDLEWARES GENERALES
 // =======================================================================
-app.use(cors());
+
+// --- INICIO DE LA CORRECCIÓN DE CORS ---
+const corsOptions = {
+  origin: '*', // Permite todas las origenes. Para producción podrías poner: process.env.FRONTEND_URL
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Permite todos los métodos HTTP comunes
+  allowedHeaders: 'Content-Type, Authorization', // Permite las cabeceras que usamos
+};
+app.use(cors(corsOptions));
+// --- FIN DE LA CORRECCIÓN DE CORS ---
+
 app.use(express.json());
 app.set('trust proxy', 1);
 
@@ -52,11 +61,11 @@ if (!API_KEY) { console.error('❌ Error: La variable de entorno ODDS_API_KEY no
 const eventsCache = new NodeCache({ stdTTL: 600 });
 
 // =======================================================================
-//  RUTAS DE LA APLICACIÓN (ORDEN CORREGIDO Y RUTAS ESPECÍFICAS)
+//  RUTAS DE LA APLICACIÓN
 // =======================================================================
 
 // --- Rutas Públicas (Autenticación y Deportes) ---
-app.use('/api', authRoutes); // Contiene /register, /login, etc.
+app.use('/api', authRoutes);
 
 app.get('/api/sports', sportsApiLimiter, async (req, res) => {
     try {
@@ -92,7 +101,6 @@ app.get('/api/event/:sportKey/:eventId', sportsApiLimiter, (req, res) => {
 });
 
 // --- Rutas Protegidas de Usuario ---
-// Ahora todas las rutas dentro de 'userRoutes' comenzarán con /api/user/
 app.use('/api/user', userRoutes);
 
 // --- Rutas Protegidas de Administrador ---
