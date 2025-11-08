@@ -1,4 +1,4 @@
-// Archivo: js/account.js (COMPLETO Y SIMPLIFICADO)
+// Archivo: js/account.js (CON LÓGICA DE DESHABILITACIÓN)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -67,6 +67,24 @@ export async function loadUserData() {
                 formatPhoneNumber({ target: phoneInput });
             }
             renderPhoneVerificationStatus(userData.personalInfo.isPhoneVerified, userData.personalInfo.phone);
+        }
+        
+        // --- LÓGICA DE HABILITACIÓN/DESHABILITACIÓN DE BOTONES ---
+        const depositBtn = document.getElementById('deposit-btn-sidebar');
+        const withdrawBtn = document.getElementById('withdraw-btn-sidebar');
+        const notice = document.querySelector('.verification-notice');
+
+        const isVerified = userData.personalInfo?.isPhoneVerified;
+        const hasData = userData.personalInfo?.fullName && userData.personalInfo?.cedula;
+
+        if (isVerified && hasData) {
+            if(depositBtn) depositBtn.disabled = false;
+            if(withdrawBtn) withdrawBtn.disabled = false;
+            if(notice) notice.classList.add('hidden');
+        } else {
+            if(depositBtn) depositBtn.disabled = true;
+            if(withdrawBtn) withdrawBtn.disabled = true;
+            if(notice) notice.classList.remove('hidden');
         }
         
     } catch (error) {

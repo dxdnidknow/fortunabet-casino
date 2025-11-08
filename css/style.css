@@ -1447,3 +1447,14 @@ body.user-logged-in .logged-out-only {
 body.role-admin #admin-panel-link {
     display: flex !important; /* Usamos flex porque es un flex item en el menú */
 }
+.verification-notice {
+    font-size: 0.8rem;
+    color: var(--color-pending);
+    margin-top: 15px;
+    background-color: rgba(241, 196, 15, 0.1);
+    padding: 8px;
+    border-radius: var(--border-radius-sm);
+}
+.verification-notice i {
+    margin-right: 5px;
+}

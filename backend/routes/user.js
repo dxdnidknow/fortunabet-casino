@@ -1,8 +1,8 @@
-// Archivo: backend/routes/user.js (CON CAMBIO DE CONTRASEÑA IMPLEMENTADO)
+// Archivo: backend/routes/user.js (CON VALIDACIÓN DE VERIFICACIÓN)
 
 const express = require('express');
 const { ObjectId } = require('mongodb');
-const bcrypt = require('bcrypt'); // <-- IMPORTANTE: Necesitamos bcrypt aquí
+const bcrypt = require('bcrypt');
 const authenticateToken = require('../middleware/authMiddleware');
 const rateLimit = require('express-rate-limit');
 const { client } = require('../db');
@@ -10,19 +10,16 @@ const twilio = require('twilio');
 
 const router = express.Router();
 
-// --- Constantes y Middlewares ---
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 router.use(authenticateToken);
 
-// --- Inicializar Cliente de Twilio ---
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
-// Expresión regular para la validación de contraseñas
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
 // =======================================================================
-//  RUTAS DE DATOS DE USUARIO (MI CUENTA)
+//  RUTAS DE DATOS DE USUARIO
 // =======================================================================
 
 router.get('/user-data', async (req, res) => {
@@ -74,7 +71,7 @@ router.put('/user-data', authLimiter, async (req, res) => {
 });
 
 // =======================================================================
-//  NUEVA RUTA DE SEGURIDAD: CAMBIO DE CONTRASEÑA
+//  RUTA DE CAMBIO DE CONTRASEÑA
 // =======================================================================
 
 router.post('/change-password', authLimiter, async (req, res) => {
@@ -82,40 +79,32 @@ router.post('/change-password', authLimiter, async (req, res) => {
     const userId = new ObjectId(req.user.id);
     const db = req.db;
 
-    // 1. Validar que los datos llegaron
     if (!currentPassword || !newPassword) {
         return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
     }
-
-    // 2. Validar la fortaleza de la nueva contraseña
     if (!passwordRegex.test(newPassword)) {
         return res.status(400).json({ message: 'La nueva contraseña no cumple los requisitos de seguridad.' });
     }
 
     try {
-        // 3. Buscar al usuario en la base de datos
         const user = await db.collection('users').findOne({ _id: userId });
         if (!user) {
             return res.status(404).json({ message: 'Usuario no encontrado.' });
         }
 
-        // 4. Comparar la contraseña actual proporcionada con la guardada en la BD
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
             return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
         }
 
-        // 5. Hashear la nueva contraseña
         const salt = await bcrypt.genSalt(10);
         const hashedNewPassword = await bcrypt.hash(newPassword, salt);
 
-        // 6. Actualizar la contraseña en la base de datos
         await db.collection('users').updateOne(
             { _id: userId },
             { $set: { password: hashedNewPassword } }
         );
 
-        // 7. Enviar respuesta de éxito
         res.status(200).json({ message: 'Contraseña actualizada con éxito.' });
 
     } catch (error) {
@@ -289,18 +278,27 @@ router.delete('/payout-methods/:id', authLimiter, async (req, res) => {
 });
 
 // =======================================================================
-//  RUTAS DE TRANSACCIONES
+//  RUTAS DE TRANSACCIONES (CON VALIDACIÓN DE VERIFICACIÓN)
 // =======================================================================
 
 router.post('/request-deposit', authLimiter, async (req, res) => {
-    const { amount, method, reference } = req.body;
-    const userId = req.user.id;
-
-    if (!amount || !method || !reference) return res.status(400).json({ message: 'Faltan datos (monto, método o referencia).' });
-    const numericAmount = parseFloat(amount);
-    if (isNaN(numericAmount) || numericAmount <= 0) return res.status(400).json({ message: 'El monto no es válido.' });
+    const userId = new ObjectId(req.user.id);
+    const db = req.db;
 
     try {
+        const user = await db.collection('users').findOne({ _id: userId });
+        const isVerified = user?.personalInfo?.isPhoneVerified;
+        const hasData = user?.personalInfo?.fullName && user?.personalInfo?.cedula;
+
+        if (!isVerified || !hasData) {
+            return res.status(403).json({ message: "Debes completar tus datos personales y verificar tu teléfono en 'Mi Cuenta' para poder depositar." });
+        }
+
+        const { amount, method, reference } = req.body;
+        if (!amount || !method || !reference) return res.status(400).json({ message: 'Faltan datos (monto, método o referencia).' });
+        const numericAmount = parseFloat(amount);
+        if (isNaN(numericAmount) || numericAmount <= 0) return res.status(400).json({ message: 'El monto no es válido.' });
+
         await req.db.collection('transactions').insertOne({
             userId: new ObjectId(userId),
             type: 'deposit',
@@ -318,22 +316,29 @@ router.post('/request-deposit', authLimiter, async (req, res) => {
 });
 
 router.post('/withdraw', authLimiter, async (req, res) => {
+    const userId = new ObjectId(req.user.id);
+    const db = req.db;
     const session = client.startSession();
     
     try {
         await session.startTransaction();
         
-        const userId = new ObjectId(req.user.id);
-        const { amount, methodId } = req.body;
-        const db = req.db;
+        const user = await db.collection('users').findOne({ _id: userId }, { session });
+        const isVerified = user?.personalInfo?.isPhoneVerified;
+        const hasData = user?.personalInfo?.fullName && user?.personalInfo?.cedula;
 
+        if (!isVerified || !hasData) {
+            await session.abortTransaction();
+            return res.status(403).json({ message: "Debes completar tus datos personales y verificar tu teléfono para poder retirar." });
+        }
+        
+        const { amount, methodId } = req.body;
         const withdrawalAmount = parseFloat(amount);
         if (isNaN(withdrawalAmount) || withdrawalAmount < 10) {
             await session.abortTransaction();
             return res.status(400).json({ message: 'El retiro mínimo es de Bs. 10.00' });
         }
 
-        const user = await db.collection('users').findOne({ _id: userId }, { session });
         if (!user || user.balance < withdrawalAmount) {
             await session.abortTransaction();
             return res.status(400).json({ message: 'Fondos insuficientes para realizar el retiro.' });
@@ -385,6 +390,10 @@ router.post('/withdraw', authLimiter, async (req, res) => {
         await session.endSession();
     }
 });
+
+// =======================================================================
+//  RUTAS DE APUESTAS E HISTORIAL
+// =======================================================================
 
 router.post('/place-bet', authLimiter, async (req, res) => {
     const { bets, stake } = req.body;
@@ -439,10 +448,6 @@ router.post('/place-bet', authLimiter, async (req, res) => {
     }
 });
 
-// =======================================================================
-//  RUTAS DE HISTORIAL
-// =======================================================================
-
 router.get('/get-bets', async (req, res) => {
     const userId = new ObjectId(req.user.id);
     const db = req.db;
@@ -480,6 +485,5 @@ router.get('/transactions', async (req, res) => {
         res.status(500).json({ message: 'Error interno al obtener transacciones.' });
     }
 });
-
 
 module.exports = router;
