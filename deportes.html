@@ -40,25 +40,25 @@
                         <button class="tab-link" data-tab="upcoming">Próximos</button>
                     </div>
 
+                    <!-- ===== INICIO DE LA CORRECCIÓN ESTRUCTURAL ===== -->
                     <section id="live" class="event-list tab-content active">
-                        <div id="loader-live" class="loader-container">
-                            <div class="spinner"></div>
-                        </div>
                         <div id="live-events-container">
-                            <!-- JS insertará el mensaje inicial o los eventos aquí -->
+                            <!-- El loader ahora vive aquí como estado inicial -->
+                            <div class="loader-container">
+                                <div class="spinner"></div>
+                            </div>
                         </div>
                     </section>
 
-                    <!-- ===== INICIO DE LA CORRECCIÓN CLAVE ===== -->
-<section id="upcoming" class="event-list tab-content">
-    <div id="loader-upcoming" class="loader-container" style="display: none;">
-        <div class="spinner"></div>
-    </div>
-    <div id="upcoming-events-container">
-        <!-- JS insertará los eventos próximos aquí -->
-    </div>
-</section>
-                    <!-- ===== FIN DE LA CORRECCIÓN CLAVE ===== -->
+                    <section id="upcoming" class="event-list tab-content">
+                        <div id="upcoming-events-container">
+                             <!-- El loader ahora vive aquí como estado inicial -->
+                            <div class="loader-container" style="display: none;">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </section>
+                    <!-- ===== FIN DE LA CORRECCIÓN ESTRUCTURAL ===== -->
 
                     <section id="event-detail-view" class="hidden">
                         <!-- JS llenará esto con los detalles del evento -->
@@ -73,7 +73,7 @@
                     </div>
                     <div class="bet-summary">
                         <div class="summary-row"><span>Monto a Apostar:</span><input type="number" placeholder="0.00" class="stake-input"></div>
-                        <div class="summary-row"><span>Ganancia Potencial:</span><span id="potential-winnings">$0.00</span></div>
+                        <div class="summary-row"><span>Ganancia Potencial:</span><span id="potential-winnings">Bs. 0.00</span></div>
                         <button id="place-bet-btn" class="btn btn-primary btn-cta">Realizar Apuesta</button>
                     </div>
                 </aside>
@@ -87,6 +87,6 @@
     <div id="sports-panel-placeholder"></div>
 	<div id="modals-placeholder"></div>
     <div id="help-widget-placeholder"></div>
-	<script src="js/main.js" type="module"></script>
+	<script type="module" src="/js/main.js"></script>
 </body>
 </html>

@@ -258,12 +258,13 @@ async function initSportsNav() {
 function showInitialMessage() {
     const liveContainer = document.getElementById('live-events-container');
     const upcomingContainer = document.getElementById('upcoming-events-container');
+    
     if (liveContainer) {
         liveContainer.innerHTML = `<div class="initial-message"><i class="fa-solid fa-arrow-left"></i><h2>Bienvenido a FortunaBet</h2><p>Selecciona un deporte o una liga del menú para ver los partidos disponibles.</p></div>`;
     }
-    if (upcomingContainer) upcomingContainer.innerHTML = '';
-    document.getElementById('loader-live')?.style.setProperty('display', 'none');
-    document.getElementById('loader-upcoming')?.style.setProperty('display', 'none');
+    if (upcomingContainer) {
+        upcomingContainer.innerHTML = '';
+    }
 }
 
 function handleSearch(searchTerm) {
@@ -441,13 +442,14 @@ function setupEventListeners() {
             
             const sportKey = sportLink.dataset.sportKey;
             
-            document.getElementById('live-events-container').innerHTML = '';
-            document.getElementById('upcoming-events-container').innerHTML = '';
-            document.querySelectorAll('#loader-live, #loader-upcoming').forEach(l => l?.style.setProperty('display', 'flex'));
-            
+            const liveContainer = document.getElementById('live-events-container');
+            const upcomingContainer = document.getElementById('upcoming-events-container');
+            const spinnerHtml = `<div class="loader-container"><div class="spinner"></div></div>`;
+            if (liveContainer) liveContainer.innerHTML = spinnerHtml;
+            if (upcomingContainer) upcomingContainer.innerHTML = spinnerHtml;
+
             const events = await fetchLiveEvents(sportKey);
             
-            document.querySelectorAll('#loader-live, #loader-upcoming').forEach(l => l?.style.setProperty('display', 'none'));
             renderEvents(events);
             document.querySelectorAll('.sport-link.active').forEach(link => link.classList.remove('active'));
             sportLink.classList.add('active');
@@ -580,6 +582,7 @@ function setupEventListeners() {
 }
 
 async function main() {
+    console.log("[DEBUG 1] Ejecutando main.js");
     document.body.classList.remove('modal-open', 'panel-open');
     await initSharedComponents();
     
@@ -615,10 +618,7 @@ async function main() {
         const urlParams = new URLSearchParams(window.location.search);
         const sportKeyFromUrl = urlParams.get('sport');
         if (sportKeyFromUrl) {
-            const loader = document.getElementById('loader-live');
-            if(loader) loader.style.display = 'flex';
             const events = await fetchLiveEvents(sportKeyFromUrl);
-            if(loader) loader.style.display = 'none';
             renderEvents(events);
         } else {
             showInitialMessage();
@@ -626,12 +626,16 @@ async function main() {
     }
     
     if (window.location.pathname.includes('mi-cuenta.html')) {
+        console.log("[DEBUG 2] Detectada página mi-cuenta.html");
         const token = localStorage.getItem('fortunaToken');
         
         if (!token) {
+            console.log("[DEBUG 3] No hay token, redirigiendo a index.html");
             window.location.href = '/index.html';
         } else {
+            console.log("[DEBUG 4] Token encontrado, procediendo a cargar el dashboard...");
             await initAccountDashboard(); 
+            console.log("[DEBUG 7] initAccountDashboard ha terminado.");
         }
     }
 
