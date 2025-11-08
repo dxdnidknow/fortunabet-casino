@@ -1,23 +1,21 @@
-// Archivo: backend/routes/admin.js (COMPLETO Y CORREGIDO)
+// Archivo: backend/routes/admin.js (COMPLETO Y CORREGIDO CON DATOS DE USUARIO)
 
 const express = require('express');
-const { getDb, client } = require('../db'); // <-- ¡CORRECCIÓN! Importa el client
+const { getDb, client } = require('../db');
 const { ObjectId } = require('mongodb');
 const rateLimit = require('express-rate-limit');
-const authAdmin = require('../middleware/authAdmin'); // ¡Middleware de ADMIN!
+const authAdmin = require('../middleware/authAdmin');
 
 const router = express.Router();
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 50 }); // Más intentos para admin
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 50 });
 
-// Usamos el middleware 'authAdmin' para TODAS las rutas en este archivo
 router.use(authLimiter);
-router.use(authAdmin); // Asegura que solo los admins puedan acceder
+router.use(authAdmin);
 
 // ===========================================
-//  GESTIÓN DE DEPÓSITOS (Verificar Pagos)
+//  GESTIÓN DE DEPÓSITOS (CON DATOS DE USUARIO)
 // ===========================================
 
-// 1. Obtener todos los depósitos PENDIENTES
 router.get('/deposits/pending', async (req, res) => {
     try {
         const db = getDb();
@@ -37,9 +35,12 @@ router.get('/deposits/pending', async (req, res) => {
                 reference: 1,
                 createdAt: 1,
                 userEmail: '$userDetails.email',
-                username: '$userDetails.username'
+                username: '$userDetails.username',
+                // --- NUEVOS CAMPOS AÑADIDOS ---
+                fullName: '$userDetails.personalInfo.fullName',
+                cedula: '$userDetails.personalInfo.cedula'
             }}
-        ]).sort({ createdAt: 1 }).toArray(); // Ordena los más antiguos primero
+        ]).sort({ createdAt: 1 }).toArray();
         
         res.status(200).json(pendingDeposits);
     } catch (e) {
@@ -48,10 +49,9 @@ router.get('/deposits/pending', async (req, res) => {
     }
 });
 
-// 2. APROBAR un depósito (USA TRANSACCIÓN)
 router.post('/deposits/approve/:txId', async (req, res) => {
     const { txId } = req.params;
-    const session = client.startSession(); // Inicia sesión para transacción
+    const session = client.startSession();
 
     try {
         await session.startTransaction();
@@ -65,7 +65,6 @@ router.post('/deposits/approve/:txId', async (req, res) => {
             return res.status(404).json({ message: 'Transacción no encontrada o ya procesada.' });
         }
 
-        // 1. Actualiza la transacción
         await db.collection('transactions').updateOne(
             { _id: transaction._id },
             { $set: { 
@@ -76,7 +75,6 @@ router.post('/deposits/approve/:txId', async (req, res) => {
             { session }
         );
 
-        // 2. Aumenta el saldo del usuario
         await db.collection('users').updateOne(
             { _id: new ObjectId(transaction.userId) },
             { $inc: { balance: transaction.amount } },
@@ -96,7 +94,6 @@ router.post('/deposits/approve/:txId', async (req, res) => {
     }
 });
 
-// 3. RECHAZAR un depósito
 router.post('/deposits/reject/:txId', async (req, res) => {
     const { txId } = req.params;
     const { reason } = req.body;
@@ -124,17 +121,34 @@ router.post('/deposits/reject/:txId', async (req, res) => {
 });
 
 // ===========================================
-//  GESTIÓN DE RETIROS (Liberar Pagos)
+//  GESTIÓN DE RETIROS (CON DATOS DE USUARIO)
 // ===========================================
 
-// 1. Obtener todos los retiros PENDIENTES
 router.get('/withdrawals/pending', async (req, res) => {
     try {
         const db = getDb();
-        // Usamos la colección 'withdrawalRequests'
-        const pendingWithdrawals = await db.collection('withdrawalRequests').find({
-            status: 'pending'
-        }).sort({ requestedAt: 1 }).toArray();
+        const pendingWithdrawals = await db.collection('withdrawalRequests').aggregate([
+            { $match: { status: 'pending' } },
+            { $lookup: {
+                from: 'users',
+                localField: 'userId',
+                foreignField: '_id',
+                as: 'userDetails'
+            }},
+            { $unwind: '$userDetails' },
+            { $project: {
+                _id: 1,
+                amount: 1,
+                methodDetails: 1,
+                methodType: 1,
+                requestedAt: 1,
+                username: 1,
+                userId: 1,
+                // --- NUEVOS CAMPOS AÑADIDOS ---
+                fullName: '$userDetails.personalInfo.fullName',
+                cedula: '$userDetails.personalInfo.cedula'
+            }}
+        ]).sort({ requestedAt: 1 }).toArray();
         
         res.status(200).json(pendingWithdrawals);
     } catch (e) {
@@ -143,9 +157,8 @@ router.get('/withdrawals/pending', async (req, res) => {
     }
 });
 
-// 2. APROBAR un retiro (Marcar como pagado)
 router.post('/withdrawals/approve/:reqId', async (req, res) => {
-    const { reqId } = req.params; // ID de la solicitud de retiro
+    const { reqId } = req.params;
     const session = client.startSession();
 
     try {
@@ -162,7 +175,6 @@ router.post('/withdrawals/approve/:reqId', async (req, res) => {
             return res.status(404).json({ message: 'Solicitud no encontrada o ya procesada.' });
         }
 
-        // 1. Marcar la solicitud como completada
         await db.collection('withdrawalRequests').updateOne(
             { _id: request._id },
             { $set: { 
@@ -173,9 +185,8 @@ router.post('/withdrawals/approve/:reqId', async (req, res) => {
             { session }
         );
         
-        // 2. Actualizar la transacción original en el historial
         await db.collection('transactions').updateOne(
-            { _id: request.transactionId }, // Asumiendo que guardaste el ID de la transacción
+            { _id: request.transactionId },
             { $set: { status: 'approved' } },
             { session }
         );
@@ -193,11 +204,10 @@ router.post('/withdrawals/approve/:reqId', async (req, res) => {
     }
 });
 
-// 3. RECHAZAR un retiro (y devolver el dinero al saldo del usuario)
 router.post('/withdrawals/reject/:reqId', async (req, res) => {
     const { reqId } = req.params;
     const { reason } = req.body;
-    const session = client.startSession(); // Usar transacción para seguridad
+    const session = client.startSession();
 
     try {
         await session.startTransaction();
@@ -213,7 +223,6 @@ router.post('/withdrawals/reject/:reqId', async (req, res) => {
             return res.status(404).json({ message: 'Solicitud no encontrada o ya procesada.' });
         }
 
-        // 1. Marcar como rechazado
         await db.collection('withdrawalRequests').updateOne(
             { _id: request._id },
             { $set: { 
@@ -225,14 +234,12 @@ router.post('/withdrawals/reject/:reqId', async (req, res) => {
             { session }
         );
 
-        // 2. DEVOLVER el dinero al saldo del usuario
         await db.collection('users').updateOne(
             { _id: new ObjectId(request.userId) },
-            { $inc: { balance: request.amount } } // Sumamos de vuelta
+            { $inc: { balance: request.amount } }
             , { session }
         );
         
-        // 3. Actualizar la transacción original
         await db.collection('transactions').updateOne(
             { _id: request.transactionId },
             { $set: { status: 'rejected' } },

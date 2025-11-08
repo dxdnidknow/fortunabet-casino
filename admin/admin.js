@@ -5,11 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
     //  CONFIGURACIÓN
     // ==========================================================
     
-    // APUNTAMOS A TU API EN PRODUCCIÓN (RENDER)
     const API_URL = 'https://fortunabet-api.onrender.com/api'; 
-    // const API_URL = 'http://localhost:3001/api'; // (Descomenta esta línea si trabajas en local)
+    // const API_URL = 'http://localhost:3001/api'; 
 
-    // === CONSTANTES Y ELEMENTOS DEL DOM ===
     const loginView = document.getElementById('login-view');
     const dashboardView = document.getElementById('dashboard-view');
     const loginForm = document.getElementById('login-form');
@@ -28,14 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === FUNCIONES DE API ===
 
-    /**
-     * Realiza una petición fetch autenticada a la API.
-     */
     async function apiFetch(endpoint, method = 'GET', body = null) {
         const headers = new Headers();
         headers.append('Authorization', `Bearer ${authToken}`);
         
-        const options = { method, headers, mode: 'cors' }; // Habilitar CORS
+        const options = { method, headers, mode: 'cors' };
         
         if (method === 'POST' || method === 'PUT') {
             headers.append('Content-Type', 'application/json');
@@ -46,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${API_URL}${endpoint}`, options);
             
             if (response.status === 401 || response.status === 403) {
-                // Si el token es inválido o no es admin
                 logout();
                 throw new Error('Sesión inválida o permisos insuficientes.');
             }
@@ -54,12 +48,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const err = await response.json();
                 throw new Error(err.message || 'Error en la petición');
             }
-            if (response.status === 204) return null; // No content
+            if (response.status === 204) return null;
             return await response.json();
         } catch (error) {
             console.error(`Error en fetch a ${endpoint}:`, error);
             showError(error.message);
-            throw error; // Propagar el error para que sea manejado por quien llamó
+            throw error;
         }
     }
 
@@ -68,14 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const submitButton = loginForm.querySelector('button[type="submit"]');
         submitButton.disabled = true;
         submitButton.innerHTML = '<span class="spinner-sm"></span> Entrando...';
-        showError(''); // Limpiar errores
+        showError('');
 
         try {
-            // Usamos /api/login (la ruta de auth.js), que es pública
             const response = await fetch(`${API_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                mode: 'cors', // Habilitar CORS
+                mode: 'cors',
                 body: JSON.stringify({ identifier: email, password })
             });
 
@@ -85,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
                  throw new Error(data.message || 'Credenciales inválidas.');
             }
 
-            // ¡Clave! Verificamos que sea un admin
             if (data.user.role !== 'admin') {
                 throw new Error('No tienes permisos de administrador.');
             }
@@ -116,10 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadPendingData() {
         if (!refreshBtn) return;
         refreshBtn.disabled = true;
-        refreshBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i>'; // Icono de spin
+        refreshBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i>';
         
         try {
-            // Cargar depósitos y retiros en paralelo
             const [deposits, withdrawals] = await Promise.all([
                 apiFetch('/admin/deposits/pending'),
                 apiFetch('/admin/withdrawals/pending')
@@ -129,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderWithdrawals(withdrawals);
 
         } catch (error) {
-            // El error ya se muestra en apiFetch
+            // El error ya se maneja en apiFetch
         } finally {
             refreshBtn.disabled = false;
             refreshBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Recargar';
@@ -138,9 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Renderizado de Tablas ---
     
-    /**
-     * Formatea una fecha ISO (ej. 2025-11-04T...) a un formato legible (ej. 04/11 8:30 PM)
-     */
     function formatTxDate(isoDate) {
         if (!isoDate) return 'N/A';
         const date = new Date(isoDate);
@@ -156,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderDeposits(deposits) {
         depositsBody.innerHTML = '';
         if (!deposits || deposits.length === 0) {
-            depositsEmpty.style.display = 'table-row'; // Mostrar mensaje de vacío
+            depositsEmpty.style.display = 'block';
             return;
         }
         depositsEmpty.style.display = 'none';
@@ -165,7 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>
-                    ${tx.username}
+                    <strong>${tx.fullName || tx.username}</strong>
+                    <div class="user-info">${tx.cedula || 'Cédula no registrada'}</div>
                     <div class="user-info">${tx.userEmail}</div>
                 </td>
                 <td class="amount">${tx.amount.toFixed(2)}</td>
@@ -186,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderWithdrawals(withdrawals) {
         withdrawalsBody.innerHTML = '';
         if (!withdrawals || withdrawals.length === 0) {
-            withdrawalsEmpty.style.display = 'table-row'; // Mostrar mensaje de vacío
+            withdrawalsEmpty.style.display = 'block';
             return;
         }
         withdrawalsEmpty.style.display = 'none';
@@ -195,16 +184,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('tr');
             let info = 'Detalles no disponibles';
             if (tx.methodDetails) {
-                info = Object.entries(tx.methodDetails).map(([key, value]) => `${key}: ${value}`).join('<br>');
+                info = Object.entries(tx.methodDetails)
+                             .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+                             .join('<br>');
             }
 
             row.innerHTML = `
                 <td>
-                    ${tx.username}
-                    <div class="user-info">ID: ${tx.userId}</div>
+                    <strong>${tx.fullName || tx.username}</strong>
+                    <div class="user-info">${tx.cedula || 'Cédula no registrada'}</div>
                 </td>
                 <td class="amount withdrawal">${tx.amount.toFixed(2)}</td>
-                <td><small>${info}</small></td>
+                <td><small>${tx.methodType.replace('_', ' ')}<br>${info}</small></td>
                 <td class="date-cell">${formatTxDate(tx.requestedAt)}</td>
                 <td class="actions">
                     <button class="btn btn-primary btn-sm btn-approve-withdrawal" data-id="${tx._id}" title="Marcar como Pagado"><i class="fa-solid fa-check"></i></button>
@@ -215,10 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Acciones de Admin (Con Estados de Carga) ---
+    // --- Acciones de Admin ---
     async function handleAdminAction(e) {
         const btn = e.target.closest('button');
-        if (!btn || !btn.dataset.id) return; // No es un botón de acción
+        if (!btn || !btn.dataset.id) return;
 
         const id = btn.dataset.id;
         const originalHtml = btn.innerHTML;
@@ -232,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (btn.classList.contains('btn-reject-deposit')) {
             endpoint = `/admin/deposits/reject/${id}`;
             const reason = prompt('Motivo del rechazo (opcional, se guardará en la base de datos):');
-            if (reason === null) return; // Si presiona "Cancelar"
+            if (reason === null) return;
             body = { reason: reason || 'Rechazado por admin' };
         } else if (btn.classList.contains('btn-approve-withdrawal')) {
             endpoint = `/admin/withdrawals/approve/${id}`;
@@ -243,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (reason === null) return;
             body = { reason: reason || 'Rechazado por admin' };
         } else {
-            return; // No es un botón de acción de tabla
+            return;
         }
 
         if (confirmMessage && !confirm(confirmMessage)) return;
@@ -253,13 +244,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             await apiFetch(endpoint, 'POST', body);
-            loadPendingData(); // Recargar ambas tablas
+            loadPendingData();
         } catch (error) {
-            // El error ya se muestra en apiFetch, solo restauramos el botón
             btn.disabled = false;
             btn.innerHTML = originalHtml;
         }
-        // No restauramos el botón aquí, porque la tabla se va a recargar
     }
 
     // === INICIALIZACIÓN Y EVENT LISTENERS ===
@@ -277,11 +266,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Listeners ---
     if (loginForm) {
         loginForm.addEventListener('submit', e => {
             e.preventDefault();
-            showError(''); // Limpiar errores
+            showError('');
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             login(email, password);
@@ -296,14 +284,11 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshBtn.addEventListener('click', loadPendingData);
     }
     
-    // Event delegation para los botones de las tablas
     if (dashboardView) {
         dashboardView.addEventListener('click', handleAdminAction);
     }
 
-    // Chequeo inicial al cargar
     if (authToken && adminUser) {
-        // Intenta cargar el dashboard. Si el token es inválido, apiFetch llamará a logout().
         initDashboard();
     } else {
         loginView.style.display = 'block';

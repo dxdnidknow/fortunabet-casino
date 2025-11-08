@@ -1,11 +1,12 @@
-// Archivo: backend/routes/user.js (CON TWILIO IMPLEMENTADO)
+// Archivo: backend/routes/user.js (CON CAMBIO DE CONTRASEÑA IMPLEMENTADO)
 
 const express = require('express');
 const { ObjectId } = require('mongodb');
+const bcrypt = require('bcrypt'); // <-- IMPORTANTE: Necesitamos bcrypt aquí
 const authenticateToken = require('../middleware/authMiddleware');
 const rateLimit = require('express-rate-limit');
 const { client } = require('../db');
-const twilio = require('twilio'); // <-- 1. IMPORTAR TWILIO
+const twilio = require('twilio');
 
 const router = express.Router();
 
@@ -14,9 +15,11 @@ const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 router.use(authenticateToken);
 
 // --- Inicializar Cliente de Twilio ---
-// Las variables deben estar en el .env y en Render
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
+// Expresión regular para la validación de contraseñas
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
 // =======================================================================
 //  RUTAS DE DATOS DE USUARIO (MI CUENTA)
@@ -71,7 +74,58 @@ router.put('/user-data', authLimiter, async (req, res) => {
 });
 
 // =======================================================================
-//  RUTAS DE VERIFICACIÓN TELEFÓNICA (¡YA NO ES SIMULADO!)
+//  NUEVA RUTA DE SEGURIDAD: CAMBIO DE CONTRASEÑA
+// =======================================================================
+
+router.post('/change-password', authLimiter, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = new ObjectId(req.user.id);
+    const db = req.db;
+
+    // 1. Validar que los datos llegaron
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+    }
+
+    // 2. Validar la fortaleza de la nueva contraseña
+    if (!passwordRegex.test(newPassword)) {
+        return res.status(400).json({ message: 'La nueva contraseña no cumple los requisitos de seguridad.' });
+    }
+
+    try {
+        // 3. Buscar al usuario en la base de datos
+        const user = await db.collection('users').findOne({ _id: userId });
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+
+        // 4. Comparar la contraseña actual proporcionada con la guardada en la BD
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
+        }
+
+        // 5. Hashear la nueva contraseña
+        const salt = await bcrypt.genSalt(10);
+        const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+        // 6. Actualizar la contraseña en la base de datos
+        await db.collection('users').updateOne(
+            { _id: userId },
+            { $set: { password: hashedNewPassword } }
+        );
+
+        // 7. Enviar respuesta de éxito
+        res.status(200).json({ message: 'Contraseña actualizada con éxito.' });
+
+    } catch (error) {
+        console.error('[ERROR] en /change-password:', error);
+        res.status(500).json({ message: 'Error interno al cambiar la contraseña.' });
+    }
+});
+
+// =======================================================================
+//  RUTAS DE VERIFICACIÓN TELEFÓNICA
 // =======================================================================
 
 router.post('/request-phone-verification', authLimiter, async (req, res) => {
@@ -91,30 +145,29 @@ router.post('/request-phone-verification', authLimiter, async (req, res) => {
             return res.status(400).json({ message: "Añade un número de teléfono válido (+58) en 'Mis Datos' primero." });
         }
         
-        // --- LÓGICA REAL DE TWILIO ---
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
         
-        // 1. Guardar el código en la BD
         await db.collection('users').updateOne(
             { _id: userId },
             { $set: { 'personalInfo.phoneOtp': otp, 'personalInfo.phoneOtpExpires': otpExpires } }
         );
         
-        // 2. Enviar el SMS
         await twilioClient.messages.create({
             body: `Tu código de verificación para FortunaBet es: ${otp}`,
             from: twilioPhoneNumber,
-            to: phone // El número del usuario (ej: +58414...)
+            to: phone
         });
         
         res.status(200).json({ message: `Se ha enviado un código de verificación a tu teléfono.` });
 
     } catch (error) {
         console.error("Error al enviar código con Twilio:", error);
-        // Twilio devuelve errores útiles si el número no es válido
         if (error.code === 21211) {
              return res.status(400).json({ message: "El número de teléfono proporcionado no es válido." });
+        }
+        if (error.code === 21608) {
+            return res.status(400).json({ message: "Este número no está verificado en la cuenta de prueba de Twilio." });
         }
         res.status(500).json({ message: "No se pudo enviar el código. Intenta de nuevo más tarde." });
     }

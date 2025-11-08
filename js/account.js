@@ -1,4 +1,4 @@
-// Archivo: js/account.js (COMPLETO Y VERIFICADO)
+// Archivo: js/account.js (CON CAMBIO DE CONTRASEÑA IMPLEMENTADO)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -463,36 +463,56 @@ function handlePasswordChange() {
     const passwordChangeForm = document.getElementById('password-change-form');
     if (!passwordChangeForm) return;
 
-    let isCodeStep = false;
-    const confirmationGroup = document.getElementById('confirmation-code-group');
-    const submitButton = document.getElementById('change-password-btn');
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
     passwordChangeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const newPassword = document.getElementById('new-password').value;
-        const confirmNewPassword = document.getElementById('confirm-new-password').value;
+        const currentPasswordInput = document.getElementById('current-password');
+        const newPasswordInput = document.getElementById('new-password');
+        const confirmNewPasswordInput = document.getElementById('confirm-new-password');
+        const submitButton = document.getElementById('change-password-btn');
 
+        const currentPassword = currentPasswordInput.value;
+        const newPassword = newPasswordInput.value;
+        const confirmNewPassword = confirmNewPasswordInput.value;
+        
+        if (!currentPassword || !newPassword || !confirmNewPassword) {
+            showToast('Por favor, completa todos los campos.', 'error');
+            return;
+        }
         if (newPassword !== confirmNewPassword) {
             showToast('La nueva contraseña y su confirmación no coinciden.', 'error');
             return;
         }
+        if (!passwordRegex.test(newPassword)) {
+            showToast('La nueva contraseña no es segura. Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.', 'error');
+            return;
+        }
 
+        const originalBtnText = submitButton.textContent;
         submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-sm"></span> Guardando...';
 
-        if (!isCodeStep) {
-            showToast('Funcionalidad en desarrollo (Simulado).', 'info');
-            confirmationGroup.classList.remove('hidden');
-            submitButton.textContent = 'Confirmar Cambio';
-            isCodeStep = true;
-            submitButton.disabled = false;
-        } else {
-            showToast('Contraseña cambiada con éxito (Simulado).', 'success');
+        try {
+            const response = await fetchWithAuth(`${API_BASE_URL}/user/change-password`, {
+                method: 'POST',
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Ocurrió un error.');
+            }
+            
+            showToast(data.message, 'success');
             passwordChangeForm.reset();
-            confirmationGroup.classList.add('hidden');
-            submitButton.textContent = 'Cambiar Contraseña';
-            isCodeStep = false;
+
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
             submitButton.disabled = false;
+            submitButton.innerHTML = originalBtnText;
         }
     });
 }
