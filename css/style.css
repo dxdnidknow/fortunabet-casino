@@ -1434,3 +1434,16 @@ body.user-logged-in .logged-out-only {
     outline: 2px solid var(--color-primary-light);
     outline-offset: 2px;
 }
+/* ==========================================================================
+   29. VISIBILIDAD DE ROL DE ADMIN
+   ========================================================================== */
+
+/* Por defecto, el enlace al panel de admin está oculto */
+#admin-panel-link {
+    display: none !important;
+}
+
+/* Si el body tiene la clase 'role-admin', entonces se muestra el enlace */
+body.role-admin #admin-panel-link {
+    display: flex !important; /* Usamos flex porque es un flex item en el menú */
+}

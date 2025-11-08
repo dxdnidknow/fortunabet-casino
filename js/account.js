@@ -1,4 +1,4 @@
-// Archivo: js/account.js (CON CAMBIO DE CONTRASEÑA IMPLEMENTADO)
+// Archivo: js/account.js (COMPLETO Y SIMPLIFICADO)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -69,11 +69,6 @@ export async function loadUserData() {
             renderPhoneVerificationStatus(userData.personalInfo.isPhoneVerified, userData.personalInfo.phone);
         }
         
-        if (userData.role === 'admin') {
-            const adminLink = document.getElementById('admin-panel-link');
-            if (adminLink) adminLink.style.display = 'flex';
-        }
-
     } catch (error) {
         console.error(error);
         showToast('Error al cargar datos de usuario. Intenta recargar.', 'error');

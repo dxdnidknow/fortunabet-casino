@@ -1,4 +1,4 @@
-// Archivo: js/auth.js (COMPLETO Y CORREGIDO PARA SESIONES FANTASMA)
+// Archivo: js/auth.js (COMPLETO Y CORREGIDO PARA ROL DE ADMIN)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -42,6 +42,14 @@ function updateLoginState(user) {
     }
     document.body.classList.add('user-logged-in');
     
+    // --- INICIO DE LA CORRECCIÓN PARA EL ROL DE ADMIN ---
+    if (user.role === 'admin') {
+        document.body.classList.add('role-admin');
+    } else {
+        document.body.classList.remove('role-admin');
+    }
+    // --- FIN DE LA CORRECCIÓN ---
+
     const authButtons = document.querySelector('.auth-wrapper .auth-buttons');
     const userInfo = document.querySelector('.auth-wrapper .user-info');
     if (authButtons) authButtons.classList.add('hidden');
