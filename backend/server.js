@@ -131,11 +131,11 @@ function handleApiError(error, res) {
 // =======================================================================
 connectDB().then(() => {
     // La dirección '0.0.0.0' es correcta para Render,
-    // pero lo crucial es usar la variable 'port' definida arriba.
+    // y aquí nos aseguramos de usar la variable 'port' definida arriba.
     app.listen(port, '0.0.0.0', () => {
         console.log('-------------------------------------------');
         console.log(`🚀 Servidor backend de FortunaBet`);
-        console.log(`   Escuchando en el puerto: ${port}`);
+        console.log(`   Escuchando en el puerto: ${port}`); // Aseguramos que se loguea el valor de la variable 'port'
         console.log('-------------------------------------------');
     });
 });
