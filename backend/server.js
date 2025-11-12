@@ -1,6 +1,6 @@
-// Archivo: backend/server.js (CORRECCIÓN FINAL DE CORS)
+// Archivo: backend/server.js (CORRECCIÓN FINAL DE CORS Y PUERTO)
 // =======================================================================
-//  CONFIGURACIÓN INICIAL Y DEPENDENCIAS
+//   CONFIGURACIÓN INICIAL Y DEPENDENCIAS
 // =======================================================================
 require('dotenv').config();
 
@@ -12,24 +12,30 @@ const { connectDB, getDb } = require('./db');
 const rateLimit = require('express-rate-limit');
 
 // =======================================================================
-//  IMPORTACIÓN DE RUTAS MODULARES
+//   IMPORTACIÓN DE RUTAS MODULARES
 // =======================================================================
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
-const port = process.env.PORT || 3001;
+// =======================================================================
+// CORRECCIÓN CLAVE: PUERTO PARA RENDER
+// =======================================================================
+// Render inyecta el puerto en process.env.PORT.
+// Es CRUCIAL que el servidor escuche en este puerto para ser accesible.
+// Para desarrollo local, si process.env.PORT no existe, usará 3001.
+const port = process.env.PORT || 3001; 
 
 // =======================================================================
-//  MIDDLEWARES GENERALES
+//   MIDDLEWARES GENERALES
 // =======================================================================
 
 // --- INICIO DE LA CORRECCIÓN DE CORS ---
 const corsOptions = {
-  origin: '*', // Permite todas las origenes. Para producción podrías poner: process.env.FRONTEND_URL
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Permite todos los métodos HTTP comunes
-  allowedHeaders: 'Content-Type, Authorization', // Permite las cabeceras que usamos
+    origin: '*', // Permite todas las origenes. Para producción podrías poner: process.env.FRONTEND_URL
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Permite todos los métodos HTTP comunes
+    allowedHeaders: 'Content-Type, Authorization', // Permite las cabeceras que usamos
 };
 app.use(cors(corsOptions));
 // --- FIN DE LA CORRECCIÓN DE CORS ---
@@ -43,25 +49,25 @@ app.use((req, res, next) => {
 });
 
 // =======================================================================
-//  CONFIGURACIÓN DE SEGURIDAD: RATE LIMITER
+//   CONFIGURACIÓN DE SEGURIDAD: RATE LIMITER
 // =======================================================================
 const sportsApiLimiter = rateLimit({
-	windowMs: 15 * 60 * 1000,
-	max: 100,
-	standardHeaders: true,
-	legacyHeaders: false,
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
     message: { message: 'Demasiadas peticiones a la API de deportes. Intente de nuevo en 15 minutos.' }
 });
 
 // =======================================================================
-//  CONFIGURACIÓN DE API DE DEPORTES
+//   CONFIGURACIÓN DE API DE DEPORTES
 // =======================================================================
 const API_KEY = process.env.ODDS_API_KEY;
 if (!API_KEY) { console.error('❌ Error: La variable de entorno ODDS_API_KEY no está definida.'); process.exit(1); }
 const eventsCache = new NodeCache({ stdTTL: 600 });
 
 // =======================================================================
-//  RUTAS DE LA APLICACIÓN
+//   RUTAS DE LA APLICACIÓN
 // =======================================================================
 
 // --- Rutas Públicas (Autenticación y Deportes) ---
@@ -107,11 +113,12 @@ app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 
 // =======================================================================
-//  FUNCIÓN DE MANEJO DE ERRORES
+//   FUNCIÓN DE MANEJO DE ERRORES
 // =======================================================================
 function handleApiError(error, res) {
     if (error.response) {
         console.error(`[ERROR] API Externa: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+        // Usamos el status original de la API externa
         res.status(error.response.status).json(error.response.data);
     } else {
         console.error(`[ERROR] Servidor Interno: ${error.message}`);
@@ -120,13 +127,15 @@ function handleApiError(error, res) {
 }
 
 // =======================================================================
-//  INICIO DEL SERVIDOR
+//   INICIO DEL SERVIDOR
 // =======================================================================
 connectDB().then(() => {
+    // La dirección '0.0.0.0' es correcta para Render,
+    // pero lo crucial es usar la variable 'port' definida arriba.
     app.listen(port, '0.0.0.0', () => {
         console.log('-------------------------------------------');
         console.log(`🚀 Servidor backend de FortunaBet`);
-        console.log(`   Escuchando en el puerto: ${port}`);
+        console.log(`   Escuchando en el puerto: ${port}`);
         console.log('-------------------------------------------');
     });
 });
