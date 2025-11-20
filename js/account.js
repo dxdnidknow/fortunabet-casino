@@ -1,5 +1,3 @@
-// Archivo: js/account.js (COMPLETO Y CORREGIDO)
-
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
 import { openModal, closeModal } from './modal.js';
@@ -48,8 +46,17 @@ export async function loadUserData() {
         // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
         const userData = await fetchWithAuth(`${API_BASE_URL}/user/user-data`);
         
-        document.getElementById('user-display-name').textContent = userData.username;
-        document.getElementById('user-display-balance').textContent = `Bs. ${userData.balance.toFixed(2)}`;
+        // CAMBIO IMPORTANTE: Usamos querySelectorAll para actualizar TODAS las instancias 
+        // del nombre y balance (tanto en móvil como en escritorio si existen duplicados)
+        document.querySelectorAll('.data-username').forEach(element => {
+            element.textContent = userData.username;
+        });
+
+        document.querySelectorAll('.data-balance').forEach(element => {
+            element.textContent = `Bs. ${userData.balance.toFixed(2)}`;
+        });
+
+        // El balance del dashboard principal
         const dashboardBalance = document.getElementById('dashboard-balance');
         if(dashboardBalance) dashboardBalance.textContent = `Bs. ${userData.balance.toFixed(2)}`;
         
