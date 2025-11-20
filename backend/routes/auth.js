@@ -1,4 +1,4 @@
-// Archivo: backend/routes/auth.js (COMPLETO Y REVISADO)
+// Archivo: backend/routes/auth.js (VERSIÓN FINAL)
 
 const express = require('express');
 const bcrypt = require('bcrypt');
@@ -52,7 +52,7 @@ async function sendVerificationEmail(email, otp) {
     try {
         await sgMail.send(msg);
     } catch (error) {
-        console.error("Error enviando email con SendGrid:", error.response.body);
+        console.error("Error enviando email con SendGrid:", error.response?.body || error.message);
     }
 }
 
@@ -64,11 +64,11 @@ async function sendVerificationEmail(email, otp) {
 router.post('/register', authLimiter, async (req, res) => {
     try {
         const { username, email, password } = req.body;
-        const db = req.db; // Obtenemos la BD desde el middleware en server.js
+        const db = req.db;
 
         if (!username || !email || !password) return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
         if (!usernameRegex.test(username)) return res.status(400).json({ message: 'El usuario debe tener entre 4 y 20 letras, sin números ni espacios.' });
-        if (!passwordRegex.test(password)) return res.status(400).json({ message: 'La contraseña no cumple con los requisitos de seguridad (mín. 8 caracteres, 1 mayúscula, 1 minúscula, 1 número, 1 símbolo).' });
+        if (!passwordRegex.test(password)) return res.status(400).json({ message: 'La contraseña no cumple con los requisitos de seguridad.' });
 
         const usersCollection = db.collection('users');
         const existingUser = await usersCollection.findOne({ $or: [{ email: email.toLowerCase() }, { username: username }] });
@@ -87,11 +87,11 @@ router.post('/register', authLimiter, async (req, res) => {
             password: hashedPassword,
             balance: 0,
             role: "user",
-            isVerified: false, // Inicia como NO verificado
+            isVerified: false, 
             otp: otp,
             otpExpires: otpExpires,
             createdAt: new Date(),
-            personalInfo: {}, // Objeto vacío para datos futuros
+            personalInfo: {}, 
         });
 
         await sendVerificationEmail(email.toLowerCase(), otp);
@@ -133,7 +133,7 @@ router.post('/verify-email', authLimiter, async (req, res) => {
         // --- ÉXITO ---
         await db.collection('users').updateOne(
             { _id: user._id },
-            { $set: { isVerified: true }, $unset: { otp: "", otpExpires: "" } } // Limpia el OTP
+            { $set: { isVerified: true }, $unset: { otp: "", otpExpires: "" } } 
         );
 
         const payload = { id: user._id.toString(), username: user.username, email: user.email, role: user.role };
@@ -196,7 +196,7 @@ router.post('/login', authLimiter, async (req, res) => {
         
         if (!user) return res.status(401).json({ message: 'Credenciales inválidas.' });
 
-        // IMPORTANTE: Verificar si la cuenta está activada
+        // Verificación de cuenta activada
         if (!user.isVerified) {
             const newOtp = generateOtp();
             const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
@@ -278,8 +278,8 @@ router.post('/reset-password', authLimiter, async (req, res) => {
         const user = await db.collection('users').findOne({ _id: new ObjectId(id) });
         if (!user) return res.status(400).json({ message: 'Usuario no válido.' });
 
-        const secret = JWT_SECRET + user.password; // El secreto debe coincidir
-        jwt.verify(token, secret); // Si esto falla, lanza un error (que será capturado por el catch)
+        const secret = JWT_SECRET + user.password; 
+        jwt.verify(token, secret); 
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -292,6 +292,5 @@ router.post('/reset-password', authLimiter, async (req, res) => {
         res.status(400).json({ message: 'El enlace no es válido o ha expirado.' });
     }
 });
-
 
 module.exports = router;

@@ -1,4 +1,4 @@
-// Archivo: backend/routes/user.js (CON VALIDACIÓN DE VERIFICACIÓN)
+// Archivo: backend/routes/user.js (VERSIÓN FINAL)
 
 const express = require('express');
 const { ObjectId } = require('mongodb');
@@ -53,7 +53,7 @@ router.put('/user-data', authLimiter, async (req, res) => {
         if (phone) {
              updateData['personalInfo.phone'] = phone;
              const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
-             if (user.personalInfo.phone !== phone) {
+             if (user && user.personalInfo && user.personalInfo.phone !== phone) {
                  updateData['personalInfo.isPhoneVerified'] = false;
              }
         }

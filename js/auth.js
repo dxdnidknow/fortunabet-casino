@@ -359,7 +359,7 @@
     }
 
 async function fetchWithAuth(url, options = {}) {
-    const authToken = localStorage.getItem('authToken');
+    const authToken = localStorage.getItem('fortunaToken');
 
     if (authToken) {
         options.headers = {

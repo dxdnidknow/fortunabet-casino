@@ -1,4 +1,4 @@
-// Archivo: js/account.js (CON LÓGICA DE DESHABILITACIÓN)
+// Archivo: js/account.js (COMPLETO Y CORREGIDO)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -45,9 +45,8 @@ function formatPhoneNumber(event) {
 
 export async function loadUserData() {
     try {
-        const response = await fetchWithAuth(`${API_BASE_URL}/user/user-data`);
-        if (!response.ok) throw new Error('No se pudieron cargar los datos del usuario.');
-        const userData = await response.json();
+        // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+        const userData = await fetchWithAuth(`${API_BASE_URL}/user/user-data`);
         
         document.getElementById('user-display-name').textContent = userData.username;
         document.getElementById('user-display-balance').textContent = `Bs. ${userData.balance.toFixed(2)}`;
@@ -128,9 +127,8 @@ export async function loadPayoutMethods() {
     if (!listContainer) return;
     
     try {
-        const response = await fetchWithAuth(`${API_BASE_URL}/user/payout-methods`); 
-        if (!response.ok) throw new Error('No se pudieron cargar los métodos de pago.');
-        const methods = await response.json();
+        // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+        const methods = await fetchWithAuth(`${API_BASE_URL}/user/payout-methods`); 
 
         listContainer.innerHTML = ''; 
         if (withdrawSelect) withdrawSelect.innerHTML = '';
@@ -175,10 +173,8 @@ export async function renderBetHistory() {
     const emptyMsgFull = document.querySelector('#historial-apuestas .empty-message-bets');
 
     try {
-        const response = await fetchWithAuth(`${API_BASE_URL}/user/get-bets`);
-        if (!response.ok) throw new Error('No se pudo cargar el historial de apuestas.');
-        
-        const betHistory = await response.json(); 
+        // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+        const betHistory = await fetchWithAuth(`${API_BASE_URL}/user/get-bets`);
 
         if (betHistory.length === 0) {
             if (emptyMsgRecent) emptyMsgRecent.style.display = 'block';
@@ -231,10 +227,8 @@ export async function renderTransactionHistory() {
     const emptyMsg = document.querySelector('.empty-message-transactions');
 
     try {
-        const response = await fetchWithAuth(`${API_BASE_URL}/user/transactions`); 
-        if (!response.ok) throw new Error('No se pudo cargar el historial de transacciones.');
-        
-        const transactions = await response.json();
+        // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+        const transactions = await fetchWithAuth(`${API_BASE_URL}/user/transactions`); 
 
         if (emptyMsg) emptyMsg.style.display = 'none';
 
@@ -323,12 +317,11 @@ function handlePayoutMethodChange() {
                 data.details.name = formData.get('name');
             }
 
-            const response = await fetchWithAuth(`${API_BASE_URL}/user/payout-methods`, {
+            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+            await fetchWithAuth(`${API_BASE_URL}/user/payout-methods`, {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message);
 
             showToast('Método de retiro añadido con éxito.', 'success');
             payoutMethodForm.reset();
@@ -372,13 +365,12 @@ function handleUserDataSubmit() {
                 phone: phoneValue ? `+58${phoneValue}` : ''
             };
 
-            const response = await fetchWithAuth(`${API_BASE_URL}/user/user-data`, {
+            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+            const result = await fetchWithAuth(`${API_BASE_URL}/user/user-data`, {
                 method: 'PUT',
                 body: JSON.stringify(data)
             });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message);
-
+            
             showToast(result.message || 'Datos actualizados con éxito.', 'success');
             await loadUserData();
         } catch (error) {
@@ -428,9 +420,8 @@ async function handlePhoneVerification() {
         showToast('Solicitando código de verificación...');
         
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/user/request-phone-verification`, { method: 'POST' });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message);
+            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+            const data = await fetchWithAuth(`${API_BASE_URL}/user/request-phone-verification`, { method: 'POST' });
             
             showToast(data.message, 'success');
             openModal(document.getElementById('phone-verification-modal'));
@@ -452,12 +443,11 @@ async function handlePhoneVerification() {
         errorEl.textContent = '';
 
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/user/verify-phone-code`, {
+            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+            const data = await fetchWithAuth(`${API_BASE_URL}/user/verify-phone-code`, {
                 method: 'POST',
                 body: JSON.stringify({ code: codeInput.value })
             });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message);
 
             showToast(data.message, 'success');
             closeModal(document.getElementById('phone-verification-modal'));
@@ -508,15 +498,11 @@ function handlePasswordChange() {
         submitButton.innerHTML = '<span class="spinner-sm"></span> Guardando...';
 
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/user/change-password`, {
+            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+            const data = await fetchWithAuth(`${API_BASE_URL}/user/change-password`, {
                 method: 'POST',
                 body: JSON.stringify({ currentPassword, newPassword })
             });
-
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message || 'Ocurrió un error.');
-            }
             
             showToast(data.message, 'success');
             passwordChangeForm.reset();
@@ -617,8 +603,8 @@ export async function initAccountDashboard() {
             const methodId = deleteBtn.dataset.id;
              if (!confirm('¿Estás seguro de que quieres eliminar este método de retiro?')) return;
             try {
-                const response = await fetchWithAuth(`${API_BASE_URL}/user/payout-methods/${methodId}`, { method: 'DELETE' }); 
-                if (!response.ok) throw new Error((await response.json()).message || 'Error al eliminar');
+                // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+                await fetchWithAuth(`${API_BASE_URL}/user/payout-methods/${methodId}`, { method: 'DELETE' }); 
                 showToast('Método eliminado con éxito.', 'success');
                 loadPayoutMethods();
             } catch (error) {
@@ -627,8 +613,8 @@ export async function initAccountDashboard() {
         } else if (setPrimaryBtn) {
             const methodId = setPrimaryBtn.dataset.id;
             try {
-                const response = await fetchWithAuth(`${API_BASE_URL}/user/payout-methods/${methodId}/primary`, { method: 'POST' }); 
-                if (!response.ok) throw new Error((await response.json()).message || 'Error al establecer principal');
+                // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+                await fetchWithAuth(`${API_BASE_URL}/user/payout-methods/${methodId}/primary`, { method: 'POST' }); 
                 showToast('Método establecido como principal.', 'success');
                 loadPayoutMethods();
             } catch (error) {
@@ -636,4 +622,4 @@ export async function initAccountDashboard() {
             }
         }
     });
-}   
+}

@@ -1,4 +1,4 @@
-// Archivo: js/payments.js (COMPLETO Y MODIFICADO)
+// Archivo: js/payments.js (COMPLETO Y CORREGIDO)
 
 import { showToast } from './ui.js';
 import { fetchWithAuth } from './auth.js'; 
@@ -19,6 +19,8 @@ function showStep(stepNumber) {
 function showInstructions(method) {
     currentMethod = method;
     document.querySelectorAll('.payment-instructions').forEach(inst => inst.classList.remove('active'));
+    
+    // Se asegura el uso de comillas invertidas para la interpolación de cadenas
     const instructions = document.querySelector(`#instructions-${method}`);
     if (instructions) {
         instructions.classList.add('active');
@@ -77,7 +79,8 @@ export function initPaymentModals() {
         submitButton.innerHTML = '<span class="spinner-sm"></span> Reportando...';
 
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/user/request-deposit`, { 
+            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+            const data = await fetchWithAuth(`${API_BASE_URL}/user/request-deposit`, { 
                 method: 'POST',
                 body: JSON.stringify({
                     amount: amount,
@@ -86,9 +89,6 @@ export function initPaymentModals() {
                 })
             });
             
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message);
-
             showToast(data.message, 'success');
             
             closeModal(depositModal);
@@ -107,7 +107,7 @@ export function initPaymentModals() {
     const withdrawModal = document.getElementById('withdraw-modal');
 
     document.body.addEventListener('click', (e) => {
-        if (e.target.closest('[data-modal-target="withdraw-modal"]')) {
+        if (e.target.closest('[data-modal-trigger="withdraw-modal"]')) {
             e.preventDefault();
             const modal = document.getElementById('withdraw-modal');
             if(modal) {
@@ -142,16 +142,14 @@ export function initPaymentModals() {
         submitButton.innerHTML = '<span class="spinner-sm"></span> Procesando...';
 
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/user/withdraw`, { 
+            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+            const data = await fetchWithAuth(`${API_BASE_URL}/user/withdraw`, { 
                 method: 'POST',
                 body: JSON.stringify({
                     amount: amount,
                     methodId: methodId
                 })
             });
-            
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message);
             
             showToast(data.message, 'success');
 
@@ -167,4 +165,4 @@ export function initPaymentModals() {
             submitButton.innerHTML = originalBtnText;
         }
     });
-}   
+}

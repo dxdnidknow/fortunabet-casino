@@ -1,4 +1,4 @@
-// Archivo: backend/routes/admin.js (COMPLETO Y CORREGIDO CON DATOS DE USUARIO)
+// Archivo: backend/routes/admin.js (VERSIÓN FINAL)
 
 const express = require('express');
 const { getDb, client } = require('../db');
@@ -36,7 +36,6 @@ router.get('/deposits/pending', async (req, res) => {
                 createdAt: 1,
                 userEmail: '$userDetails.email',
                 username: '$userDetails.username',
-                // --- NUEVOS CAMPOS AÑADIDOS ---
                 fullName: '$userDetails.personalInfo.fullName',
                 cedula: '$userDetails.personalInfo.cedula'
             }}
@@ -144,7 +143,6 @@ router.get('/withdrawals/pending', async (req, res) => {
                 requestedAt: 1,
                 username: 1,
                 userId: 1,
-                // --- NUEVOS CAMPOS AÑADIDOS ---
                 fullName: '$userDetails.personalInfo.fullName',
                 cedula: '$userDetails.personalInfo.cedula'
             }}
@@ -259,4 +257,4 @@ router.post('/withdrawals/reject/:reqId', async (req, res) => {
     }
 });
 
-module.exports = router; 
+module.exports = router;

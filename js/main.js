@@ -544,7 +544,7 @@ function setupEventListeners() {
                 const loader = document.getElementById('loader-live');
                 if (loader) loader.style.display = 'flex';
                 const events = await fetchLiveEvents(activeSportKey);
-                if (loader) loader.style.display('none');
+                if (loader) loader.style.display = 'none';
                 renderEvents(events);
             }
             document.querySelector('.event-tabs').classList.remove('hidden');

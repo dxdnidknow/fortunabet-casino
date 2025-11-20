@@ -1,4 +1,4 @@
-// Archivo: js/bet.js (MODIFICADO Y COMPLETO)
+// Archivo: js/bet.js (COMPLETO Y CORREGIDO)
 
 import { showToast } from './ui.js';
 import { fetchWithAuth } from './auth.js';
@@ -79,17 +79,21 @@ function saveBetsToLocalStorage() {
 }
 
 export function addBet(betInfo) {
+    // Verifica si ya existe una apuesta para el mismo evento (mismo equipo/partido)
     const existingBetIndex = bets.findIndex(bet => bet.team.split(' - ')[0] === betInfo.team.split(' - ')[0]);
     
     if (existingBetIndex !== -1) {
         if (bets[existingBetIndex].id === betInfo.id) {
+            // Si es la misma apuesta exacta, la eliminamos (toggle)
             bets.splice(existingBetIndex, 1);
             showToast('Selección eliminada del cupón');
         } else {
+            // Si es una apuesta diferente del mismo evento, la reemplazamos
             bets[existingBetIndex] = { ...betInfo, id: betInfo.id || Date.now() };
             showToast('Selección actualizada en el cupón');
         }
     } else {
+        // Si no existe, la añadimos
         bets.push({ ...betInfo, id: betInfo.id || Date.now() });
         showToast('Selección añadida al cupón');
     }
@@ -148,7 +152,8 @@ export function initBetSlip() {
         placeBetBtn.innerHTML = '<span class="spinner-sm"></span> Apostando...';
 
         try {
-            const response = await fetchWithAuth(`${API_BASE_URL}/user/place-bet`, {
+            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
+            const data = await fetchWithAuth(`${API_BASE_URL}/user/place-bet`, {
                 method: 'POST',
                 body: JSON.stringify({
                     bets: bets,
@@ -156,9 +161,6 @@ export function initBetSlip() {
                 })
             });
             
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message);
-
             showToast(data.message, 'success');
 
             bets = [];

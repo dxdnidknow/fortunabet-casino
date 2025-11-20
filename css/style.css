@@ -711,10 +711,8 @@ a:hover { color: var(--color-primary-light); }
 }
 /* Oculta por defecto los elementos que solo son para usuarios logueados */
 .logged-in-only {
-    display: none !important; /* Usamos !important para asegurar que se oculte */
+    display: none !important;
 }
-
-/* Cuando el body tenga la clase 'user-logged-in', muestra los elementos */
 body.user-logged-in .logged-in-only {
     display: list-item !important; /* Para la nav de escritorio */
 }
@@ -813,7 +811,7 @@ body.user-logged-in .mobile-menu-links .logged-in-only {
     gap: 10px;
 }
 .result-league { grid-area: league; color: var(--color-text-secondary); font-weight: 500; }
-.result-teams { grid-area: team1 / team1 / team2 / team2; display: contents; text-align: center; font-size: 1.1rem; }
+.result-teams { display: contents; text-align: center; font-size: 1.1rem; }
 .result-teams span:first-child { text-align: right; }
 .result-teams span:last-child { text-align: left; }
 .result-score { grid-area: score; font-size: 1.4rem; font-weight: 700; color: var(--color-primary); }
@@ -848,22 +846,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
    18. CORRECCIONES DE NAVEGADOR
    ========================================================================== */
 
-/* Oculta el icono de "mostrar contraseña" nativo de Webkit/Blink (Chrome, Edge) */
-input[type="password"]::-webkit-reveal,
-input[type="password"]::-webkit-clear-button {
-    display: none !important;
-    -webkit-appearance: none !important;
-}
-/* ==========================================================================
-   18. CORRECCIONES DE NAVEGADOR
-   ========================================================================== */
-
-/* Oculta el icono de "mostrar contraseña" nativo de Webkit/Blink (Chrome, Edge) */
+/* Oculta el icono de "ojo" nativo en Edge */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
     display: none !important;
 }
 
+/* Oculta el icono de "ojo" y "x" nativo en Chrome, Safari, etc. */
 input[type="password"]::-webkit-reveal,
 input[type="password"]::-webkit-clear-button {
     display: none !important;
@@ -984,22 +973,6 @@ input[type="password"]::-webkit-clear-button {
    23. LÓGICA DE VISIBILIDAD DE MENÚS (NUEVO)
    ========================================================================== */
 
-/* Oculta por defecto los elementos que solo son para usuarios logueados */
-.logged-in-only {
-    display: none !important;
-}
-
-/* Cuando el body tenga la clase 'user-logged-in', muestra estos elementos */
-body.user-logged-in .logged-in-only {
-    display: list-item !important; /* Para la nav de escritorio */
-}
-body.user-logged-in .mobile-menu-links .logged-in-only {
-    display: flex !important; /* Para el menú móvil */
-}
-
-/* ----- NUEVA LÓGICA PARA ELEMENTOS DE USUARIO DESCONECTADO ----- */
-
-/* Por defecto, los elementos 'solo para desconectados' son visibles */
 .logged-out-only {
     display: list-item; /* Para la nav de escritorio */
 }
