@@ -1,4 +1,5 @@
-// Archivo: backend/server.js (CORRECCIÓN FINAL DE CORS Y PUERTO)
+// Archivo: backend/server.js (COMPLETO CON HEALTH CHECK PARA UPTIMEROBOT)
+
 // =======================================================================
 //   CONFIGURACIÓN INICIAL Y DEPENDENCIAS
 // =======================================================================
@@ -19,30 +20,28 @@ const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
+
 // =======================================================================
-// CORRECCIÓN CLAVE: PUERTO PARA RENDER
+//   PUERTO DEL SERVIDOR
 // =======================================================================
 // Render inyecta el puerto en process.env.PORT.
-// Es CRUCIAL que el servidor escuche en este puerto para ser accesible.
-// Para desarrollo local, si process.env.PORT no existe, usará 3001.
 const port = process.env.PORT || 3001; 
 
 // =======================================================================
 //   MIDDLEWARES GENERALES
 // =======================================================================
 
-// --- INICIO DE LA CORRECCIÓN DE CORS ---
 const corsOptions = {
-    origin: '*', // Permite todas las origenes. Para producción podrías poner: process.env.FRONTEND_URL
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Permite todos los métodos HTTP comunes
-    allowedHeaders: 'Content-Type, Authorization', // Permite las cabeceras que usamos
+    origin: '*', // Permite todas las origenes.
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Authorization',
 };
 app.use(cors(corsOptions));
-// --- FIN DE LA CORRECCIÓN DE CORS ---
 
 app.use(express.json());
 app.set('trust proxy', 1);
 
+// Middleware para inyectar la conexión a la BD en cada petición
 app.use((req, res, next) => {
     req.db = getDb();
     next();
@@ -65,6 +64,20 @@ const sportsApiLimiter = rateLimit({
 const API_KEY = process.env.ODDS_API_KEY;
 if (!API_KEY) { console.error('❌ Error: La variable de entorno ODDS_API_KEY no está definida.'); process.exit(1); }
 const eventsCache = new NodeCache({ stdTTL: 600 });
+
+
+// =======================================================================
+//   RUTAS DE SALUD (HEALTH CHECK) - ¡NUEVO PARA UPTIMEROBOT!
+// =======================================================================
+// Esta es la ruta que debes poner en UptimeRobot: https://fortunabet-api.onrender.com/
+app.get('/', (req, res) => {
+    res.status(200).send('Backend de FortunaBet está en línea 🟢');
+});
+
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date() });
+});
+
 
 // =======================================================================
 //   RUTAS DE LA APLICACIÓN
@@ -130,12 +143,10 @@ function handleApiError(error, res) {
 //   INICIO DEL SERVIDOR
 // =======================================================================
 connectDB().then(() => {
-    // La dirección '0.0.0.0' es correcta para Render,
-    // y aquí nos aseguramos de usar la variable 'port' definida arriba.
     app.listen(port, '0.0.0.0', () => {
         console.log('-------------------------------------------');
         console.log(`🚀 Servidor backend de FortunaBet`);
-        console.log(`   Escuchando en el puerto: ${port}`); // Aseguramos que se loguea el valor de la variable 'port'
+        console.log(`   Escuchando en el puerto: ${port}`);
         console.log('-------------------------------------------');
     });
 });
