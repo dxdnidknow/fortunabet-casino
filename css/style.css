@@ -1446,18 +1446,21 @@ body.role-admin #admin-panel-link {
     letter-spacing: 1px;
 }
 .payment-logos img {
-    height: 30px; /* Tamaño uniforme */
+    height: 30px;
     width: auto;
-    margin: 0 10px;
-    opacity: 0.7;
-    transition: all 0.3s ease;
+    margin: 0 12px; /* Un poco más de espacio */
     
-    /* EL TRUCO MAGICO: Convierte cualquier logo negro/color a Blanco */
-    filter: grayscale(100%) brightness(0) invert(1); 
+    /* NUEVO FILTRO: Solo escala de grises y un poco de transparencia.
+       Esto mantiene los detalles negros/blancos del logo original. */
+    filter: grayscale(100%) opacity(0.7); 
+    
+    transition: all 0.3s ease;
 }
+
 .payment-logos img:hover {
-    opacity: 1;
-    filter: none; /* Al pasar el mouse, recuperan su color original */
+    /* Al pasar el mouse, quitamos el filtro para que se vea a color */
+    filter: grayscale(0%) opacity(1);
+    transform: scale(1.1); /* Pequeño efecto de zoom */
 }
 
 /* ==========================================================================
