@@ -1,5 +1,3 @@
-// Archivo: backend/routes/admin.js (VERSIÓN FINAL - CON ANALYTICS)
-
 const express = require('express');
 const { getDb, client } = require('../db');
 const { ObjectId } = require('mongodb');
@@ -43,7 +41,7 @@ router.get('/stats', async (req, res) => {
     }
 });
 
-// Datos para la Gráfica de Ingresos (ESTA ES LA QUE TE DABA ERROR 404)
+// Datos para la Gráfica de Ingresos
 router.get('/analytics/revenue', async (req, res) => {
     try {
         const db = getDb();

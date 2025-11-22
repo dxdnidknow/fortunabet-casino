@@ -1,4 +1,4 @@
-// Archivo: js/modal.js (COMPLETO Y CORREGIDO)
+// Archivo: js/modal.js (COMPLETO Y MEJORADO)
 
 let activeModal = null;
 let lastActiveElement = null;
@@ -79,18 +79,14 @@ export function closeModal(modal) {
         const gameIframe = modal.querySelector('#game-iframe');
         if (gameIframe) gameIframe.src = '';
     }
-    
-    // --- CORRECCIÓN ---
-    // Se elimina la condición que evitaba que el modal de verificación se reseteara.
-    // Ahora TODOS los modales se resetean al cerrarse.
     resetModalForms(modal);
-
     document.removeEventListener('keydown', focusTrap);
     if (lastActiveElement) lastActiveElement.focus();
 }
 
 export function initModals() {
     document.body.addEventListener('click', (event) => {
+        // 1. Abrir modal
         const trigger = event.target.closest('[data-modal-trigger]');
         if (trigger) {
             const modal = document.getElementById(trigger.dataset.modalTrigger);
@@ -98,12 +94,14 @@ export function initModals() {
             return;
         }
 
+        // 2. Cerrar con botón X (Esto SIEMPRE funciona)
         const closeBtn = event.target.closest('.close-modal');
         if (closeBtn) {
             closeModal(closeBtn.closest('.modal-overlay'));
             return;
         }
 
+        // 3. Cambiar de modal
         const switcher = event.target.closest('[data-modal-switch]');
         if (switcher) {
             event.preventDefault();
@@ -114,18 +112,27 @@ export function initModals() {
             return;
         }
 
+        // 4. Cerrar al hacer clic afuera (Solo si NO es persistente)
         if (event.target.classList.contains('modal-overlay')) {
+            // Si tiene data-persistent="true", NO hacemos nada (no cerramos)
             if (event.target.dataset.persistent === "true") {
+                // Opcional: Hacer un pequeño efecto de vibración o parpadeo
+                const container = event.target.querySelector('.auth-container');
+                if(container) {
+                    container.style.transform = 'scale(1.02)';
+                    setTimeout(() => container.style.transform = 'scale(1)', 100);
+                }
                 return; 
             }
             closeModal(event.target);
         }
     });
 
+    // 5. Cerrar con tecla Escape (Solo si NO es persistente)
     window.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && activeModal) {
             if (activeModal.dataset.persistent === "true") {
-                return;
+                return; // No cerrar si es persistente
             }
             closeModal(activeModal);
         }
