@@ -259,11 +259,27 @@ function showInitialMessage() {
     const liveContainer = document.getElementById('live-events-container');
     const upcomingContainer = document.getElementById('upcoming-events-container');
     
+    // Diseño atractivo para el estado inicial
+    const emptyStateHtml = `
+        <div class="initial-message" style="text-align: center; padding: 60px 20px;">
+            <i class="fa-solid fa-trophy" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 20px; opacity: 0.8;"></i>
+            <h2 style="font-size: 1.8rem; margin-bottom: 10px;">¡Bienvenido a la Zona de Deportes!</h2>
+            <p style="color: var(--color-text-secondary); max-width: 400px; margin: 0 auto 20px;">
+                Selecciona una liga del menú de la izquierda para ver los partidos en vivo y las mejores cuotas del mercado.
+            </p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <i class="fa-solid fa-futbol" style="font-size: 1.5rem; color: var(--color-text-secondary);"></i>
+                <i class="fa-solid fa-basketball" style="font-size: 1.5rem; color: var(--color-text-secondary);"></i>
+                <i class="fa-solid fa-baseball" style="font-size: 1.5rem; color: var(--color-text-secondary);"></i>
+            </div>
+        </div>
+    `;
+
     if (liveContainer) {
-        liveContainer.innerHTML = `<div class="initial-message"><i class="fa-solid fa-arrow-left"></i><h2>Bienvenido a FortunaBet</h2><p>Selecciona un deporte o una liga del menú para ver los partidos disponibles.</p></div>`;
+        liveContainer.innerHTML = emptyStateHtml;
     }
     if (upcomingContainer) {
-        upcomingContainer.innerHTML = '';
+        upcomingContainer.innerHTML = ''; // Limpiamos el otro contenedor
     }
 }
 

@@ -204,7 +204,26 @@ a:hover { color: var(--color-primary-light); }
 .bet-slip { background-color: var(--color-surface-1); padding: calc(var(--spacing-unit) * 3); border-radius: var(--border-radius-md); position: sticky; top: calc(var(--header-height) + var(--top-bar-height) + 25px); border: 1px solid var(--color-border); }
 .bet-slip h3 { text-align: center; margin-bottom: calc(var(--spacing-unit) * 3); font-size: 1.3rem; }
 .bet-slip .empty-message { text-align: center; color: var(--color-text-secondary); }
-.bet-summary { border-top: 1px solid var(--color-border); padding-top: 20px; margin-top: 20px; }
+.bet-summary {
+    border-top: 1px solid var(--color-border);
+    padding-top: 20px;
+    margin-top: 20px;
+    display: flex;           /* Usamos Flexbox */
+    flex-direction: column;  /* Elementos uno debajo del otro */
+    align-items: stretch;    /* Estirar para ocupar todo el ancho */
+    gap: 15px;               /* Espacio entre elementos */
+}
+
+/* El botón específico */
+#place-bet-btn {
+    width: 100%;             /* Ocupar todo el ancho disponible */
+    display: flex;
+    justify-content: center; /* Texto centrado horizontalmente */
+    align-items: center;     /* Texto centrado verticalmente */
+    padding: 14px;
+    font-size: 1.1rem;
+    margin-top: 10px;        /* Un poco de aire arriba */
+}
 .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .stake-input { width: 100px; background-color: var(--color-background); border: 1px solid var(--color-border); color: var(--color-text-primary); padding: 8px 12px; border-radius: var(--border-radius-sm); text-align: right; font-size: 1rem; }
 
@@ -326,6 +345,7 @@ a:hover { color: var(--color-primary-light); }
 
 /* Contenedor Principal del Footer */
 .main-footer {
+    display: none;
     background-color: #0f1115; /* Negro profundo */
     border-top: 1px solid var(--color-border);
     padding: 60px 0 30px; /* Más espacio arriba para respirar */
@@ -335,6 +355,9 @@ a:hover { color: var(--color-primary-light); }
     z-index: 10;
 }
 
+body.home-page .main-footer {
+    display: block;
+}
 /* Contenedor interno para centrar el contenido */
 .footer-container {
     max-width: var(--container-max-width);
