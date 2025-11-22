@@ -1,4 +1,4 @@
-// Archivo: backend/routes/admin.js (ADMIN 2.0)
+// Archivo: backend/routes/admin.js (VERSIÓN FINAL - ADMIN 2.0)
 
 const express = require('express');
 const { getDb, client } = require('../db');
@@ -12,7 +12,7 @@ const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 50 });
 router.use(authLimiter);
 router.use(authAdmin);
 
-// --- RUTA NUEVA: ESTADÍSTICAS ---
+// --- RUTA NUEVA: ESTADÍSTICAS (La que te da error 404) ---
 router.get('/stats', async (req, res) => {
     try {
         const db = getDb();
@@ -46,7 +46,7 @@ router.get('/users', async (req, res) => {
         const users = await db.collection('users')
             .find({}, { projection: { password: 0, otp: 0, otpExpires: 0 } })
             .sort({ createdAt: -1 })
-            .limit(20) // Limitamos a los últimos 20 para no saturar
+            .limit(20)
             .toArray();
         res.status(200).json(users);
     } catch (e) {

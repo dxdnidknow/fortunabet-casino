@@ -1,4 +1,4 @@
-// Archivo: backend/routes/user.js (CORREGIDO EL ERROR 500)
+// Archivo: backend/routes/user.js (VERSIÓN FINAL SEGURA)
 
 const express = require('express');
 const { ObjectId } = require('mongodb');
@@ -44,6 +44,18 @@ router.put('/user-data', authLimiter, async (req, res) => {
         const { fullName, cedula, birthDate, phone } = req.body;
         const db = req.db;
 
+        // 1. VALIDACIÓN DE DUPLICADOS: Si envían un teléfono, verificar que nadie más lo tenga
+        if (phone) {
+            const existingUserWithPhone = await db.collection('users').findOne({
+                'personalInfo.phone': phone,
+                _id: { $ne: new ObjectId(userId) } // Excluir al usuario actual de la búsqueda
+            });
+
+            if (existingUserWithPhone) {
+                return res.status(400).json({ message: 'Este número de teléfono ya está registrado en otra cuenta.' });
+            }
+        }
+
         const updateData = {
             'personalInfo.fullName': fullName,
             'personalInfo.cedula': cedula,
@@ -52,13 +64,18 @@ router.put('/user-data', authLimiter, async (req, res) => {
         
         if (phone) {
              updateData['personalInfo.phone'] = phone;
+             
+             // Buscamos al usuario actual de forma segura
              const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
              
-             // --- CORRECCIÓN AQUÍ: Usamos ?. (optional chaining) ---
-             const currentPhone = user?.personalInfo?.phone;
+             // CORRECCIÓN ANTI-CRASH 500:
+             // Verificamos paso a paso si existe personalInfo para no leer propiedades de undefined
+             const currentPhone = (user && user.personalInfo) ? user.personalInfo.phone : null;
              
+             // Si el número cambió, reseteamos la verificación
              if (currentPhone !== phone) {
                  updateData['personalInfo.isPhoneVerified'] = false;
+                 updateData['personalInfo.phoneOtp'] = ""; // Limpiar código viejo
              }
         }
 
@@ -69,14 +86,10 @@ router.put('/user-data', authLimiter, async (req, res) => {
         
         res.status(200).json({ message: 'Información personal actualizada con éxito.' });
     } catch (error) {
-        console.error('[ERROR] en update-personal-info:', error);
-        res.status(500).json({ message: 'Error interno del servidor.' });
+        console.error('[ERROR] en update-personal-info:', error); // Esto saldrá en los logs de Render
+        res.status(500).json({ message: 'Error interno del servidor: ' + error.message });
     }
 });
-
-// ... (El resto del archivo user.js sigue IGUAL, no necesitas cambiar nada más abajo) ...
-// Copia el resto de tu archivo user.js anterior a partir de aquí (change-password, etc.)
-// O si prefieres, avísame y te lo pego todo completo otra vez, pero solo cambié la línea del 'currentPhone'.
 
 // =======================================================================
 //  RUTA DE CAMBIO DE CONTRASEÑA
