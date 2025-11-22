@@ -1,4 +1,4 @@
-// Archivo: backend/routes/admin.js (VERSIÓN FINAL - ADMIN 2.0)
+// Archivo: backend/routes/admin.js (VERSIÓN FINAL - CON ANALYTICS)
 
 const express = require('express');
 const { getDb, client } = require('../db');
@@ -12,7 +12,11 @@ const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 50 });
 router.use(authLimiter);
 router.use(authAdmin);
 
-// --- RUTA NUEVA: ESTADÍSTICAS (La que te da error 404) ---
+// =======================================================================
+//  1. RUTAS DE ESTADÍSTICAS Y GRÁFICAS (NUEVAS)
+// =======================================================================
+
+// Estadísticas Generales (Tarjetas)
 router.get('/stats', async (req, res) => {
     try {
         const db = getDb();
@@ -39,14 +43,45 @@ router.get('/stats', async (req, res) => {
     }
 });
 
-// --- RUTA NUEVA: LISTA DE USUARIOS ---
+// Datos para la Gráfica de Ingresos (ESTA ES LA QUE TE DABA ERROR 404)
+router.get('/analytics/revenue', async (req, res) => {
+    try {
+        const db = getDb();
+        
+        // Agrupamos transacciones de depósito aprobadas por fecha
+        const revenueData = await db.collection('transactions').aggregate([
+            { 
+                $match: { 
+                    type: 'deposit', 
+                    status: 'approved' 
+                } 
+            },
+            {
+                $group: {
+                    // Formatea la fecha a YYYY-MM-DD para agrupar por día
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    total: { $sum: "$amount" }
+                }
+            },
+            { $sort: { _id: 1 } }, // Ordenar por fecha ascendente
+            { $limit: 30 } // Últimos 30 días con actividad
+        ]).toArray();
+
+        res.status(200).json(revenueData);
+    } catch (e) {
+        console.error("Error en analytics:", e);
+        res.status(500).json({ message: 'Error calculando ingresos.' });
+    }
+});
+
+// Lista de Usuarios (Paginada o limitada)
 router.get('/users', async (req, res) => {
     try {
         const db = getDb();
         const users = await db.collection('users')
             .find({}, { projection: { password: 0, otp: 0, otpExpires: 0 } })
             .sort({ createdAt: -1 })
-            .limit(20)
+            .limit(50) // Traemos los últimos 50 para la tabla
             .toArray();
         res.status(200).json(users);
     } catch (e) {
@@ -54,7 +89,10 @@ router.get('/users', async (req, res) => {
     }
 });
 
-// --- DEPÓSITOS PENDIENTES ---
+// =======================================================================
+//  2. GESTIÓN DE DEPÓSITOS
+// =======================================================================
+
 router.get('/deposits/pending', async (req, res) => {
     try {
         const db = getDb();
@@ -74,7 +112,6 @@ router.get('/deposits/pending', async (req, res) => {
     }
 });
 
-// --- APROBAR DEPÓSITO ---
 router.post('/deposits/approve/:txId', async (req, res) => {
     const { txId } = req.params;
     const session = client.startSession();
@@ -85,7 +122,7 @@ router.post('/deposits/approve/:txId', async (req, res) => {
 
         if (!transaction || transaction.status !== 'pending') {
             await session.abortTransaction();
-            return res.status(404).json({ message: 'Transacción no válida.' });
+            return res.status(404).json({ message: 'Transacción no válida o ya procesada.' });
         }
 
         await db.collection('transactions').updateOne(
@@ -104,13 +141,13 @@ router.post('/deposits/approve/:txId', async (req, res) => {
         res.status(200).json({ message: 'Depósito aprobado.' });
     } catch (e) {
         if (session.inTransaction()) await session.abortTransaction();
+        console.error(e);
         res.status(500).json({ message: 'Error interno.' });
     } finally {
         await session.endSession();
     }
 });
 
-// --- RECHAZAR DEPÓSITO ---
 router.post('/deposits/reject/:txId', async (req, res) => {
     const { txId } = req.params;
     const { reason } = req.body;
@@ -126,7 +163,10 @@ router.post('/deposits/reject/:txId', async (req, res) => {
     }
 });
 
-// --- RETIROS PENDIENTES ---
+// =======================================================================
+//  3. GESTIÓN DE RETIROS
+// =======================================================================
+
 router.get('/withdrawals/pending', async (req, res) => {
     try {
         const db = getDb();
@@ -146,7 +186,6 @@ router.get('/withdrawals/pending', async (req, res) => {
     }
 });
 
-// --- APROBAR RETIRO ---
 router.post('/withdrawals/approve/:reqId', async (req, res) => {
     const { reqId } = req.params;
     const session = client.startSession();
@@ -182,7 +221,6 @@ router.post('/withdrawals/approve/:reqId', async (req, res) => {
     }
 });
 
-// --- RECHAZAR RETIRO ---
 router.post('/withdrawals/reject/:reqId', async (req, res) => {
     const { reqId } = req.params;
     const { reason } = req.body;
@@ -203,9 +241,10 @@ router.post('/withdrawals/reject/:reqId', async (req, res) => {
             { session }
         );
 
+        // Devolver el dinero al usuario
         await db.collection('users').updateOne(
             { _id: new ObjectId(request.userId) },
-            { $inc: { balance: request.amount } }, // Devolver dinero
+            { $inc: { balance: request.amount } }, 
             { session }
         );
         
