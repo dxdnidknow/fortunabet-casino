@@ -1,5 +1,5 @@
 /* ==========================================================================
-   style.css (VERSIÓN DEFINITIVA - CON FOOTER PRO Y CORRECCIONES)
+   style.css (VERSIÓN FINAL DEFINITIVA - 22/11/2025)
    ========================================================================== */
 
 /* ==========================================================================
@@ -143,16 +143,8 @@ a:hover { color: var(--color-primary-light); }
 /* ==========================================================================
    4. LAYOUT DE DEPORTES
    ========================================================================== */
-.main-container { 
-    display: grid; 
-    grid-template-columns: 280px 1fr 350px; /* SidebarIzq - Contenido - Cupón */
-    gap: 24px; 
-    max-width: var(--container-max-width); 
-    margin: 0 auto; 
-    padding: 30px 25px; 
-    align-items: start; 
-    min-height: calc(100vh - 110px); 
-}
+.main-container { display: grid; grid-template-columns: 280px 1fr 350px; gap: calc(var(--spacing-unit) * 3); max-width: var(--container-max-width); margin: 0 auto; padding: calc(var(--spacing-unit) * 4) 25px; align-items: start; min-height: calc(100vh - var(--header-height) - var(--top-bar-height) - 80px); }
+
 .sports-nav { background-color: var(--color-surface-1); border-radius: var(--border-radius-md); border: 1px solid var(--color-border); display: flex; flex-direction: column; max-height: 80vh; }
 .sports-nav .search-container { flex-shrink: 0; }
 .sports-nav .nav-container { overflow-y: auto; flex-grow: 1; }
@@ -257,7 +249,6 @@ a:hover { color: var(--color-primary-light); }
     display: flex; justify-content: center; align-items: center;
 }
 
-/* NUEVA REGLA para el tooltip */
 .input-wrapper .tooltip-trigger {
     position: relative; right: 0; top: 0; width: 50px; height: 100%;
     display: inline-flex; align-items: center; justify-content: center;
@@ -352,13 +343,13 @@ a:hover { color: var(--color-primary-light); }
     text-align: center;
 }
 
-/* --- SECCIÓN 1: MÉTODOS DE PAGO --- */
+/* --- SECCIÓN 1: MÉTODOS DE PAGO (SOLO HOME) --- */
 .footer-payment-section {
-    display: none; 
+    display: none; /* Oculto por defecto en páginas internas */
     margin-bottom: 40px;
 }
 
-/* Solo mostramos los métodos de pago si estamos en la Home (body.home-page) */
+/* Esta clase se agrega al body en index.html */
 body.home-page .footer-payment-section {
     display: block;
 }
@@ -386,18 +377,17 @@ body.home-page .footer-payment-section {
     width: auto;
     object-fit: contain;
     
-    /* ESTO ES LO QUE LOS HACE BLANCOS */
+    /* FILTRO MÁGICO: Los vuelve blancos y brillantes */
     filter: grayscale(100%) brightness(1000%); 
-    
-    opacity: 0.6; 
-    transition: all 0.3s ease;
+    opacity: 0.5; /* Sutil por defecto */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
 }
 
 .payment-logos img:hover {
     filter: none; /* Recupera color original */
-    opacity: 1;
-    transform: translateY(-3px) scale(1.1);
+    opacity: 1;   /* Brillo total */
+    transform: translateY(-3px) scale(1.1); /* Efecto de elevación */
 }
 
 /* --- LÍNEA DIVISORIA --- */
@@ -416,6 +406,9 @@ body.home-page .footer-payment-section {
     align-items: center;
     flex-wrap: wrap;
     gap: 20px;
+    
+    /* FIX: Espacio a la derecha para que no choque con el botón flotante */
+    padding-right: 90px; 
 }
 
 .footer-brand p {
@@ -460,13 +453,16 @@ body.home-page .footer-payment-section {
    10. WIDGET DE AYUDA RÁPIDA
    ========================================================================== */
 .help-trigger-btn { 
-    position: fixed; bottom: 30px; right: 25px; 
+    position: fixed; 
+    bottom: 30px; /* Subido para que no estorbe */
+    right: 25px; 
     width: 50px; height: 50px; border-radius: 50%; 
     background: var(--color-primary); color: #000; 
     border: none; font-size: 1.8rem; 
     display: flex; justify-content: center; align-items: center; 
     cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.3); 
-    z-index: 9999; transition: transform 0.3s ease, background-color 0.3s ease; 
+    z-index: 9999; /* Siempre encima */
+    transition: transform 0.3s ease, background-color 0.3s ease; 
 }
 .help-trigger-btn:hover { transform: scale(1.1) rotate(10deg); background: var(--color-primary-light); }
 
@@ -474,7 +470,7 @@ body.home-page .footer-payment-section {
     position: fixed; bottom: 100px; right: 25px; width: 90%; max-width: 380px; 
     background-color: var(--color-surface-1); border-radius: var(--border-radius-md); 
     box-shadow: 0 10px 40px rgba(0,0,0,0.4); border: 1px solid var(--color-border); 
-    z-index: 999; display: flex; flex-direction: column; overflow: hidden; 
+    z-index: 9999; display: flex; flex-direction: column; overflow: hidden; 
     opacity: 0; transform: translateY(20px); visibility: hidden; 
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
 }
@@ -499,15 +495,13 @@ body.home-page .footer-payment-section {
 .faq-answer p { padding-bottom: 20px; }
 
 /* ==========================================================================
-   11. RESPONSIVIDAD (ACTUALIZADA CON FOOTER)
+   11. RESPONSIVIDAD Y MEDIA QUERIES
    ========================================================================== */
 @media (max-width: 1200px) {
     .main-container { grid-template-columns: 280px 1fr; }
     .bet-slip { grid-column: 1 / -1; position: static; margin-top: 25px; }
 }
 @media (max-width: 1024px) {
-    .main-container { grid-template-columns: 1fr; }
-    .sports-nav:not(.sports-panel__nav) { display: none; } 
     .main-nav, .header-content .auth-wrapper { display: none; }
     .mobile-header-buttons { display: flex; }
     .mobile-menu-toggle { display: flex; }
@@ -534,7 +528,7 @@ body.home-page .footer-payment-section {
     
     /* Responsive Footer */
     .main-footer {
-        padding: 40px 0 80px; /* Espacio extra abajo en móvil */
+        padding: 40px 0 80px; /* Más padding abajo para no chocar con el menú móvil si lo hubiera */
     }
     .payment-logos {
         gap: 25px;
@@ -545,6 +539,7 @@ body.home-page .footer-payment-section {
     .footer-bottom {
         flex-direction: column;
         gap: 15px;
+        padding-right: 0; /* En móvil quitamos el padding derecho porque se apila verticalmente */
     }
     .footer-links {
         gap: 15px;
