@@ -1,3 +1,5 @@
+// Archivo: backend/routes/admin.js (VERSIÓN COMPLETA QUE SOLUCIONA EL 404)
+
 const express = require('express');
 const { getDb, client } = require('../db');
 const { ObjectId } = require('mongodb');
@@ -11,10 +13,10 @@ router.use(authLimiter);
 router.use(authAdmin);
 
 // =======================================================================
-//  1. RUTAS DE ESTADÍSTICAS Y GRÁFICAS (NUEVAS)
+//  1. RUTAS DE ESTADÍSTICAS Y GRÁFICAS (ESTAS SON LAS QUE TE FALTAN)
 // =======================================================================
 
-// Estadísticas Generales (Tarjetas)
+// Estadísticas Generales
 router.get('/stats', async (req, res) => {
     try {
         const db = getDb();
@@ -23,7 +25,7 @@ router.get('/stats', async (req, res) => {
         const pendingDepositsCount = await db.collection('transactions').countDocuments({ type: 'deposit', status: 'pending' });
         const pendingWithdrawalsCount = await db.collection('withdrawalRequests').countDocuments({ status: 'pending' });
         
-        // Calcular balance total de todos los usuarios
+        // Calcular balance total
         const balanceAggr = await db.collection('users').aggregate([
             { $group: { _id: null, total: { $sum: "$balance" } } }
         ]).toArray();
@@ -41,45 +43,36 @@ router.get('/stats', async (req, res) => {
     }
 });
 
-// Datos para la Gráfica de Ingresos
+// Gráfica de Ingresos
 router.get('/analytics/revenue', async (req, res) => {
     try {
         const db = getDb();
-        
-        // Agrupamos transacciones de depósito aprobadas por fecha
         const revenueData = await db.collection('transactions').aggregate([
-            { 
-                $match: { 
-                    type: 'deposit', 
-                    status: 'approved' 
-                } 
-            },
+            { $match: { type: 'deposit', status: 'approved' } },
             {
                 $group: {
-                    // Formatea la fecha a YYYY-MM-DD para agrupar por día
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
                     total: { $sum: "$amount" }
                 }
             },
-            { $sort: { _id: 1 } }, // Ordenar por fecha ascendente
-            { $limit: 30 } // Últimos 30 días con actividad
+            { $sort: { _id: 1 } },
+            { $limit: 30 }
         ]).toArray();
 
         res.status(200).json(revenueData);
     } catch (e) {
-        console.error("Error en analytics:", e);
         res.status(500).json({ message: 'Error calculando ingresos.' });
     }
 });
 
-// Lista de Usuarios (Paginada o limitada)
+// Lista de Usuarios
 router.get('/users', async (req, res) => {
     try {
         const db = getDb();
         const users = await db.collection('users')
             .find({}, { projection: { password: 0, otp: 0, otpExpires: 0 } })
             .sort({ createdAt: -1 })
-            .limit(50) // Traemos los últimos 50 para la tabla
+            .limit(50)
             .toArray();
         res.status(200).json(users);
     } catch (e) {
@@ -88,7 +81,7 @@ router.get('/users', async (req, res) => {
 });
 
 // =======================================================================
-//  2. GESTIÓN DE DEPÓSITOS
+//  2. DEPÓSITOS
 // =======================================================================
 
 router.get('/deposits/pending', async (req, res) => {
@@ -120,7 +113,7 @@ router.post('/deposits/approve/:txId', async (req, res) => {
 
         if (!transaction || transaction.status !== 'pending') {
             await session.abortTransaction();
-            return res.status(404).json({ message: 'Transacción no válida o ya procesada.' });
+            return res.status(404).json({ message: 'Transacción no válida.' });
         }
 
         await db.collection('transactions').updateOne(
@@ -139,7 +132,6 @@ router.post('/deposits/approve/:txId', async (req, res) => {
         res.status(200).json({ message: 'Depósito aprobado.' });
     } catch (e) {
         if (session.inTransaction()) await session.abortTransaction();
-        console.error(e);
         res.status(500).json({ message: 'Error interno.' });
     } finally {
         await session.endSession();
@@ -162,7 +154,7 @@ router.post('/deposits/reject/:txId', async (req, res) => {
 });
 
 // =======================================================================
-//  3. GESTIÓN DE RETIROS
+//  3. RETIROS
 // =======================================================================
 
 router.get('/withdrawals/pending', async (req, res) => {
@@ -239,7 +231,6 @@ router.post('/withdrawals/reject/:reqId', async (req, res) => {
             { session }
         );
 
-        // Devolver el dinero al usuario
         await db.collection('users').updateOne(
             { _id: new ObjectId(request.userId) },
             { $inc: { balance: request.amount } }, 

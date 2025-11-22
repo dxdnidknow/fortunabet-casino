@@ -1,4 +1,4 @@
-<!-- Archivo: components/modals.html (COMPLETO Y CORREGIDO) -->
+<!-- Archivo: components/modals.html (VERSIÓN BOLÍVARES) -->
 
 <div id="register-modal" class="modal-overlay">
 	<div class="auth-container">
@@ -175,6 +175,9 @@
 	</div>
 </div>
 
+<!-- ================================================================== -->
+<!-- MODAL DE DEPÓSITO (ACTUALIZADO A BS.) -->
+<!-- ================================================================== -->
 <div id="deposit-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
@@ -194,6 +197,7 @@
 						<i class="fa-solid fa-building-columns"></i>
 						<span>Transferencia Bs.</span>
 					</button>
+					<!-- Opcional: Mantener USDT si aceptas -->
 					<button class="payment-method-btn" data-method="usdt">
 						<i class="fa-brands fa-bitcoin"></i>
 						<span>Cripto (USDT)</span>
@@ -234,8 +238,9 @@
 
 				<form id="report-payment-form" class="auth-form" style="margin-top: 20px;">
 					<div class="form-group">
-						<label for="deposit-amount">Monto Depositado (USD)</label>
-						<input type="number" id="deposit-amount" name="deposit-amount" placeholder="Ej: 20.00" required>
+						<!-- CAMBIO AQUÍ: Etiqueta y Placeholder en Bs. -->
+						<label for="deposit-amount">Monto a Depositar (Bs.)</label>
+						<input type="number" id="deposit-amount" name="deposit-amount" placeholder="Ej: 500.00" step="0.01" required>
 					</div>
 					<div class="form-group">
 						<label for="deposit-reference">N° de Referencia o Hash</label>
@@ -248,6 +253,9 @@
 	</div>
 </div>
 
+<!-- ================================================================== -->
+<!-- MODAL DE RETIRO (ACTUALIZADO A BS.) -->
+<!-- ================================================================== -->
 <div id="withdraw-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
@@ -258,8 +266,9 @@
 		
         <form id="withdraw-form" class="auth-form">
 			<div class="form-group">
-				<label for="withdraw-amount">Monto a Retirar (USD)</label>
-				<input type="number" id="withdraw-amount" name="withdraw-amount" placeholder="0.00" required>
+				<!-- CAMBIO AQUÍ: Etiqueta y Placeholder en Bs. -->
+				<label for="withdraw-amount">Monto a Retirar (Bs.)</label>
+				<input type="number" id="withdraw-amount" name="withdraw-amount" placeholder="Mínimo Bs. 10.00" step="0.01" required>
 			</div>
 			
 			<div class="form-group">
@@ -273,7 +282,7 @@
 			
 			<p class="small-notice">
 				Los retiros se procesan al método de pago seleccionado. 
-                <a href="#mis-datos" class="edit-method-link account-menu-link" data-target="mis-datos">Administrar métodos</a>.
+                <a href="#" class="edit-method-link account-menu-link" data-target="mis-datos">Administrar métodos</a>.
 			</p>
 			
 			<p id="withdraw-error-message" class="error-message" aria-live="polite"></p>
@@ -322,6 +331,7 @@
 	</div>
 </div>
 
+<!-- AQUÍ ESTÁ EL CAMBIO QUE PEDISTE ANTES PARA EL MODAL DE TELÉFONO TAMBIÉN (PERSISTENTE) -->
 <div id="phone-verification-modal" class="modal-overlay" data-persistent="true">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
