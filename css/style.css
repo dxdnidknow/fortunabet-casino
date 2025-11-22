@@ -715,3 +715,143 @@ input[type="password"]::-webkit-reveal, input[type="password"]::-webkit-clear-bu
     .help-widget { bottom: 0; right: 0; width: 100%; max-width: 100%; height: 80vh; border-radius: 12px 12px 0 0; }
     .help-trigger-btn { bottom: 15px; right: 15px; }
 }
+/* ==========================================================================
+   CORRECCIÓN URGENTE: PANELES LATERALES (Faltaban en la versión anterior)
+   ========================================================================== */
+
+/* 1. MENÚ MÓVIL (Oculto a la derecha) */
+.mobile-menu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 80%;
+    max-width: 320px;
+    height: 100vh;
+    background-color: var(--color-surface-1);
+    z-index: 2000;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    /* ESTO ES LO IMPORTANTE: Lo saca de la pantalla */
+    transform: translateX(100%); 
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border-left: 1px solid var(--color-border);
+    overflow-y: auto;
+}
+
+.mobile-menu.is-open {
+    transform: translateX(0); /* Lo muestra al activarse */
+    box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+}
+
+.mobile-menu-toggle {
+    font-size: 1.5rem;
+    color: #FFFFFF;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: none; /* Por defecto oculto en PC */
+}
+
+.close-menu-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 2001;
+}
+
+/* 2. ESTILOS INTERNOS DEL MENÚ MÓVIL */
+.mobile-menu-auth {
+    padding: 40px 25px 20px;
+}
+
+.mobile-menu-divider {
+    height: 1px;
+    background-color: var(--color-border);
+    margin: 10px 20px;
+}
+
+.mobile-menu-links a {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--color-text-primary);
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 15px 25px;
+    text-decoration: none;
+    transition: var(--main-transition);
+}
+
+.mobile-menu-links a:hover {
+    background-color: var(--color-surface-2);
+    color: var(--color-primary);
+}
+
+.mobile-menu-links a i {
+    width: 25px;
+    text-align: center;
+    color: var(--color-text-secondary);
+}
+
+/* 3. PANEL DE DEPORTES (Oculto a la izquierda en móvil) */
+.sports-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 85%;
+    max-width: 350px;
+    height: 100%;
+    background-color: var(--color-surface-1);
+    z-index: 4000;
+    /* ESTO ES LO IMPORTANTE: Lo saca de la pantalla */
+    transform: translateX(-100%); 
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--color-border);
+}
+
+.sports-panel.is-open {
+    transform: translateX(0); /* Lo muestra al activarse */
+    box-shadow: 5px 0 20px rgba(0,0,0,0.5);
+}
+
+.sports-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.sports-panel__header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.close-panel-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.sports-panel .search-container {
+    padding: 15px;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.sports-panel .sports-panel__nav {
+    flex-grow: 1;
+    overflow-y: auto;
+}
