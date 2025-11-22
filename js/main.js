@@ -625,7 +625,7 @@ async function main() {
         }
     }
     
-    if (window.location.pathname.includes('mi-cuenta.html')) {
+    if (window.location.pathname.includes('mi-cuenta') || document.querySelector('.account-dashboard-grid')) {
         console.log("[DEBUG 2] Detectada página mi-cuenta.html");
         const token = localStorage.getItem('fortunaToken');
         
