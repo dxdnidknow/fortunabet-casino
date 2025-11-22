@@ -143,8 +143,16 @@ a:hover { color: var(--color-primary-light); }
 /* ==========================================================================
    4. LAYOUT DE DEPORTES
    ========================================================================== */
-.main-container { display: grid; grid-template-columns: 280px 1fr 350px; gap: calc(var(--spacing-unit) * 3); max-width: var(--container-max-width); margin: 0 auto; padding: calc(var(--spacing-unit) * 4) 25px; align-items: start; min-height: calc(100vh - var(--header-height) - var(--top-bar-height) - 80px); }
-
+.main-container { 
+    display: grid; 
+    grid-template-columns: 280px 1fr 350px; /* SidebarIzq - Contenido - Cupón */
+    gap: 24px; 
+    max-width: var(--container-max-width); 
+    margin: 0 auto; 
+    padding: 30px 25px; 
+    align-items: start; 
+    min-height: calc(100vh - 110px); 
+}
 .sports-nav { background-color: var(--color-surface-1); border-radius: var(--border-radius-md); border: 1px solid var(--color-border); display: flex; flex-direction: column; max-height: 80vh; }
 .sports-nav .search-container { flex-shrink: 0; }
 .sports-nav .nav-container { overflow-y: auto; flex-grow: 1; }
@@ -346,7 +354,13 @@ a:hover { color: var(--color-primary-light); }
 
 /* --- SECCIÓN 1: MÉTODOS DE PAGO --- */
 .footer-payment-section {
+    display: none; 
     margin-bottom: 40px;
+}
+
+/* Solo mostramos los métodos de pago si estamos en la Home (body.home-page) */
+body.home-page .footer-payment-section {
+    display: block;
 }
 
 .footer-payment-section p {
@@ -446,13 +460,13 @@ a:hover { color: var(--color-primary-light); }
    10. WIDGET DE AYUDA RÁPIDA
    ========================================================================== */
 .help-trigger-btn { 
-    position: fixed; bottom: 10px; right: 25px; 
+    position: fixed; bottom: 30px; right: 25px; 
     width: 50px; height: 50px; border-radius: 50%; 
     background: var(--color-primary); color: #000; 
     border: none; font-size: 1.8rem; 
     display: flex; justify-content: center; align-items: center; 
     cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.3); 
-    z-index: 998; transition: transform 0.3s ease, background-color 0.3s ease; 
+    z-index: 9999; transition: transform 0.3s ease, background-color 0.3s ease; 
 }
 .help-trigger-btn:hover { transform: scale(1.1) rotate(10deg); background: var(--color-primary-light); }
 
@@ -492,6 +506,8 @@ a:hover { color: var(--color-primary-light); }
     .bet-slip { grid-column: 1 / -1; position: static; margin-top: 25px; }
 }
 @media (max-width: 1024px) {
+    .main-container { grid-template-columns: 1fr; }
+    .sports-nav:not(.sports-panel__nav) { display: none; } 
     .main-nav, .header-content .auth-wrapper { display: none; }
     .mobile-header-buttons { display: flex; }
     .mobile-menu-toggle { display: flex; }
