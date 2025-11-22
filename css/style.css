@@ -843,3 +843,32 @@ body.role-admin #admin-panel-link { display: flex !important; }
 .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; color: var(--color-text-secondary); }
 .faq-answer p { padding-bottom: 20px; margin: 0; }
 .faq-question.active i { transform: rotate(180deg); }
+/* ==========================================================================
+   PARCHE FINAL: VISIBILIDAD DEL MENÚ MÓVIL
+   ========================================================================== */
+
+/* 1. Ocultar SIEMPRE por defecto (PC y Pantallas grandes) */
+.mobile-sports-trigger-container {
+    display: none !important;
+}
+
+/* 2. Mostrar SOLO si la pantalla es menor a 1024px (Tablets y Celulares) */
+@media (max-width: 1024px) {
+    .mobile-sports-trigger-container {
+        display: block !important;
+        margin-bottom: 20px;
+    }
+
+    .sport-link-trigger {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--color-surface-2);
+        color: var(--color-primary);
+        padding: 15px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        border: 1px solid var(--color-border);
+    }
+}

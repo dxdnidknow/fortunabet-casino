@@ -1,8 +1,5 @@
-// Archivo: backend/server.js (COMPLETO CON HEALTH CHECK PARA UPTIMEROBOT)
+// Archivo: backend/server.js (CON RUTA DE RESULTADOS /api/scores)
 
-// =======================================================================
-//   CONFIGURACIÓN INICIAL Y DEPENDENCIAS
-// =======================================================================
 require('dotenv').config();
 
 const express = require('express');
@@ -12,78 +9,48 @@ const NodeCache = require('node-cache');
 const { connectDB, getDb } = require('./db');
 const rateLimit = require('express-rate-limit');
 
-// =======================================================================
-//   IMPORTACIÓN DE RUTAS MODULARES
-// =======================================================================
+// Importación de Rutas
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
-
-// =======================================================================
-//   PUERTO DEL SERVIDOR
-// =======================================================================
-// Render inyecta el puerto en process.env.PORT.
 const port = process.env.PORT || 3001; 
 
-// =======================================================================
-//   MIDDLEWARES GENERALES
-// =======================================================================
-
+// Middlewares
 const corsOptions = {
-    origin: '*', // Permite todas las origenes.
+    origin: '*', 
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Authorization',
 };
 app.use(cors(corsOptions));
-
 app.use(express.json());
 app.set('trust proxy', 1);
 
-// Middleware para inyectar la conexión a la BD en cada petición
 app.use((req, res, next) => {
     req.db = getDb();
     next();
 });
 
-// =======================================================================
-//   CONFIGURACIÓN DE SEGURIDAD: RATE LIMITER
-// =======================================================================
+// Rate Limiter
 const sportsApiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { message: 'Demasiadas peticiones a la API de deportes. Intente de nuevo en 15 minutos.' }
+    message: { message: 'Demasiadas peticiones a la API de deportes.' }
 });
 
-// =======================================================================
-//   CONFIGURACIÓN DE API DE DEPORTES
-// =======================================================================
+// API KEY
 const API_KEY = process.env.ODDS_API_KEY;
-if (!API_KEY) { console.error('❌ Error: La variable de entorno ODDS_API_KEY no está definida.'); process.exit(1); }
+if (!API_KEY) { console.error('❌ Error: Falta ODDS_API_KEY.'); process.exit(1); }
 const eventsCache = new NodeCache({ stdTTL: 600 });
 
+// Rutas de Salud (UptimeRobot)
+app.get('/', (req, res) => { res.status(200).send('Backend de FortunaBet está en línea 🟢'); });
+app.get('/health', (req, res) => { res.status(200).json({ status: 'ok', timestamp: new Date() }); });
 
-// =======================================================================
-//   RUTAS DE SALUD (HEALTH CHECK) - ¡NUEVO PARA UPTIMEROBOT!
-// =======================================================================
-// Esta es la ruta que debes poner en UptimeRobot: https://fortunabet-api.onrender.com/
-app.get('/', (req, res) => {
-    res.status(200).send('Backend de FortunaBet está en línea 🟢');
-});
-
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date() });
-});
-
-
-// =======================================================================
-//   RUTAS DE LA APLICACIÓN
-// =======================================================================
-
-// --- Rutas Públicas (Autenticación y Deportes) ---
+// --- RUTAS ---
 app.use('/api', authRoutes);
 
 app.get('/api/sports', sportsApiLimiter, async (req, res) => {
@@ -118,59 +85,45 @@ app.get('/api/event/:sportKey/:eventId', sportsApiLimiter, (req, res) => {
     }
     res.status(404).json({ message: 'Evento no encontrado o caché expirado.' });
 });
-// --- RUTA NUEVA: RESULTADOS REALES ---
+
+// --- NUEVA RUTA: RESULTADOS (SCORES) ---
 app.get('/api/scores', sportsApiLimiter, async (req, res) => {
     try {
-        // Intentamos obtener del caché primero (dura 30 minutos)
+        // Caché de 30 minutos para no gastar la API
         const cachedScores = eventsCache.get('allScores');
         if (cachedScores) { return res.json(cachedScores); }
 
-        // Pedimos resultados de fútbol (puedes agregar más deportes separados por comas)
-        // daysFrom: 3 (Resultados de los últimos 3 días)
-        const response = await axios.get('https://api.the-odds-api.com/v4/sports/soccer_epl/scores', { // Ejemplo: Premier League
+        // Pide resultados de fútbol (puedes cambiar 'soccer_epl' por otros deportes)
+        const response = await axios.get('https://api.the-odds-api.com/v4/sports/soccer_epl/scores', { 
             params: { 
                 apiKey: API_KEY, 
-                daysFrom: 3,
+                daysFrom: 3, // Últimos 3 días
                 dateFormat: 'iso'
             }
         });
 
-        // Guardamos en caché
-        eventsCache.set('allScores', response.data, 1800); // 1800 segundos = 30 min
+        eventsCache.set('allScores', response.data, 1800); 
         res.json(response.data);
     } catch (error) {
         handleApiError(error, res);
     }
 });
 
-// --- Rutas Protegidas de Usuario ---
 app.use('/api/user', userRoutes);
-
-// --- Rutas Protegidas de Administrador ---
 app.use('/api/admin', adminRoutes);
 
-// =======================================================================
-//   FUNCIÓN DE MANEJO DE ERRORES
-// =======================================================================
 function handleApiError(error, res) {
     if (error.response) {
-        console.error(`[ERROR] API Externa: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
-        // Usamos el status original de la API externa
+        console.error(`[ERROR API]: ${error.response.status}`, error.response.data);
         res.status(error.response.status).json(error.response.data);
     } else {
-        console.error(`[ERROR] Servidor Interno: ${error.message}`);
+        console.error(`[ERROR SERVER]: ${error.message}`);
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 }
 
-// =======================================================================
-//   INICIO DEL SERVIDOR
-// =======================================================================
 connectDB().then(() => {
     app.listen(port, '0.0.0.0', () => {
-        console.log('-------------------------------------------');
-        console.log(`🚀 Servidor backend de FortunaBet`);
-        console.log(`   Escuchando en el puerto: ${port}`);
-        console.log('-------------------------------------------');
+        console.log(`🚀 Servidor FortunaBet corriendo en puerto: ${port}`);
     });
 });
