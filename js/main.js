@@ -1,4 +1,4 @@
-// Archivo: js/main.js (CORREGIDO URL CHECK)
+// Archivo: js/main.js (PROTEGIDO Y CORREGIDO)
 
 import { API_BASE_URL } from './config.js';
 import { addBet, initBetSlip, subscribe, getBets } from './bet.js';
@@ -259,7 +259,7 @@ function showInitialMessage() {
     const liveContainer = document.getElementById('live-events-container');
     const upcomingContainer = document.getElementById('upcoming-events-container');
     
-    // Diseño atractivo para el estado inicial
+    // NUEVO DISEÑO BONITO PARA DEPORTES
     const emptyStateHtml = `
         <div class="initial-message" style="text-align: center; padding: 60px 20px;">
             <i class="fa-solid fa-trophy" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 20px; opacity: 0.8;"></i>
@@ -279,7 +279,7 @@ function showInitialMessage() {
         liveContainer.innerHTML = emptyStateHtml;
     }
     if (upcomingContainer) {
-        upcomingContainer.innerHTML = ''; // Limpiamos el otro contenedor
+        upcomingContainer.innerHTML = '';
     }
 }
 
@@ -451,7 +451,6 @@ function setupEventListeners() {
             document.getElementById('sports-panel')?.classList.remove('is-open');
             document.body.classList.remove('panel-open');
 
-            // CAMBIO: Usamos includes('deportes') sin la extensión .html para mayor compatibilidad
             if (!window.location.pathname.includes('deportes')) {
                 window.location.href = `deportes.html?sport=${sportLink.dataset.sportKey}`;
                 return;
@@ -630,7 +629,6 @@ async function main() {
     setupEventListeners();
     subscribe(updateSelectedOddsUI);
 
-    // CAMBIO: Usamos includes('deportes') para que funcione con y sin .html
     if (window.location.pathname.includes('deportes')) {
         const urlParams = new URLSearchParams(window.location.search);
         const sportKeyFromUrl = urlParams.get('sport');
@@ -642,7 +640,6 @@ async function main() {
         }
     }
     
-    // CAMBIO: Añadida verificación extra por si falla el path check
     if (window.location.pathname.includes('mi-cuenta') || document.querySelector('.account-dashboard-grid')) {
         const token = localStorage.getItem('fortunaToken');
         
@@ -650,6 +647,16 @@ async function main() {
             window.location.href = '/index.html';
         } else {
             await initAccountDashboard(); 
+        }
+    }
+
+    // PROTECCIÓN DE LA PÁGINA DE RESULTADOS
+    if (window.location.pathname.includes('resultados')) {
+        const token = localStorage.getItem('fortunaToken');
+        
+        if (!token) {
+            // Redirigir si no está logueado
+            window.location.href = '/index.html';
         }
     }
 
