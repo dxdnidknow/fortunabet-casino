@@ -1,4 +1,4 @@
-// --- ARCHIVO COMPLETO Y CORREGIDO: js/loader.js ---
+// --- ARCHIVO: js/loader.js (CORREGIDO RUTAS ABSOLUTAS) ---
 
 /**
  * Carga componentes HTML reutilizables en elementos específicos del DOM.
@@ -8,9 +8,6 @@
 async function loadComponent(url, elementId) {
     const element = document.getElementById(elementId);
     if (!element) {
-        // No imprimimos un error si el placeholder no existe, 
-        // ya que no todas las páginas necesitan todos los componentes.
-        // console.warn(`Placeholder '${elementId}' no encontrado en esta página.`);
         return; 
     }
     try {
@@ -22,18 +19,20 @@ async function loadComponent(url, elementId) {
         element.innerHTML = text;
     } catch (error) {
         console.error('Error cargando componente:', error);
-        element.innerHTML = `<p style="color: #e74c3c; text-align: center;">Error al cargar contenido.</p>`;
+        // Opcional: Mostrar mensaje discreto o nada en producción
+        // element.innerHTML = `<p style="color: #e74c3c; text-align: center; font-size: 0.8rem;">Error de carga.</p>`;
     }
 }
 
 // Esta función carga todos los componentes compartidos
 export async function initSharedComponents() {
+    // NOTA: Todas las rutas ahora empiezan con "/" para evitar errores 404 en subpáginas
     await Promise.all([
-        loadComponent('components/header.html', 'header-placeholder'),
-        loadComponent('components/modals.html', 'modals-placeholder'),
-        loadComponent('components/footer.html', 'footer-placeholder'),
-        loadComponent('components/mobile-menu.html', 'mobile-menu-placeholder'),
-        loadComponent('components/sports-panel.html', 'sports-panel-placeholder'),
-        loadComponent('components/help-widget.html', 'help-widget-placeholder') // AÑADE ESTA LÍNEA
+        loadComponent('/components/header.html', 'header-placeholder'),
+        loadComponent('/components/modals.html', 'modals-placeholder'),
+        loadComponent('/components/footer.html', 'footer-placeholder'),
+        loadComponent('/components/mobile-menu.html', 'mobile-menu-placeholder'),
+        loadComponent('/components/sports-panel.html', 'sports-panel-placeholder'),
+        loadComponent('/components/help-widget.html', 'help-widget-placeholder')
     ]);
 }

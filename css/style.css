@@ -368,21 +368,22 @@ a:hover { color: var(--color-primary-light); }
 }
 
 .payment-logos img {
-    height: 35px; /* Un poco más grandes para que se vean bien */
+    height: 35px;
     width: auto;
     object-fit: contain;
     
-    /* FILTRO MÁGICO: Los vuelve blancos y brillantes */
+    /* ESTO ES LO QUE LOS HACE BLANCOS */
     filter: grayscale(100%) brightness(1000%); 
-    opacity: 0.5; /* Sutil por defecto */
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    opacity: 0.6; 
+    transition: all 0.3s ease;
     cursor: pointer;
 }
 
 .payment-logos img:hover {
     filter: none; /* Recupera color original */
-    opacity: 1;   /* Brillo total */
-    transform: translateY(-3px) scale(1.1); /* Efecto de elevación */
+    opacity: 1;
+    transform: translateY(-3px) scale(1.1);
 }
 
 /* --- LÍNEA DIVISORIA --- */
