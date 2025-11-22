@@ -22,15 +22,65 @@
 
         <div class="body-container">
             <div class="page-container">
-                <h1 class="page-title">Resultados de Partidos</h1>
+                <h1 class="page-title">Resultados Recientes</h1>
                 
+                <!-- Filtros de fecha y deporte (Visuales) -->
+                <div class="results-filters" style="display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
+                    <button class="filter-btn active"><i class="fa-solid fa-calendar-day"></i> Hoy</button>
+                    <button class="filter-btn"><i class="fa-solid fa-calendar-minus"></i> Ayer</button>
+                    <button class="filter-btn"><i class="fa-solid fa-futbol"></i> Fútbol</button>
+                    <button class="filter-btn"><i class="fa-solid fa-basketball"></i> Baloncesto</button>
+                </div>
+
                 <div class="results-container">
-                    <!-- Próximamente, el JavaScript llenará esta sección con resultados reales -->
-                    <div class="initial-message" style="padding: 40px 20px;">
-                        <i class="fa-solid fa-chart-line" style="margin-bottom: 15px;"></i>
-                        <h2>Resultados Próximamente</h2>
-                        <p>Esta sección mostrará los resultados de los partidos finalizados.</p>
+                    
+                    <!-- Ejemplo de Tarjeta de Resultado 1 -->
+                    <div class="result-card">
+                        <div class="result-league">
+                            <img src="/images/logos/premier-league.png" alt="PL" style="height: 20px; margin-right: 10px; vertical-align: middle;">
+                            Premier League
+                        </div>
+                        <div class="result-teams">
+                            <span>Manchester City</span>
+                            <span class="result-score win">3 - 1</span>
+                            <span>Arsenal</span>
+                        </div>
+                        <div class="result-date">Finalizado - 22 Nov</div>
                     </div>
+
+                    <!-- Ejemplo de Tarjeta de Resultado 2 -->
+                    <div class="result-card">
+                        <div class="result-league">
+                            <i class="fa-solid fa-basketball" style="margin-right: 10px; color: var(--color-primary);"></i>
+                            NBA
+                        </div>
+                        <div class="result-teams">
+                            <span>Lakers</span>
+                            <span class="result-score loss">105 - 112</span>
+                            <span>Warriors</span>
+                        </div>
+                        <div class="result-date">Finalizado - Ayer</div>
+                    </div>
+
+                    <!-- Ejemplo de Tarjeta de Resultado 3 -->
+                    <div class="result-card">
+                        <div class="result-league">
+                            <img src="/images/logos/la-liga.png" alt="LL" style="height: 20px; margin-right: 10px; vertical-align: middle;">
+                            La Liga
+                        </div>
+                        <div class="result-teams">
+                            <span>Real Madrid</span>
+                            <span class="result-score win">2 - 0</span>
+                            <span>Valencia</span>
+                        </div>
+                        <div class="result-date">Finalizado - 21 Nov</div>
+                    </div>
+
+                    <!-- Mensaje final -->
+                    <div style="text-align: center; margin-top: 40px; color: var(--color-text-secondary);">
+                        <p>Mostrando los últimos resultados destacados.</p>
+                    </div>
+
                 </div>
             </div>
         </div>

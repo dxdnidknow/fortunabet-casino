@@ -533,7 +533,9 @@ body.home-page .footer-payment-section {
     .header-left { flex-grow: 0; }
     .main-container { grid-template-columns: 1fr; min-height: 0; }
     .sports-nav:not(.sports-panel__nav) { display: none; }
-    .mobile-sports-trigger-container { display: block; }
+    .mobile-sports-trigger-container {
+    display: block;
+}
 }
 @media (max-width: 768px) {
     body { font-size: 15px; }
