@@ -22,15 +22,83 @@
 
         <div class="body-container">
             <div class="page-container">
-                <h1 class="page-title">Resultados de Partidos</h1>
                 
-                <div class="results-container">
-                    <!-- Próximamente, el JavaScript llenará esta sección con resultados reales -->
-                    <div class="initial-message" style="padding: 40px 20px;">
-                        <i class="fa-solid fa-chart-line" style="margin-bottom: 15px;"></i>
-                        <h2>Resultados Próximamente</h2>
-                        <p>Esta sección mostrará los resultados de los partidos finalizados.</p>
+                <div class="results-header">
+                    <h1 class="page-title" style="border:none; margin:0;">Resultados</h1>
+                    <div class="date-filter">
+                        <button class="filter-pill"><i class="fa-solid fa-calendar-days"></i> Ayer</button>
+                        <button class="filter-pill active">Hoy</button>
+                        <input type="date" class="date-picker-input">
                     </div>
+                </div>
+
+                <!-- Filtros de Deporte -->
+                <div class="sport-tabs">
+                    <button class="sport-tab active"><i class="fa-solid fa-futbol"></i> Fútbol</button>
+                    <button class="sport-tab"><i class="fa-solid fa-basketball"></i> Baloncesto</button>
+                    <button class="sport-tab"><i class="fa-solid fa-baseball-bat-ball"></i> Béisbol</button>
+                    <button class="sport-tab"><i class="fa-solid fa-table-tennis-paddle-ball"></i> Tenis</button>
+                </div>
+                
+                <div class="results-list">
+                    
+                    <!-- Ejemplo de Resultado 1 -->
+                    <div class="match-result-card">
+                        <div class="match-header">
+                            <span class="league-name"><img src="/images/logos/premier-league.png" onerror="this.style.display='none'" class="mini-logo"> Premier League</span>
+                            <span class="match-status finished">Finalizado</span>
+                        </div>
+                        <div class="match-content">
+                            <div class="team home">
+                                <span class="team-name">Manchester City</span>
+                                <div class="team-logo-placeholder">MC</div> 
+                            </div>
+                            <div class="score-board">
+                                <span class="score">3</span>
+                                <span class="divider">-</span>
+                                <span class="score">1</span>
+                            </div>
+                            <div class="team away">
+                                <div class="team-logo-placeholder">MU</div>
+                                <span class="team-name">Man. United</span>
+                            </div>
+                        </div>
+                        <div class="match-footer">
+                            <span><i class="fa-regular fa-clock"></i> 03/11/2025</span>
+                        </div>
+                    </div>
+
+                    <!-- Ejemplo de Resultado 2 -->
+                    <div class="match-result-card">
+                        <div class="match-header">
+                            <span class="league-name"><i class="fa-solid fa-trophy"></i> La Liga</span>
+                            <span class="match-status finished">Finalizado</span>
+                        </div>
+                        <div class="match-content">
+                            <div class="team home">
+                                <span class="team-name">Real Madrid</span>
+                                <div class="team-logo-placeholder">RM</div>
+                            </div>
+                            <div class="score-board">
+                                <span class="score">2</span>
+                                <span class="divider">-</span>
+                                <span class="score">2</span>
+                            </div>
+                            <div class="team away">
+                                <div class="team-logo-placeholder">FCB</div>
+                                <span class="team-name">Barcelona</span>
+                            </div>
+                        </div>
+                        <div class="match-footer">
+                            <span><i class="fa-regular fa-clock"></i> 03/11/2025</span>
+                        </div>
+                    </div>
+
+                    <!-- Mensaje de "No más resultados" -->
+                    <div class="no-more-results">
+                        <p>No hay más resultados para mostrar el día de hoy.</p>
+                    </div>
+
                 </div>
             </div>
         </div>
