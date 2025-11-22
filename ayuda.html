@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Ayuda - FortunaBet</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" href="/favicon.ico">
+</head>
+<body>
+    <div id="page-backdrop" class="page-backdrop"></div>
+    <div id="page-wrapper">
+        <div id="header-placeholder"></div>
+
+        <div class="body-container">
+            <div class="page-container">
+                <h1 class="page-title"><i class="fa-solid fa-circle-question"></i> Centro de Ayuda</h1>
+                
+                <div class="legal-content">
+                    <p class="lead">Encuentra respuestas rápidas a las dudas más comunes sobre depósitos, retiros y reglas de juego.</p>
+
+                    <div class="faq-container">
+                        <!-- Pregunta 1 -->
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                ¿Cómo recargo saldo en mi cuenta?
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Ve a la sección "Mi Cuenta", haz clic en "Depositar" y selecciona tu método preferido (Pago Móvil, Transferencia o USDT). Realiza el pago y reporta la transacción con el número de referencia. Tu saldo se acreditará una vez verificado.</p>
+                            </div>
+                        </div>
+
+                        <!-- Pregunta 2 -->
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                ¿Cuánto tiempo tardan los retiros?
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Los retiros se procesan en un plazo máximo de 24 horas hábiles. Asegúrate de tener tus datos personales y número de teléfono verificados antes de solicitar un retiro.</p>
+                            </div>
+                        </div>
+
+                        <!-- Pregunta 3 -->
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                ¿Cuál es el monto mínimo de retiro?
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </button>
+                            <div class="faq-answer">
+                                <p>El monto mínimo para retirar es de Bs. 10.00 (o su equivalente en la moneda de tu cuenta).</p>
+                            </div>
+                        </div>
+
+                        <!-- Pregunta 4 -->
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                ¿Qué pasa si se suspende un partido?
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Si un partido se suspende y no se reanuda dentro de las 24 horas siguientes, las apuestas realizadas a ese evento serán anuladas y el dinero apostado será devuelto a tu saldo.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="footer-placeholder"></div>
+    </div>
+
+    <!-- Componentes -->
+    <div id="mobile-menu-placeholder"></div>
+    <div id="sports-panel-placeholder"></div>
+    <div id="modals-placeholder"></div>
+    <div id="help-widget-placeholder"></div>
+    <script type="module" src="/js/main.js"></script>
+    
+    <!-- Script simple para el acordeón de esta página -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const faqs = document.querySelectorAll('.faq-question');
+            faqs.forEach(faq => {
+                faq.addEventListener('click', () => {
+                    faq.classList.toggle('active');
+                    const answer = faq.nextElementSibling;
+                    if (faq.classList.contains('active')) {
+                        answer.style.maxHeight = answer.scrollHeight + 'px';
+                    } else {
+                        answer.style.maxHeight = null;
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

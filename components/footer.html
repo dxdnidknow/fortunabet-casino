@@ -1,14 +1,26 @@
-<!-- ======================================================================= -->
-<!--             ARCHIVO components/footer.html (COMPLETO)                   -->
-<!-- ======================================================================= -->
-
+<!-- components/footer.html -->
 <footer class="main-footer">
     <div class="footer-content">
-        <p>&copy; 2025 FortunaBet. Todos los derechos reservados.</p>
+        <div class="footer-brand">
+            <p>&copy; 2025 FortunaBet. Todos los derechos reservados.</p>
+        </div>
+        
+        <!-- Sección de Logos Mejorada -->
+        <div class="payment-methods-footer">
+            <p>Métodos de pago aceptados</p>
+            <div class="payment-logos">
+                <!-- Asegúrate de que las imágenes existan en tu carpeta images/logos/ -->
+                <img src="/images/logos/pago-movil.png" alt="Pago Móvil" title="Pago Móvil">
+                <img src="/images/logos/mercantil.png" alt="Mercantil" title="Banco Mercantil">
+                <img src="/images/logos/banesco.png" alt="Banesco" title="Banesco">
+                <img src="/images/logos/usdt.png" alt="USDT" title="Tether (USDT)">
+            </div>
+        </div>
+
         <div class="footer-links">
-            <a href="ayuda.html">Ayuda</a>
-            <a href="terminos.html">Términos y Condiciones</a>
-            <a href="contacto.html">Contacto</a>
+            <a href="/ayuda.html">Centro de Ayuda</a>
+            <a href="/terminos.html">Términos y Condiciones</a>
+            <!-- Eliminamos 'Contacto' de aquí porque ya está en el Header y en el botón flotante -->
         </div>
     </div>
 </footer>

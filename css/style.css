@@ -1431,3 +1431,75 @@ body.role-admin #admin-panel-link {
 .verification-notice i {
     margin-right: 5px;
 }
+/* ==========================================================================
+   MEJORAS DEL FOOTER
+   ========================================================================== */
+.payment-methods-footer {
+    text-align: center;
+    margin: 0 20px;
+}
+.payment-methods-footer p {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.payment-logos img {
+    height: 30px; /* Tamaño uniforme */
+    width: auto;
+    margin: 0 10px;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    
+    /* EL TRUCO MAGICO: Convierte cualquier logo negro/color a Blanco */
+    filter: grayscale(100%) brightness(0) invert(1); 
+}
+.payment-logos img:hover {
+    opacity: 1;
+    filter: none; /* Al pasar el mouse, recuperan su color original */
+}
+
+/* ==========================================================================
+   ESTILOS PARA PÁGINAS LEGALES Y AYUDA
+   ========================================================================== */
+.legal-content {
+    background-color: var(--color-surface-1);
+    padding: 40px;
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--color-border);
+    line-height: 1.8;
+}
+
+.legal-content h2 { color: var(--color-primary); margin-top: 30px; margin-bottom: 15px; font-size: 1.5rem; }
+.legal-content h3 { color: var(--color-text-primary); margin-top: 20px; margin-bottom: 10px; font-size: 1.2rem; }
+.legal-content p { margin-bottom: 15px; color: var(--color-text-secondary); text-align: justify; }
+.legal-content ul { margin-bottom: 15px; padding-left: 20px; color: var(--color-text-secondary); }
+.legal-content li { margin-bottom: 8px; }
+
+/* Acordeón para Ayuda */
+.faq-container { margin-top: 20px; }
+.faq-item { border-bottom: 1px solid var(--color-border); }
+.faq-question {
+    width: 100%;
+    text-align: left;
+    padding: 20px 0;
+    background: none;
+    border: none;
+    color: var(--color-text-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.faq-question:hover { color: var(--color-primary); }
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    color: var(--color-text-secondary);
+}
+.faq-answer p { padding-bottom: 20px; margin: 0; }
+.faq-question.active i { transform: rotate(180deg); }
