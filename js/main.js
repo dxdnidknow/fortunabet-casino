@@ -1,4 +1,4 @@
-// Archivo: js/main.js (COMPLETO Y CORREGIDO FINAL)
+// Archivo: js/main.js (CORREGIDO URL CHECK)
 
 import { API_BASE_URL } from './config.js';
 import { addBet, initBetSlip, subscribe, getBets } from './bet.js';
@@ -435,7 +435,8 @@ function setupEventListeners() {
             document.getElementById('sports-panel')?.classList.remove('is-open');
             document.body.classList.remove('panel-open');
 
-            if (!window.location.pathname.includes('deportes.html')) {
+            // CAMBIO: Usamos includes('deportes') sin la extensión .html para mayor compatibilidad
+            if (!window.location.pathname.includes('deportes')) {
                 window.location.href = `deportes.html?sport=${sportLink.dataset.sportKey}`;
                 return;
             }
@@ -582,7 +583,6 @@ function setupEventListeners() {
 }
 
 async function main() {
-    console.log("[DEBUG 1] Ejecutando main.js");
     document.body.classList.remove('modal-open', 'panel-open');
     await initSharedComponents();
     
@@ -614,7 +614,8 @@ async function main() {
     setupEventListeners();
     subscribe(updateSelectedOddsUI);
 
-    if (window.location.pathname.includes('deportes.html')) {
+    // CAMBIO: Usamos includes('deportes') para que funcione con y sin .html
+    if (window.location.pathname.includes('deportes')) {
         const urlParams = new URLSearchParams(window.location.search);
         const sportKeyFromUrl = urlParams.get('sport');
         if (sportKeyFromUrl) {
@@ -625,17 +626,14 @@ async function main() {
         }
     }
     
+    // CAMBIO: Añadida verificación extra por si falla el path check
     if (window.location.pathname.includes('mi-cuenta') || document.querySelector('.account-dashboard-grid')) {
-        console.log("[DEBUG 2] Detectada página mi-cuenta.html");
         const token = localStorage.getItem('fortunaToken');
         
         if (!token) {
-            console.log("[DEBUG 3] No hay token, redirigiendo a index.html");
             window.location.href = '/index.html';
         } else {
-            console.log("[DEBUG 4] Token encontrado, procediendo a cargar el dashboard...");
             await initAccountDashboard(); 
-            console.log("[DEBUG 7] initAccountDashboard ha terminado.");
         }
     }
 

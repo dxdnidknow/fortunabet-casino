@@ -1,3 +1,5 @@
+// Archivo: js/account.js (CORREGIDO: ADMIN LINK + FIX ESCRITORIO)
+
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
 import { openModal, closeModal } from './modal.js';
@@ -43,11 +45,8 @@ function formatPhoneNumber(event) {
 
 export async function loadUserData() {
     try {
-        // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
         const userData = await fetchWithAuth(`${API_BASE_URL}/user/user-data`);
         
-        // CAMBIO IMPORTANTE: Usamos querySelectorAll para actualizar TODAS las instancias 
-        // del nombre y balance (tanto en móvil como en escritorio si existen duplicados)
         document.querySelectorAll('.data-username').forEach(element => {
             element.textContent = userData.username;
         });
@@ -56,7 +55,6 @@ export async function loadUserData() {
             element.textContent = `Bs. ${userData.balance.toFixed(2)}`;
         });
 
-        // El balance del dashboard principal
         const dashboardBalance = document.getElementById('dashboard-balance');
         if(dashboardBalance) dashboardBalance.textContent = `Bs. ${userData.balance.toFixed(2)}`;
         
@@ -75,7 +73,6 @@ export async function loadUserData() {
             renderPhoneVerificationStatus(userData.personalInfo.isPhoneVerified, userData.personalInfo.phone);
         }
         
-        // --- LÓGICA DE HABILITACIÓN/DESHABILITACIÓN DE BOTONES ---
         const depositBtn = document.getElementById('deposit-btn-sidebar');
         const withdrawBtn = document.getElementById('withdraw-btn-sidebar');
         const notice = document.querySelector('.verification-notice');
@@ -134,7 +131,6 @@ export async function loadPayoutMethods() {
     if (!listContainer) return;
     
     try {
-        // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
         const methods = await fetchWithAuth(`${API_BASE_URL}/user/payout-methods`); 
 
         listContainer.innerHTML = ''; 
@@ -169,7 +165,7 @@ export async function loadPayoutMethods() {
 }
 
 // =======================================================================
-//  3. HISTORIAL DE APUESTAS
+//  3. HISTORIAL DE APUESTAS Y TRANSACCIONES
 // =======================================================================
 
 export async function renderBetHistory() {
@@ -180,7 +176,6 @@ export async function renderBetHistory() {
     const emptyMsgFull = document.querySelector('#historial-apuestas .empty-message-bets');
 
     try {
-        // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
         const betHistory = await fetchWithAuth(`${API_BASE_URL}/user/get-bets`);
 
         if (betHistory.length === 0) {
@@ -194,7 +189,6 @@ export async function renderBetHistory() {
 
         historyLists.forEach(list => {
             list.innerHTML = '';
-            
             const isFullHistory = list.classList.contains('full-history');
             const historyToShow = isFullHistory ? betHistory : betHistory.slice(0, 5); 
 
@@ -218,14 +212,8 @@ export async function renderBetHistory() {
     } catch (error) {
         console.error(error);
         showToast(error.message, 'error');
-        if (emptyMsgRecent) emptyMsgRecent.textContent = 'Error al cargar apuestas.';
-        if (emptyMsgFull) emptyMsgFull.textContent = 'Error al cargar historial.';
     }
 }
-
-// =======================================================================
-//  4. HISTORIAL DE TRANSACCIONES
-// =======================================================================
 
 export async function renderTransactionHistory() {
     const listContainer = document.querySelector('#historial-transacciones .history-list');
@@ -234,7 +222,6 @@ export async function renderTransactionHistory() {
     const emptyMsg = document.querySelector('.empty-message-transactions');
 
     try {
-        // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
         const transactions = await fetchWithAuth(`${API_BASE_URL}/user/transactions`); 
 
         if (emptyMsg) emptyMsg.style.display = 'none';
@@ -274,13 +261,11 @@ export async function renderTransactionHistory() {
     } catch (error) {
         console.error(error);
         showToast(error.message, 'error');
-        if (emptyMsg) emptyMsg.textContent = 'Error al cargar transacciones.';
     }
 }
 
-
 // =======================================================================
-//  5. LISTENERS Y MANEJADORES DE EVENTOS
+//  5. LISTENERS (CORREGIDO EL BLOQUEO DE ENLACES)
 // =======================================================================
 
 function handlePayoutMethodChange() {
@@ -324,7 +309,6 @@ function handlePayoutMethodChange() {
                 data.details.name = formData.get('name');
             }
 
-            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
             await fetchWithAuth(`${API_BASE_URL}/user/payout-methods`, {
                 method: 'POST',
                 body: JSON.stringify(data)
@@ -372,7 +356,6 @@ function handleUserDataSubmit() {
                 phone: phoneValue ? `+58${phoneValue}` : ''
             };
 
-            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
             const result = await fetchWithAuth(`${API_BASE_URL}/user/user-data`, {
                 method: 'PUT',
                 body: JSON.stringify(data)
@@ -427,12 +410,9 @@ async function handlePhoneVerification() {
         showToast('Solicitando código de verificación...');
         
         try {
-            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
             const data = await fetchWithAuth(`${API_BASE_URL}/user/request-phone-verification`, { method: 'POST' });
-            
             showToast(data.message, 'success');
             openModal(document.getElementById('phone-verification-modal'));
-            
         } catch (error) {
             showToast(error.message, 'error');
             verifyBtn.disabled = false;
@@ -450,7 +430,6 @@ async function handlePhoneVerification() {
         errorEl.textContent = '';
 
         try {
-            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
             const data = await fetchWithAuth(`${API_BASE_URL}/user/verify-phone-code`, {
                 method: 'POST',
                 body: JSON.stringify({ code: codeInput.value })
@@ -477,7 +456,6 @@ function handlePasswordChange() {
 
     passwordChangeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         const currentPasswordInput = document.getElementById('current-password');
         const newPasswordInput = document.getElementById('new-password');
         const confirmNewPasswordInput = document.getElementById('confirm-new-password');
@@ -496,7 +474,7 @@ function handlePasswordChange() {
             return;
         }
         if (!passwordRegex.test(newPassword)) {
-            showToast('La nueva contraseña no es segura. Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.', 'error');
+            showToast('La nueva contraseña no es segura.', 'error');
             return;
         }
 
@@ -505,15 +483,12 @@ function handlePasswordChange() {
         submitButton.innerHTML = '<span class="spinner-sm"></span> Guardando...';
 
         try {
-            // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
             const data = await fetchWithAuth(`${API_BASE_URL}/user/change-password`, {
                 method: 'POST',
                 body: JSON.stringify({ currentPassword, newPassword })
             });
-            
             showToast(data.message, 'success');
             passwordChangeForm.reset();
-
         } catch (error) {
             showToast(error.message, 'error');
         } finally {
@@ -553,12 +528,17 @@ function handle2FASetup() {
 
 export async function initAccountDashboard() {
     
+    // --- CORRECCIÓN PARA EL BOTÓN DE ADMIN ---
     document.querySelectorAll('.account-menu-link').forEach(link => {
         link.addEventListener('click', (e) => {
-            e.preventDefault();
             const targetId = e.currentTarget.dataset.target;
 
-            if (!targetId) return;
+            // Si el enlace NO tiene data-target (como el de Admin o Cerrar Sesión),
+            // NO prevenimos el comportamiento por defecto y salimos.
+            if (!targetId) return; 
+
+            // Si SÍ tiene data-target, es una pestaña interna: prevenimos navegación.
+            e.preventDefault();
 
             document.querySelectorAll('.account-section').forEach(section => section.classList.remove('active'));
             const targetSection = document.getElementById(targetId);
@@ -601,7 +581,6 @@ export async function initAccountDashboard() {
         }
     });
 
-
     document.getElementById('payout-methods-list')?.addEventListener('click', async (e) => {
         const deleteBtn = e.target.closest('.delete-method-btn');
         const setPrimaryBtn = e.target.closest('.set-primary-btn');
@@ -610,7 +589,6 @@ export async function initAccountDashboard() {
             const methodId = deleteBtn.dataset.id;
              if (!confirm('¿Estás seguro de que quieres eliminar este método de retiro?')) return;
             try {
-                // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
                 await fetchWithAuth(`${API_BASE_URL}/user/payout-methods/${methodId}`, { method: 'DELETE' }); 
                 showToast('Método eliminado con éxito.', 'success');
                 loadPayoutMethods();
@@ -620,7 +598,6 @@ export async function initAccountDashboard() {
         } else if (setPrimaryBtn) {
             const methodId = setPrimaryBtn.dataset.id;
             try {
-                // CORRECCIÓN: fetchWithAuth devuelve los datos directamente.
                 await fetchWithAuth(`${API_BASE_URL}/user/payout-methods/${methodId}/primary`, { method: 'POST' }); 
                 showToast('Método establecido como principal.', 'success');
                 loadPayoutMethods();

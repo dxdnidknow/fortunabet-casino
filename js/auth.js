@@ -1,4 +1,4 @@
-// Archivo: js/auth.js (CORREGIDO Y EXPORTANDO fetchWithAuth)
+// Archivo: js/auth.js (VERSIÓN SEGURA: LOGOUT SOLO EN 401)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -15,7 +15,6 @@ function getUser() {
     try {
         return JSON.parse(userString);
     } catch (error) {
-        console.error("Error al leer datos del usuario. Limpiando localStorage corrupto:", error);
         localStorage.removeItem('fortunaUser');
         localStorage.removeItem('fortunaToken');
         return null;
@@ -32,10 +31,7 @@ function validatePasswordStrength(password) {
 }
 
 function updateLoginState(user) {
-    if (!user || !user.username) {
-        console.error("Intento de actualizar el estado de login sin un usuario válido.");
-        return;
-    }
+    if (!user || !user.username) return;
     document.body.classList.add('user-logged-in');
     
     if (user.role === 'admin') {
@@ -63,7 +59,12 @@ function updateLoginState(user) {
     }
 }
 
-async function handleRegisterSubmit(event) {
+// ... (Las funciones de registro, OTP, etc. se mantienen igual) ...
+// Voy a resumir las funciones que no cambian para no hacer el código gigante
+// Asegúrate de mantener handleRegisterSubmit, handleOtpSubmit, handleResendOtp, handleLoginSubmit, etc.
+// Solo cambiaré fetchWithAuth y exportaré todo completo al final.
+
+async function handleRegisterSubmit(event) { /* ... (código original) ... */ 
     event.preventDefault();
     const form = event.target;
     const usernameInput = form.querySelector('#username');
@@ -117,7 +118,7 @@ async function handleRegisterSubmit(event) {
     }
 }
 
-async function handleOtpSubmit(event) {
+async function handleOtpSubmit(event) { /* ... (código original) ... */ 
     event.preventDefault();
     const form = event.target;
     const email = sessionStorage.getItem('emailForVerification');
@@ -168,7 +169,7 @@ async function handleOtpSubmit(event) {
     }
 }
 
-async function handleResendOtp(event) {
+async function handleResendOtp(event) { /* ... (código original) ... */ 
     event.preventDefault();
     const link = event.target.closest('#resend-otp-link');
     const email = sessionStorage.getItem('emailForVerification');
@@ -223,7 +224,7 @@ async function handleResendOtp(event) {
     }
 }
 
-async function handleLoginSubmit(event) {
+async function handleLoginSubmit(event) { /* ... (código original) ... */ 
     event.preventDefault();
     const form = event.target;
     const identifierInput = form.querySelector('#login-identifier');
@@ -278,7 +279,7 @@ async function handleLoginSubmit(event) {
     }
 }
 
-async function handleForgotPasswordSubmit(event) {
+async function handleForgotPasswordSubmit(event) { /* ... (código original) ... */ 
     event.preventDefault();
     const form = event.target;
     const emailInput = form.querySelector('#forgot-email');
@@ -306,7 +307,7 @@ async function handleForgotPasswordSubmit(event) {
     }
 }
 
-async function handleResetPasswordSubmit(event) {
+async function handleResetPasswordSubmit(event) { /* ... (código original) ... */ 
     event.preventDefault();
     const form = event.target;
     const passwordInput = form.querySelector('#reset-password');
@@ -353,18 +354,15 @@ function handleLogout() {
 }
 
 // =======================================================================
-//  AQUÍ ESTÁ LA CORRECCIÓN: EXPORTAMOS ESTA FUNCIÓN
+//  AQUÍ ESTÁ EL CAMBIO IMPORTANTE PARA EL PROBLEMA DE RETIRO
 // =======================================================================
 export async function fetchWithAuth(url, options = {}) {
-    // Usar 'fortunaToken' (no authToken)
     const authToken = localStorage.getItem('fortunaToken');
 
-    // Construir los headers por defecto si no existen
     if (!options.headers) {
         options.headers = {};
     }
 
-    // Asegurar que Content-Type sea 'application/json' si hay un body
     if (options.body && !options.headers['Content-Type']) {
         options.headers['Content-Type'] = 'application/json';
     }
@@ -376,19 +374,21 @@ export async function fetchWithAuth(url, options = {}) {
     try {
         const response = await fetch(url, options);
 
-        if (response.status === 401 || response.status === 403) {
+        // CAMBIO: Solo cerramos sesión si es 401 (Token inválido/expirado).
+        // El 403 (Prohibido) lo dejamos pasar para que el frontend muestre el mensaje de "Debes verificar tus datos".
+        if (response.status === 401) {
             handleLogout();
-            throw new Error('Sesión inválida o expirada. Por favor, inicia sesión de nuevo.');
+            throw new Error('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
         }
 
         const responseData = await response.json();
         
         if (!response.ok) {
-            throw new Error(responseData.message || `Error en la solicitud: ${response.status}`);
+            // Si es 403 u otro error, lanzamos el error con el mensaje del servidor
+            // para que account.js pueda mostrarlo en un Toast en lugar de cerrar la sesión.
+            throw new Error(responseData.message || `Error: ${response.status}`);
         }
 
-        // Retornamos los datos directamente para que los otros archivos (bet.js, account.js) 
-        // no tengan que hacer .json()
         return responseData; 
 
     } catch (error) {
