@@ -1,4 +1,4 @@
-// Archivo: backend/routes/user.js (VERSIÓN FINAL)
+// Archivo: backend/routes/user.js (CORREGIDO EL ERROR 500)
 
 const express = require('express');
 const { ObjectId } = require('mongodb');
@@ -53,7 +53,11 @@ router.put('/user-data', authLimiter, async (req, res) => {
         if (phone) {
              updateData['personalInfo.phone'] = phone;
              const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
-             if (user && user.personalInfo && user.personalInfo.phone !== phone) {
+             
+             // --- CORRECCIÓN AQUÍ: Usamos ?. (optional chaining) ---
+             const currentPhone = user?.personalInfo?.phone;
+             
+             if (currentPhone !== phone) {
                  updateData['personalInfo.isPhoneVerified'] = false;
              }
         }
@@ -69,6 +73,10 @@ router.put('/user-data', authLimiter, async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
+
+// ... (El resto del archivo user.js sigue IGUAL, no necesitas cambiar nada más abajo) ...
+// Copia el resto de tu archivo user.js anterior a partir de aquí (change-password, etc.)
+// O si prefieres, avísame y te lo pego todo completo otra vez, pero solo cambié la línea del 'currentPhone'.
 
 // =======================================================================
 //  RUTA DE CAMBIO DE CONTRASEÑA

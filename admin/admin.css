@@ -1,252 +1,203 @@
 /* Archivo: admin/admin.css */
 
-/* ==========================================================================
-   1. VARIABLES Y CONFIGURACIÓN GLOBAL (Copiadas de tu style.css)
-   ========================================================================== */
 :root {
-    --color-background: #121418;
-    --color-surface-1: #1A1D24;
-    --color-surface-2: #242833;
-    --color-primary: #2ECC71;
-    --color-primary-light: #58D68D;
-    --color-text-primary: #F5F5F5;
-    --color-text-secondary: #A0AEC0;
-    --color-border: #3A3F51;
-    --color-accent-gold: #FDB813;
-    --color-success: #2ECC71;
-    --color-loss: #E74C3C;
-    --color-pending: #F1C40F;
-    --font-family-base: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --border-radius-md: 12px;
-    --border-radius-sm: 8px;
+    --bg: #0f1115;
+    --surface: #181b21;
+    --surface-hover: #22262e;
+    --primary: #2ECC71;
+    --primary-hover: #27ae60;
+    --danger: #E74C3C;
+    --danger-hover: #c0392b;
+    --text: #ecf0f1;
+    --text-muted: #95a5a6;
+    --border: #2c3e50;
+    --accent-blue: #3498db;
+    --accent-orange: #e67e22;
 }
 
-/* ==========================================================================
-   2. ESTILOS GLOBALES DEL PANEL
-   ========================================================================== */
 body {
-    font-family: var(--font-family-base);
-    background-color: var(--color-background);
-    color: var(--color-text-primary);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
     margin: 0;
     padding: 20px;
-    -webkit-font-smoothing: antialiased;
-}
-.container { 
-    max-width: 1600px; 
-    margin: 0 auto; 
-    padding: 0 20px;
-}
-h1, h2 { 
-    color: var(--color-text-primary);
-    font-weight: 600;
-}
-h1 { font-size: 1.8rem; }
-h2 { font-size: 1.2rem; }
-h1 i { color: var(--color-primary); margin-right: 10px; }
-
-/* ==========================================================================
-   3. BOTONES Y FORMULARIOS
-   ========================================================================== */
-.form-group { margin-bottom: 20px; }
-.form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--color-text-secondary); }
-.form-group input {
-    width: 100%;
-    padding: 14px;
-    background-color: var(--color-background);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-sm);
-    color: var(--color-text-primary);
-    font-size: 16px;
-    box-sizing: border-box;
-}
-.form-group input:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+    min-height: 100vh;
 }
 
-.btn {
-    padding: 10px 18px;
-    border: none;
-    border-radius: var(--border-radius-sm);
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-align: center;
-    display: inline-flex;
+.container {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* --- LOGIN --- */
+#login-view {
+    height: 80vh;
+    display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
 }
-.btn:disabled { cursor: not-allowed; opacity: 0.7; }
 
-.btn-primary { background-color: var(--color-primary); color: #1a1a1a; }
-.btn-primary:hover:not(:disabled) { background-color: var(--color-primary-light); }
-
-.btn-full { width: 100%; padding: 14px; font-size: 1rem; }
-
-.btn-danger { background-color: var(--color-loss); color: white; }
-.btn-danger:hover:not(:disabled) { background-color: #c0392b; }
-
-.btn-secondary { background-color: var(--color-surface-2); color: var(--color-text-primary); border: 1px solid var(--color-border); }
-.btn-secondary:hover:not(:disabled) { background-color: var(--color-surface-1); border-color: var(--color-text-secondary); }
-
-.btn-sm { padding: 5px 10px; font-size: 0.8rem; }
-
-#error-message { color: var(--color-loss); margin-top: 15px; text-align: center; font-weight: 500; }
-
-/* ==========================================================================
-   4. LAYOUT DEL PANEL (LOGIN Y DASHBOARD)
-   ========================================================================== */
-#login-view {
-    max-width: 450px;
-    margin: 100px auto;
+.login-card {
+    background-color: var(--surface);
     padding: 40px;
-    background-color: var(--color-surface-1);
-    border-radius: var(--border-radius-md);
-    border: 1px solid var(--color-border);
-    text-align: center;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
-#login-view h1 { margin-bottom: 30px; }
 
-#dashboard-view { display: none; }
-header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    border-bottom: 1px solid var(--color-border); 
-    padding-bottom: 20px;
+.login-card h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--primary);
+    font-size: 1.8rem;
+}
+
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.9rem; }
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+.form-group input:focus { outline: none; border-color: var(--primary); }
+
+#error-message { color: var(--danger); text-align: center; margin-top: 15px; }
+
+/* --- DASHBOARD HEADER --- */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    background-color: var(--surface);
+    padding: 15px 25px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+header h1 { margin: 0; font-size: 1.4rem; display: flex; align-items: center; gap: 10px; }
+.badge { background-color: var(--surface-hover); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; color: var(--text-muted); margin-left: 15px; }
+.actions-area { display: flex; gap: 10px; }
+
+/* --- STATS GRID --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
     margin-bottom: 30px;
 }
-header span { font-weight: 500; color: var(--color-text-secondary); }
 
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-top: 30px;
-}
-.panel { 
-    background-color: var(--color-surface-1); 
-    border: 1px solid var(--color-border); 
-    border-radius: var(--border-radius-md); 
-    overflow: hidden; /* Para que la tabla no se salga */
-}
-.panel-header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 20px; 
-    border-bottom: 1px solid var(--color-border); 
-    background-color: var(--color-surface-2);
-}
-.panel-header h2 {
+.stat-card {
+    background-color: var(--surface);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
     display: flex;
     align-items: center;
-    gap: 10px;
-    color: var(--color-text-primary);
+    gap: 20px;
+    transition: transform 0.2s;
 }
-.panel-header i { color: var(--color-primary); }
+.stat-card:hover { transform: translateY(-3px); border-color: var(--primary); }
 
-.panel-body { 
-    padding: 0; /* Quitamos padding para que la tabla ocupe todo */
+.icon-box {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
 }
-.panel-body .empty-message { 
-    text-align: center; 
-    color: var(--color-text-secondary); 
-    padding: 40px 20px;
-    font-size: 1.1rem;
-}
-.panel-body .empty-message i {
-    font-size: 2.5rem;
-    display: block;
-    margin-bottom: 15px;
-    color: var(--color-primary);
+.icon-box.users { background: rgba(52, 152, 219, 0.1); color: var(--accent-blue); }
+.icon-box.money { background: rgba(46, 204, 113, 0.1); color: var(--primary); }
+.icon-box.pending { background: rgba(230, 126, 34, 0.1); color: var(--accent-orange); }
+.icon-box.withdraw { background: rgba(231, 76, 60, 0.1); color: var(--danger); }
+
+.stat-info h3 { margin: 0; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+.stat-info p { margin: 5px 0 0; font-size: 1.6rem; font-weight: 700; }
+
+/* --- LAYOUT DE PANELES --- */
+.main-content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
 }
 
-
-/* ==========================================================================
-   5. TABLAS DE DATOS
-   ========================================================================== */
-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-}
-th, td { 
-    padding: 14px 20px; 
-    text-align: left; 
-    border-bottom: 1px solid var(--color-border); 
-    white-space: nowrap;
-}
-/* Quitar borde de la última fila */
-tr:last-child td { border-bottom: none; }
-
-th { 
-    background-color: var(--color-surface-2); 
-    font-size: 0.8rem; 
-    text-transform: uppercase; 
-    color: var(--color-text-secondary); 
-    letter-spacing: 0.5px;
-}
-td .user-info { 
-    font-size: 0.85em; 
-    color: var(--color-text-secondary); 
-    display: block; /* Para que esté debajo del nombre */
-}
-td .amount { 
-    font-weight: 700; 
-    color: var(--color-success); /* Verde para depósitos */
-}
-td .amount.withdrawal { 
-    color: var(--color-loss); /* Rojo para retiros */
-}
-td .actions { display: flex; gap: 10px; }
-td small { 
-    font-family: monospace; 
-    font-size: 0.9em;
-    color: var(--color-text-secondary);
-    display: block;
-    white-space: normal; /* Permitir que los detalles largos se ajusten */
-    max-width: 200px; /* Límite para que no se desborde */
+.panel {
+    background-color: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
     overflow: hidden;
-    text-overflow: ellipsis;
-}
-td.date-cell {
-    color: var(--color-text-secondary);
-    font-size: 0.9em;
+    margin-bottom: 25px;
 }
 
-/* ==========================================================================
-   6. SPINNER DE CARGA (Para botones)
-   ========================================================================== */
+.panel-header {
+    padding: 15px 20px;
+    background-color: var(--surface-hover);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.panel-header h2 { margin: 0; font-size: 1.1rem; color: var(--text); }
+
+.panel-body { padding: 0; }
+
+.mt-20 { margin-top: 20px; }
+
+/* --- TABLAS --- */
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+th { background-color: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
+tr:last-child td { border-bottom: none; }
+td strong { display: block; color: var(--primary); margin-bottom: 3px; }
+td small { color: var(--text-muted); font-size: 0.85rem; }
+
+.empty-message {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+}
+.empty-message i { font-size: 2.5rem; margin-bottom: 10px; display: block; opacity: 0.5; }
+
+/* --- BOTONES --- */
+.btn { border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.btn-primary { background-color: var(--primary); color: #000; }
+.btn-primary:hover:not(:disabled) { background-color: var(--primary-hover); }
+.btn-secondary { background-color: var(--surface-hover); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover:not(:disabled) { background-color: var(--border); }
+.btn-danger { background-color: var(--danger); color: #fff; }
+.btn-danger:hover:not(:disabled) { background-color: var(--danger-hover); }
+.btn-sm { padding: 6px 12px; font-size: 0.85rem; }
+.btn-full { width: 100%; justify-content: center; margin-top: 10px; padding: 14px; font-size: 1rem; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* --- SPINNER --- */
 .spinner-sm {
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #ffffff;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
+    display: inline-block;
 }
-.btn-primary .spinner-sm {
-    border: 2px solid rgba(0, 0, 0, 0.3);
-    border-top-color: #000000;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* ==========================================================================
-   7. RESPONSIVIDAD
-   ========================================================================== */
-@media (max-width: 1200px) {
-    .dashboard-grid { grid-template-columns: 1fr; }
+/* --- RESPONSIVIDAD --- */
+@media (max-width: 1024px) {
+    .main-content-grid { grid-template-columns: 1fr; }
 }
-
 @media (max-width: 768px) {
-    body { padding: 10px; }
-    .container { padding: 0 10px; }
-    h1 { font-size: 1.5rem; }
-    #login-view { padding: 20px; margin: 50px auto; }
-    .panel-body { overflow-x: auto; } /* Permite scroll horizontal en tablas */
-    th, td { padding: 10px 15px; white-space: nowrap; }
+    .container { padding: 10px; }
+    header { flex-direction: column; gap: 15px; text-align: center; }
+    .panel-body { overflow-x: auto; }
+    th, td { white-space: nowrap; }
 }

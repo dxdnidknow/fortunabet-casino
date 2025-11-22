@@ -1,36 +1,31 @@
-// Archivo: admin/admin.js (COMPLETO Y MODIFICADO)
+// Archivo: admin/admin.js (COMPLETO Y FUNCIONAL)
+
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ==========================================================
-    //  CONFIGURACIÓN
-    // ==========================================================
-    
+    // CONFIGURACIÓN API
     const API_URL = 'https://fortunabet-api.onrender.com/api'; 
+    // Para pruebas locales descomenta la siguiente línea:
     // const API_URL = 'http://localhost:3001/api'; 
 
+    // ELEMENTOS DOM
     const loginView = document.getElementById('login-view');
     const dashboardView = document.getElementById('dashboard-view');
     const loginForm = document.getElementById('login-form');
     const errorMessage = document.getElementById('error-message');
-    const adminEmailSpan = document.getElementById('admin-email');
     const logoutBtn = document.getElementById('logout-btn');
     const refreshBtn = document.getElementById('refresh-btn');
 
-    const depositsBody = document.getElementById('deposits-body');
-    const depositsEmpty = document.getElementById('deposits-empty');
-    const withdrawalsBody = document.getElementById('withdrawals-body');
-    const withdrawalsEmpty = document.getElementById('withdrawals-empty');
-
+    // ESTADO
     let authToken = localStorage.getItem('adminToken');
     let adminUser = JSON.parse(localStorage.getItem('adminUser'));
 
-    // === FUNCIONES DE API ===
+    // --- HELPERS ---
 
     async function apiFetch(endpoint, method = 'GET', body = null) {
         const headers = new Headers();
         headers.append('Authorization', `Bearer ${authToken}`);
         
-        const options = { method, headers, mode: 'cors' };
+        const options = { method, headers };
         
         if (method === 'POST' || method === 'PUT') {
             headers.append('Content-Type', 'application/json');
@@ -42,256 +37,217 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (response.status === 401 || response.status === 403) {
                 logout();
-                throw new Error('Sesión inválida o permisos insuficientes.');
+                throw new Error('Sesión expirada o sin permisos.');
             }
             if (!response.ok) {
                 const err = await response.json();
-                throw new Error(err.message || 'Error en la petición');
+                throw new Error(err.message || 'Error en la API');
             }
-            if (response.status === 204) return null;
             return await response.json();
         } catch (error) {
-            console.error(`Error en fetch a ${endpoint}:`, error);
-            showError(error.message);
-            throw error;
+            console.error(error);
+            throw error; // Propagar error para manejarlo en la llamada
         }
     }
 
-    // --- Autenticación ---
-    async function login(email, password) {
-        const submitButton = loginForm.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<span class="spinner-sm"></span> Entrando...';
-        showError('');
+    function formatCurrency(amount) {
+        return `Bs. ${parseFloat(amount).toFixed(2)}`;
+    }
 
-        try {
-            const response = await fetch(`${API_URL}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                mode: 'cors',
-                body: JSON.stringify({ identifier: email, password })
-            });
+    // --- AUTHENTICATION ---
 
-            const data = await response.json();
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = loginForm.querySelector('button');
+            const errorP = document.getElementById('error-message');
             
-            if (!response.ok) {
-                 throw new Error(data.message || 'Credenciales inválidas.');
-            }
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-sm"></span> Cargando...';
+            errorP.style.display = 'none';
 
-            if (data.user.role !== 'admin') {
-                throw new Error('No tienes permisos de administrador.');
-            }
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-            authToken = data.token;
-            adminUser = data.user;
-            localStorage.setItem('adminToken', authToken);
-            localStorage.setItem('adminUser', JSON.stringify(adminUser));
-            
-            initDashboard();
-        } catch (error) {
-            showError(error.message);
-            submitButton.disabled = false;
-            submitButton.innerHTML = 'Entrar';
-        }
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.message);
+                if (data.user.role !== 'admin') throw new Error('Acceso denegado: No eres administrador.');
+
+                authToken = data.token;
+                adminUser = data.user;
+                localStorage.setItem('adminToken', authToken);
+                localStorage.setItem('adminUser', JSON.stringify(adminUser));
+                
+                initDashboard();
+
+            } catch (error) {
+                errorP.textContent = error.message;
+                errorP.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Entrar al Panel';
+            }
+        });
     }
 
     function logout() {
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminUser');
         authToken = null;
-        adminUser = null;
-        loginView.style.display = 'block';
-        dashboardView.style.display = 'none';
+        location.reload();
     }
 
-    // --- Cargar Datos ---
-    async function loadPendingData() {
-        if (!refreshBtn) return;
-        refreshBtn.disabled = true;
-        refreshBtn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i>';
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+    // --- DASHBOARD LOGIC ---
+
+    async function loadData() {
+        if(!authToken) return;
         
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Cargando...';
+
         try {
-            const [deposits, withdrawals] = await Promise.all([
+            // Cargar todo en paralelo
+            const [stats, pendingDeposits, pendingWithdrawals, users] = await Promise.all([
+                apiFetch('/admin/stats'),
                 apiFetch('/admin/deposits/pending'),
-                apiFetch('/admin/withdrawals/pending')
+                apiFetch('/admin/withdrawals/pending'),
+                apiFetch('/admin/users')
             ]);
-            
-            renderDeposits(deposits);
-            renderWithdrawals(withdrawals);
+
+            // 1. Render Stats
+            document.getElementById('stat-users').textContent = stats.totalUsers;
+            document.getElementById('stat-balance').textContent = formatCurrency(stats.totalBalance);
+            document.getElementById('stat-deposits').textContent = stats.pendingDepositsCount;
+            document.getElementById('stat-withdrawals').textContent = stats.pendingWithdrawalsCount;
+
+            // 2. Render Users Table
+            const usersBody = document.getElementById('users-body');
+            usersBody.innerHTML = users.map(u => `
+                <tr>
+                    <td>
+                        <strong>${u.username}</strong>
+                        <small>${u.email}</small>
+                    </td>
+                    <td style="color: var(--primary); font-weight: bold;">
+                        ${formatCurrency(u.balance)}
+                    </td>
+                </tr>
+            `).join('');
+
+            // 3. Render Deposits Table
+            renderTable('deposits', pendingDeposits, (tx) => `
+                <td>
+                    <strong>${tx.fullName || tx.username}</strong>
+                    <small>CI: ${tx.cedula || 'N/A'}</small>
+                </td>
+                <td>
+                    <strong style="color: var(--primary)">${formatCurrency(tx.amount)}</strong>
+                    <small>Ref: ${tx.reference}</small><br>
+                    <small>Método: ${tx.method}</small>
+                </td>
+                <td>
+                    <button class="btn btn-primary btn-sm" onclick="processTx('deposits', 'approve', '${tx._id}')" title="Aprobar"><i class="fa-solid fa-check"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="processTx('deposits', 'reject', '${tx._id}')" title="Rechazar"><i class="fa-solid fa-xmark"></i></button>
+                </td>
+            `);
+
+            // 4. Render Withdrawals Table
+            renderTable('withdrawals', pendingWithdrawals, (tx) => {
+                // Formatear detalles del método de pago
+                let details = 'N/A';
+                if(tx.methodDetails) {
+                    if(tx.methodType === 'pago_movil') {
+                        details = `Pago Móvil: ${tx.methodDetails.bank} - ${tx.methodDetails.phone}`;
+                    } else {
+                        details = `Zelle: ${tx.methodDetails.email}`;
+                    }
+                }
+
+                return `
+                <td>
+                    <strong>${tx.fullName || tx.username}</strong>
+                    <small>CI: ${tx.cedula || 'N/A'}</small>
+                </td>
+                <td>
+                    <strong style="color: var(--danger)">${formatCurrency(tx.amount)}</strong>
+                    <small>${details}</small>
+                </td>
+                <td>
+                    <button class="btn btn-primary btn-sm" onclick="processTx('withdrawals', 'approve', '${tx._id}')" title="Marcar Pagado"><i class="fa-solid fa-check"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="processTx('withdrawals', 'reject', '${tx._id}')" title="Rechazar"><i class="fa-solid fa-xmark"></i></button>
+                </td>
+            `});
 
         } catch (error) {
-            // El error ya se maneja en apiFetch
+            console.error("Error cargando datos:", error);
+            alert("Error cargando datos del panel. Revisa la consola.");
         } finally {
             refreshBtn.disabled = false;
-            refreshBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Recargar';
+            refreshBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Recargar Datos';
         }
-    }
-    
-    // --- Renderizado de Tablas ---
-    
-    function formatTxDate(isoDate) {
-        if (!isoDate) return 'N/A';
-        const date = new Date(isoDate);
-        return date.toLocaleString('es-VE', { 
-            day: '2-digit', 
-            month: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true 
-        });
     }
 
-    function renderDeposits(deposits) {
-        depositsBody.innerHTML = '';
-        if (!deposits || deposits.length === 0) {
-            depositsEmpty.style.display = 'block';
-            return;
-        }
-        depositsEmpty.style.display = 'none';
+    function renderTable(type, data, rowHtmlGenerator) {
+        const body = document.getElementById(`${type}-body`);
+        const emptyMsg = document.getElementById(`${type}-empty`);
         
-        deposits.forEach(tx => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>
-                    <strong>${tx.fullName || tx.username}</strong>
-                    <div class="user-info">${tx.cedula || 'Cédula no registrada'}</div>
-                    <div class="user-info">${tx.userEmail}</div>
-                </td>
-                <td class="amount">${tx.amount.toFixed(2)}</td>
-                <td>
-                    <small>${tx.method}</small>
-                    <strong>${tx.reference || 'N/A'}</strong>
-                </td>
-                <td class="date-cell">${formatTxDate(tx.createdAt)}</td>
-                <td class="actions">
-                    <button class="btn btn-primary btn-sm btn-approve-deposit" data-id="${tx._id}" title="Aprobar"><i class="fa-solid fa-check"></i></button>
-                    <button class="btn btn-danger btn-sm btn-reject-deposit" data-id="${tx._id}" title="Rechazar"><i class="fa-solid fa-xmark"></i></button>
-                </td>
-            `;
-            depositsBody.appendChild(row);
-        });
-    }
-
-    function renderWithdrawals(withdrawals) {
-        withdrawalsBody.innerHTML = '';
-        if (!withdrawals || withdrawals.length === 0) {
-            withdrawalsEmpty.style.display = 'block';
-            return;
-        }
-        withdrawalsEmpty.style.display = 'none';
+        body.innerHTML = '';
         
-        withdrawals.forEach(tx => {
-            const row = document.createElement('tr');
-            let info = 'Detalles no disponibles';
-            if (tx.methodDetails) {
-                info = Object.entries(tx.methodDetails)
-                             .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
-                             .join('<br>');
-            }
-
-            row.innerHTML = `
-                <td>
-                    <strong>${tx.fullName || tx.username}</strong>
-                    <div class="user-info">${tx.cedula || 'Cédula no registrada'}</div>
-                </td>
-                <td class="amount withdrawal">${tx.amount.toFixed(2)}</td>
-                <td><small>${tx.methodType.replace('_', ' ')}<br>${info}</small></td>
-                <td class="date-cell">${formatTxDate(tx.requestedAt)}</td>
-                <td class="actions">
-                    <button class="btn btn-primary btn-sm btn-approve-withdrawal" data-id="${tx._id}" title="Marcar como Pagado"><i class="fa-solid fa-check"></i></button>
-                    <button class="btn btn-danger btn-sm btn-reject-withdrawal" data-id="${tx._id}" title="Rechazar y devolver fondos"><i class="fa-solid fa-xmark"></i></button>
-                </td>
-            `;
-            withdrawalsBody.appendChild(row);
-        });
-    }
-
-    // --- Acciones de Admin ---
-    async function handleAdminAction(e) {
-        const btn = e.target.closest('button');
-        if (!btn || !btn.dataset.id) return;
-
-        const id = btn.dataset.id;
-        const originalHtml = btn.innerHTML;
-        let endpoint = '';
-        let body = null;
-        let confirmMessage = '';
-
-        if (btn.classList.contains('btn-approve-deposit')) {
-            endpoint = `/admin/deposits/approve/${id}`;
-            confirmMessage = '¿Seguro que quieres APROBAR este depósito? El saldo del usuario se incrementará.';
-        } else if (btn.classList.contains('btn-reject-deposit')) {
-            endpoint = `/admin/deposits/reject/${id}`;
-            const reason = prompt('Motivo del rechazo (opcional, se guardará en la base de datos):');
-            if (reason === null) return;
-            body = { reason: reason || 'Rechazado por admin' };
-        } else if (btn.classList.contains('btn-approve-withdrawal')) {
-            endpoint = `/admin/withdrawals/approve/${id}`;
-            confirmMessage = '¡IMPORTANTE! ¿Seguro que ya realizaste la transferencia manual y quieres marcar este retiro como PAGADO?';
-        } else if (btn.classList.contains('btn-reject-withdrawal')) {
-            endpoint = `/admin/withdrawals/reject/${id}`;
-            const reason = prompt('Motivo del rechazo (Los fondos serán DEVUELTOS al saldo del usuario):');
-            if (reason === null) return;
-            body = { reason: reason || 'Rechazado por admin' };
+        if (data.length === 0) {
+            emptyMsg.style.display = 'block';
         } else {
-            return;
+            emptyMsg.style.display = 'none';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = rowHtmlGenerator(item);
+                body.appendChild(tr);
+            });
         }
+    }
 
-        if (confirmMessage && !confirm(confirmMessage)) return;
+    // --- GLOBAL ACTION HANDLER ---
+    // La hacemos global para que funcione con el onclick="" del HTML generado
+    window.processTx = async (type, action, id) => {
+        let confirmMsg = action === 'approve' ? "¿Aprobar esta transacción?" : "¿Rechazar esta transacción?";
+        if (!confirm(confirmMsg)) return;
 
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-sm"></span>';
+        let body = null;
+        if (action === 'reject') {
+            const reason = prompt("Motivo del rechazo (opcional):");
+            if (reason === null) return; // Cancelar
+            body = { reason: reason || "Rechazado por admin" };
+        }
 
         try {
-            await apiFetch(endpoint, 'POST', body);
-            loadPendingData();
+            await apiFetch(`/admin/${type}/${action}/${id}`, 'POST', body);
+            loadData(); // Recargar datos
         } catch (error) {
-            btn.disabled = false;
-            btn.innerHTML = originalHtml;
+            alert(error.message);
         }
-    }
+    };
 
-    // === INICIALIZACIÓN Y EVENT LISTENERS ===
+    if (refreshBtn) refreshBtn.addEventListener('click', loadData);
+
+    // --- INIT ---
     function initDashboard() {
         loginView.style.display = 'none';
         dashboardView.style.display = 'block';
-        adminEmailSpan.textContent = `(${adminUser.email})`;
-        loadPendingData();
-    }
-
-    function showError(msg) {
-        if (errorMessage) {
-            errorMessage.textContent = msg;
-            errorMessage.style.display = 'block';
-        }
-    }
-
-    if (loginForm) {
-        loginForm.addEventListener('submit', e => {
-            e.preventDefault();
-            showError('');
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            login(email, password);
-        });
-    }
-
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
-    }
-    
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', loadPendingData);
-    }
-    
-    if (dashboardView) {
-        dashboardView.addEventListener('click', handleAdminAction);
+        document.getElementById('admin-email').textContent = adminUser.email;
+        loadData();
     }
 
     if (authToken && adminUser) {
         initDashboard();
     } else {
-        loginView.style.display = 'block';
-        dashboardView.style.display = 'none';
+        loginView.style.display = 'flex';
     }
 });

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración - FortunaBet</title>
+    <title>Admin FortunaBet 2.0</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="admin.css">
 </head>
@@ -11,82 +11,140 @@
 
     <div class="container">
         
+        <!-- VISTA DE LOGIN -->
         <div id="login-view">
-            <h1><i class="fa-solid fa-user-shield"></i> Panel de Admin</h1>
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="email">Email de Administrador</label>
-                    <input type="email" id="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Contraseña</label>
-                    <input type="password" id="password" required>
-                </div>
-                <button type="submit" class="btn btn-primary btn-full">Entrar</button>
-                <p id="error-message" style="display: none;"></p>
-            </form>
+            <div class="login-card">
+                <h1><i class="fa-solid fa-shield-halved"></i> Admin Access</h1>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label>Email Administrativo</label>
+                        <input type="email" id="email" required placeholder="admin@fortunabet.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" id="password" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Entrar al Panel</button>
+                    <p id="error-message" style="display: none;"></p>
+                </form>
+            </div>
         </div>
 
-        <div id="dashboard-view">
+        <!-- VISTA DEL DASHBOARD -->
+        <div id="dashboard-view" style="display: none;">
             <header>
-                <div>
-                    <h1>Panel de Administración</h1>
-                    <span id="admin-email"></span>
+                <div class="logo-area">
+                    <h1><i class="fa-solid fa-chart-line"></i> Panel de Control</h1>
+                    <span id="admin-email" class="badge">Cargando...</span>
                 </div>
-                <button id="logout-btn" class="btn btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</button>
+                <div class="actions-area">
+                    <button class="btn btn-secondary btn-sm" id="refresh-btn"><i class="fa-solid fa-rotate"></i> Recargar Datos</button>
+                    <button id="logout-btn" class="btn btn-danger btn-sm"><i class="fa-solid fa-power-off"></i> Salir</button>
+                </div>
             </header>
 
-            <div class="dashboard-grid">
-                
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2><i class="fa-solid fa-arrow-down-to-bracket"></i> Depósitos Pendientes</h2>
-                        <button class="btn btn-secondary btn-sm" id="refresh-btn"><i class="fa-solid fa-rotate"></i> Recargar</button>
+            <!-- TARJETAS DE ESTADÍSTICAS -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon-box users"><i class="fa-solid fa-users"></i></div>
+                    <div class="stat-info">
+                        <h3>Usuarios Totales</h3>
+                        <p id="stat-users">0</p>
                     </div>
-                    <div class="panel-body">
-                        <table id="deposits-table">
-                            <thead>
-                                <tr>
-                                    <th>Datos del Usuario</th>
-                                    <th>Monto (Bs)</th>
-                                    <th>Referencia de Pago</th>
-                                    <th>Fecha</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="deposits-body"></tbody>
-                        </table>
-                        <div id="deposits-empty" class="empty-message" style="display: none;">
-                            <i class="fa-solid fa-check-double"></i>
-                            <p>No hay depósitos pendientes.</p>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box money"><i class="fa-solid fa-wallet"></i></div>
+                    <div class="stat-info">
+                        <h3>Dinero en Juego</h3>
+                        <p id="stat-balance">Bs. 0.00</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box pending"><i class="fa-solid fa-clock"></i></div>
+                    <div class="stat-info">
+                        <h3>Depósitos Pend.</h3>
+                        <p id="stat-deposits">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon-box withdraw"><i class="fa-solid fa-money-bill-transfer"></i></div>
+                    <div class="stat-info">
+                        <h3>Retiros Pend.</h3>
+                        <p id="stat-withdrawals">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content-grid">
+                <!-- COLUMNA IZQUIERDA: GESTIÓN DE PAGOS -->
+                <div class="panel-column">
+                    
+                    <!-- Panel de Depósitos -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2><i class="fa-solid fa-arrow-down"></i> Depósitos por Aprobar</h2>
+                        </div>
+                        <div class="panel-body">
+                            <table id="deposits-table">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Detalles Pago</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="deposits-body"></tbody>
+                            </table>
+                            <div id="deposits-empty" class="empty-message">
+                                <i class="fa-solid fa-check-circle"></i>
+                                <p>No hay depósitos pendientes</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel de Retiros -->
+                    <div class="panel mt-20">
+                        <div class="panel-header">
+                            <h2><i class="fa-solid fa-arrow-up"></i> Solicitudes de Retiro</h2>
+                        </div>
+                        <div class="panel-body">
+                            <table id="withdrawals-table">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Monto / Método</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="withdrawals-body"></tbody>
+                            </table>
+                            <div id="withdrawals-empty" class="empty-message">
+                                <i class="fa-solid fa-check-circle"></i>
+                                <p>No hay retiros pendientes</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2><i class="fa-solid fa-arrow-up-from-bracket"></i> Retiros Pendientes</h2>
-                    </div>
-                    <div class="panel-body">
-                        <table id="withdrawals-table">
-                            <thead>
-                                <tr>
-                                    <th>Datos del Usuario</th>
-                                    <th>Monto (Bs)</th>
-                                    <th>Método de Retiro</th>
-                                    <th>Fecha</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="withdrawals-body"></tbody>
-                        </table>
-                        <div id="withdrawals-empty" class="empty-message" style="display: none;">
-                            <i class="fa-solid fa-check-double"></i>
-                            <p>No hay retiros pendientes.</p>
+                <!-- COLUMNA DERECHA: USUARIOS RECIENTES -->
+                <div class="panel-column">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2><i class="fa-solid fa-user-group"></i> Últimos Usuarios</h2>
+                        </div>
+                        <div class="panel-body">
+                            <table id="users-table">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario / Email</th>
+                                        <th>Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-body"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
