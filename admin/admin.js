@@ -1,4 +1,4 @@
-// Archivo: admin/admin.js (PROFESIONAL 3.0)
+// Archivo: admin/admin.js (COMPLETO Y FUNCIONAL)
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -7,9 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let authToken = localStorage.getItem('adminToken');
     let adminUser = JSON.parse(localStorage.getItem('adminUser'));
-    let revenueChart = null; // Variable para la gráfica
+    let revenueChart = null; 
 
-    // Estado local para datos (para búsqueda y paginación)
     let state = {
         users: [],
         deposits: [],
@@ -40,10 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const data = await apiFetch('/login', 'POST', { identifier: email, password }); // Usamos fetch normal aquí en realidad
-            // Nota: Login usa una ruta pública, así que lo hacemos manual para no usar el token que no tenemos
             
-            // (Replicamos la llamada manual porque apiFetch pide token)
             const res = await fetch(`${API_URL}/login`, {
                 method: 'POST',
                 headers: {'Content-Type':'application/json'},
@@ -80,41 +76,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- DATA LOADING & RENDERING ---
+    // --- DATA LOADING ---
     async function loadDashboard() {
+        // Animación de carga en TODOS los botones de refresh
+        document.querySelectorAll('.btn-refresh').forEach(btn => {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+        });
+
         try {
             const [stats, users, deposits, withdrawals, revenue] = await Promise.all([
                 apiFetch('/admin/stats'),
                 apiFetch('/admin/users'),
                 apiFetch('/admin/deposits/pending'),
                 apiFetch('/admin/withdrawals/pending'),
-                apiFetch('/admin/analytics/revenue') // Nueva ruta para gráfica
+                apiFetch('/admin/analytics/revenue')
             ]);
 
-            // Guardar en estado para filtrar después
             state.users = users;
             state.deposits = deposits;
             state.withdrawals = withdrawals;
 
-            // Stats Cards
+            // Update UI
             document.getElementById('stat-users').textContent = stats.totalUsers;
             document.getElementById('stat-balance').textContent = formatCurrency(stats.totalBalance);
             document.getElementById('stat-pending').textContent = stats.pendingDepositsCount + stats.pendingWithdrawalsCount;
 
-            // Badges en Sidebar
             updateBadge('badge-deposits', stats.pendingDepositsCount);
             updateBadge('badge-withdrawals', stats.pendingWithdrawalsCount);
 
-            // Renderizar tablas iniciales
             renderUsersTable(state.users);
             renderDepositsTable(state.deposits);
             renderWithdrawalsTable(state.withdrawals);
-
-            // Renderizar Gráfica
             renderRevenueChart(revenue);
 
         } catch (error) {
             console.error(error);
+        } finally {
+            // Restaurar botones
+            document.querySelectorAll('.btn-refresh').forEach(btn => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Actualizar'; // Texto simplificado si se desea, o dejar icono en móvil
+                if (btn.title === "Recargar lista") btn.innerHTML = '<i class="fa-solid fa-rotate"></i>'; // Solo icono para los pequeños
+            });
         }
     }
 
@@ -124,10 +128,10 @@ document.addEventListener('DOMContentLoaded', () => {
         el.classList.toggle('hidden', count === 0);
     }
 
-    // --- TABLE RENDERERS (Con Paginación Simple) ---
+    // --- RENDER FUNCTIONS ---
     function renderTable(id, data, columnsFn, page = 1, perPage = 10) {
         const tbody = document.getElementById(id);
-        const paginationDiv = document.getElementById(id.replace('body', 'pagination')); // users-body -> users-pagination
+        const paginationDiv = document.getElementById(id.replace('body', 'pagination'));
         
         if(data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">Sin datos encontrados</td></tr>';
@@ -137,10 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const start = (page - 1) * perPage;
         const pagedData = data.slice(start, start + perPage);
-        
         tbody.innerHTML = pagedData.map(columnsFn).join('');
 
-        // Controles de Paginación
         const totalPages = Math.ceil(data.length / perPage);
         if (totalPages > 1) {
             let html = '';
@@ -153,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Funciones específicas para cada tabla
     const renderUsersTable = (data) => renderTable('users-body', data, u => `
         <tr>
             <td><div style="font-weight:bold">${u.username}</div></td>
@@ -191,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </tr>
     `);
 
-    // --- SEARCH FUNCTIONALITY ---
+    // --- SEARCH ---
     function setupSearch(inputId, dataKey, renderFn, filterFn) {
         document.getElementById(inputId)?.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
@@ -210,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         (item.username||'').toLowerCase().includes(term)
     );
 
-    // --- CHART.JS RENDERER ---
+    // --- CHART ---
     function renderRevenueChart(data) {
         const ctx = document.getElementById('revenueChart');
         if(!ctx) return;
@@ -220,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
         revenueChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: data.map(d => d._id), // Fechas
+                labels: data.map(d => d._id),
                 datasets: [{
                     label: 'Ingresos (Bs.)',
                     data: data.map(d => d.total),
@@ -243,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- ACTIONS GLOBAL ---
+    // --- ACTIONS ---
     window.processTx = async (type, action, id) => {
         if(!confirm('¿Confirmar acción?')) return;
         try {
@@ -252,7 +253,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { alert(e.message); }
     };
 
-    document.getElementById('refresh-btn')?.addEventListener('click', loadDashboard);
+    // CAMBIO: Ahora seleccionamos TODOS los botones de refresh
+    document.querySelectorAll('.btn-refresh').forEach(btn => {
+        btn.addEventListener('click', loadDashboard);
+    });
 
     // --- INIT ---
     if (authToken) {

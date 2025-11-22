@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FortunaBet Admin</title>
-    <!-- Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <!-- Estilos -->
     <link rel="stylesheet" href="admin.css">
-    <!-- Librería para Gráficas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -31,10 +28,9 @@
     <!-- DASHBOARD LAYOUT -->
     <div id="dashboard-view" class="dashboard-layout" style="display: none;">
         
-        <!-- SIDEBAR (Navegación Lateral) -->
+        <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <!-- CAMBIO 1: Se quitó el SPAN que decía PRO -->
                 <h2>FortunaBet</h2>
             </div>
             <nav class="sidebar-nav">
@@ -58,22 +54,23 @@
                     <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
                     <div class="info">
                         <span id="admin-email-display">Admin</span>
-                        <!-- CAMBIO 2: Ahora dice Administrador -->
                         <small>Administrador</small>
                     </div>
                 </div>
-                <button id="logout-btn" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+                <button id="logout-btn" class="btn-logout" title="Cerrar Sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </aside>
 
         <!-- MAIN CONTENT -->
         <main class="main-content">
             
-            <!-- SECCIÓN: RESUMEN (GRÁFICA + CARDS) -->
+            <!-- SECCIÓN: RESUMEN -->
             <section id="section-overview" class="content-section active">
                 <header class="top-bar">
                     <h1>Visión General</h1>
-                    <button id="refresh-btn" class="btn btn-secondary"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+                    <div class="action-group">
+                        <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+                    </div>
                 </header>
 
                 <div class="stats-grid">
@@ -91,7 +88,6 @@
                     </div>
                 </div>
 
-                <!-- GRÁFICA DE INGRESOS -->
                 <div class="chart-container panel">
                     <div class="panel-header">
                         <h2><i class="fa-solid fa-chart-line"></i> Ingresos Diarios (Depósitos Aprobados)</h2>
@@ -106,9 +102,12 @@
             <section id="section-deposits" class="content-section">
                 <header class="top-bar">
                     <h1>Gestión de Depósitos</h1>
-                    <div class="search-box">
-                        <i class="fa-solid fa-search"></i>
-                        <input type="text" id="search-deposits" placeholder="Buscar referencia, usuario...">
+                    <div class="action-group">
+                        <div class="search-box">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" id="search-deposits" placeholder="Buscar referencia...">
+                        </div>
+                        <button class="btn btn-secondary btn-refresh" title="Recargar lista"><i class="fa-solid fa-rotate"></i></button>
                     </div>
                 </header>
                 <div class="panel">
@@ -124,9 +123,12 @@
             <section id="section-withdrawals" class="content-section">
                 <header class="top-bar">
                     <h1>Gestión de Retiros</h1>
-                    <div class="search-box">
-                        <i class="fa-solid fa-search"></i>
-                        <input type="text" id="search-withdrawals" placeholder="Buscar usuario...">
+                    <div class="action-group">
+                        <div class="search-box">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" id="search-withdrawals" placeholder="Buscar usuario...">
+                        </div>
+                        <button class="btn btn-secondary btn-refresh" title="Recargar lista"><i class="fa-solid fa-rotate"></i></button>
                     </div>
                 </header>
                 <div class="panel">
@@ -142,9 +144,12 @@
             <section id="section-users" class="content-section">
                 <header class="top-bar">
                     <h1>Base de Datos de Usuarios</h1>
-                    <div class="search-box">
-                        <i class="fa-solid fa-search"></i>
-                        <input type="text" id="search-users" placeholder="Buscar por email, nombre...">
+                    <div class="action-group">
+                        <div class="search-box">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" id="search-users" placeholder="Buscar email...">
+                        </div>
+                        <button class="btn btn-secondary btn-refresh" title="Recargar lista"><i class="fa-solid fa-rotate"></i></button>
                     </div>
                 </header>
                 <div class="panel">
