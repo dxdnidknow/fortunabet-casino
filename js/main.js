@@ -415,7 +415,60 @@ function initCasinoFilters() {
         });
     });
 }
+async function loadRealResults() {
+    const container = document.querySelector('.results-container');
+    if (!container) return;
 
+    container.innerHTML = '<div class="loader-container"><div class="spinner"></div></div>';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/scores`); // Llamamos al backend
+        if (!response.ok) throw new Error('Error cargando resultados');
+        const scores = await response.json();
+
+        // Filtramos solo los que ya terminaron (completed: true)
+        const finishedGames = scores.filter(game => game.completed);
+
+        if (finishedGames.length === 0) {
+            container.innerHTML = `
+                <div class="initial-message" style="padding: 40px;">
+                    <i class="fa-solid fa-calendar-xmark"></i>
+                    <h2>Sin resultados recientes</h2>
+                    <p>No hay partidos finalizados en los últimos 3 días en esta liga.</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = finishedGames.map(game => {
+            const homeScore = game.scores?.find(s => s.name === game.home_team)?.score || 0;
+            const awayScore = game.scores?.find(s => s.name === game.away_team)?.score || 0;
+            
+            // Determinar color (verde si ganó local, rojo si perdió, etc. - opcional)
+            let scoreClass = 'pending'; 
+            if(game.completed) scoreClass = 'win'; // Clase genérica para finalizado
+
+            return `
+            <div class="result-card">
+                <div class="result-league">
+                    <i class="fa-solid fa-trophy" style="color: var(--color-primary); margin-right:10px;"></i>
+                    ${game.sport_title}
+                </div>
+                <div class="result-teams">
+                    <span>${game.home_team}</span>
+                    <span class="result-score ${scoreClass}">${homeScore} - ${awayScore}</span>
+                    <span>${game.away_team}</span>
+                </div>
+                <div class="result-date">
+                    ${new Date(game.commence_time).toLocaleDateString('es-ES', {weekday: 'short', day: 'numeric'})}
+                </div>
+            </div>`;
+        }).join('');
+
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = '<p class="error-message">No se pudieron cargar los resultados en vivo.</p>';
+    }
+}
 function setupEventListeners() {
     document.body.addEventListener('click', async (event) => {
         const target = event.target;
@@ -651,14 +704,14 @@ async function main() {
     }
 
     // PROTECCIÓN DE LA PÁGINA DE RESULTADOS
-    if (window.location.pathname.includes('resultados')) {
-        const token = localStorage.getItem('fortunaToken');
-        
-        if (!token) {
-            // Redirigir si no está logueado
-            window.location.href = '/index.html';
-        }
+if (window.location.pathname.includes('resultados')) {
+    const token = localStorage.getItem('fortunaToken');
+    if (!token) {
+        window.location.href = '/index.html';
+    } else {
+        loadRealResults(); // <--- AGREGA ESTA LÍNEA
     }
+}
 
     if (document.getElementById('featured-events-container')) {
         loadFeaturedEvents();

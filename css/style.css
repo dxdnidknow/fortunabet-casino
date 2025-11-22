@@ -534,9 +534,33 @@ body.home-page .footer-payment-section {
     .main-container { grid-template-columns: 1fr; min-height: 0; }
     .sports-nav:not(.sports-panel__nav) { display: none; }
     .mobile-sports-trigger-container {
-    display: block;
+    display: block !important;
+    margin-bottom: 20px;
+    }
+.sport-link-trigger {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--color-surface-2); /* Fondo gris suave */
+        color: var(--color-primary); /* Texto verde */
+        padding: 15px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        border: 1px solid var(--color-border);
+        transition: all 0.2s ease;
+    }
+
+    .sport-link-trigger:hover, .sport-link-trigger:active {
+        background-color: var(--color-surface-1);
+        border-color: var(--color-primary);
+    }
+
+    .sport-link-trigger i {
+        font-size: 1.2rem;
+    }
 }
-}
+
 @media (max-width: 768px) {
     body { font-size: 15px; }
     .game-slider-container { height: 350px; }

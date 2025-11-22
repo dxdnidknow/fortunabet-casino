@@ -118,6 +118,30 @@ app.get('/api/event/:sportKey/:eventId', sportsApiLimiter, (req, res) => {
     }
     res.status(404).json({ message: 'Evento no encontrado o caché expirado.' });
 });
+// --- RUTA NUEVA: RESULTADOS REALES ---
+app.get('/api/scores', sportsApiLimiter, async (req, res) => {
+    try {
+        // Intentamos obtener del caché primero (dura 30 minutos)
+        const cachedScores = eventsCache.get('allScores');
+        if (cachedScores) { return res.json(cachedScores); }
+
+        // Pedimos resultados de fútbol (puedes agregar más deportes separados por comas)
+        // daysFrom: 3 (Resultados de los últimos 3 días)
+        const response = await axios.get('https://api.the-odds-api.com/v4/sports/soccer_epl/scores', { // Ejemplo: Premier League
+            params: { 
+                apiKey: API_KEY, 
+                daysFrom: 3,
+                dateFormat: 'iso'
+            }
+        });
+
+        // Guardamos en caché
+        eventsCache.set('allScores', response.data, 1800); // 1800 segundos = 30 min
+        res.json(response.data);
+    } catch (error) {
+        handleApiError(error, res);
+    }
+});
 
 // --- Rutas Protegidas de Usuario ---
 app.use('/api/user', userRoutes);
