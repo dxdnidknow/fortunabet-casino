@@ -1,5 +1,5 @@
 /* ==========================================================================
-   style.css (VERSIÓN FINAL DEFINITIVA - 22/11/2025)
+   style.css (VERSIÓN FINAL DEFINITIVA - AJUSTE BOTÓN AYUDA)
    ========================================================================== */
 
 /* ==========================================================================
@@ -204,33 +204,68 @@ a:hover { color: var(--color-primary-light); }
 .bet-slip { background-color: var(--color-surface-1); padding: calc(var(--spacing-unit) * 3); border-radius: var(--border-radius-md); position: sticky; top: calc(var(--header-height) + var(--top-bar-height) + 25px); border: 1px solid var(--color-border); }
 .bet-slip h3 { text-align: center; margin-bottom: calc(var(--spacing-unit) * 3); font-size: 1.3rem; }
 .bet-slip .empty-message { text-align: center; color: var(--color-text-secondary); }
-.bet-summary {
-    border-top: 1px solid var(--color-border);
-    padding-top: 20px;
-    margin-top: 20px;
-    display: flex;           /* Usamos Flexbox */
-    flex-direction: column;  /* Elementos uno debajo del otro */
-    align-items: stretch;    /* Estirar para ocupar todo el ancho */
-    gap: 15px;               /* Espacio entre elementos */
-}
 
-/* El botón específico */
-#place-bet-btn {
-    width: 100%;             /* Ocupar todo el ancho disponible */
+/* CORRECCIÓN: ALINEACIÓN DEL CUPÓN */
+.bet-summary { 
+    border-top: 1px solid var(--color-border); 
+    padding-top: 20px; 
+    margin-top: 20px; 
     display: flex;
-    justify-content: center; /* Texto centrado horizontalmente */
-    align-items: center;     /* Texto centrado verticalmente */
-    padding: 14px;
-    font-size: 1.1rem;
-    margin-top: 10px;        /* Un poco de aire arriba */
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
 }
 .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .stake-input { width: 100px; background-color: var(--color-background); border: 1px solid var(--color-border); color: var(--color-text-primary); padding: 8px 12px; border-radius: var(--border-radius-sm); text-align: right; font-size: 1rem; }
+
+/* CORRECCIÓN: BOTÓN REALIZAR APUESTA CENTRADO */
+#place-bet-btn {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 14px;
+    font-size: 1.1rem;
+    margin-top: 10px;
+}
 
 .bet-item { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; background-color: var(--color-surface-2); padding: 12px; border-radius: var(--border-radius-sm); margin-bottom: 10px; font-size: 0.9rem; }
 .bet-item-odds { font-weight: 700; color: var(--color-primary); }
 .remove-bet-btn { background: none; border: none; color: var(--color-text-secondary); font-size: 1.5rem; cursor: pointer; grid-column: 2; grid-row: 1 / span 2; transition: var(--main-transition); }
 .remove-bet-btn:hover { color: var(--color-loss); transform: rotate(90deg); }
+
+/* ==========================================================================
+   CORRECCIÓN: BOTÓN VER LIGAS (SOLO MÓVIL)
+   ========================================================================== */
+.mobile-sports-trigger-container {
+    display: none !important; /* En PC oculto siempre */
+}
+
+@media (max-width: 1024px) {
+    .mobile-sports-trigger-container {
+        display: block !important;
+        margin-bottom: 20px;
+    }
+
+    .sport-link-trigger {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--color-surface-2);
+        color: var(--color-primary);
+        padding: 15px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        border: 1px solid var(--color-border);
+        transition: all 0.2s ease;
+    }
+
+    .sport-link-trigger:hover, .sport-link-trigger:active {
+        background-color: var(--color-surface-1);
+        border-color: var(--color-primary);
+    }
+}
 
 /* ==========================================================================
    5. PÁGINAS ESPECÍFICAS (Contacto, Auth, etc.)
@@ -343,22 +378,23 @@ a:hover { color: var(--color-primary-light); }
    9. FOOTER (DISEÑO UNIFICADO Y PROFESIONAL)
    ========================================================================== */
 
-/* Contenedor Principal del Footer */
+/* CORRECCIÓN: OCULTAR FOOTER POR DEFECTO PARA EVITAR PROBLEMAS */
 .main-footer {
     display: none;
-    background-color: #0f1115; /* Negro profundo */
+    background-color: #0f1115;
     border-top: 1px solid var(--color-border);
-    padding: 60px 0 30px; /* Más espacio arriba para respirar */
-    margin-top: auto; /* Empuja el footer al fondo si hay poco contenido */
+    padding: 60px 0 30px;
+    margin-top: auto;
     width: 100%;
     position: relative;
     z-index: 10;
 }
 
+/* CORRECCIÓN: MOSTRAR SOLO EN HOME */
 body.home-page .main-footer {
     display: block;
 }
-/* Contenedor interno para centrar el contenido */
+
 .footer-container {
     max-width: var(--container-max-width);
     margin: 0 auto;
@@ -366,15 +402,9 @@ body.home-page .main-footer {
     text-align: center;
 }
 
-/* --- SECCIÓN 1: MÉTODOS DE PAGO (SOLO HOME) --- */
+/* SECCIÓN 1: MÉTODOS DE PAGO */
 .footer-payment-section {
-    display: none; /* Oculto por defecto en páginas internas */
     margin-bottom: 40px;
-}
-
-/* Esta clase se agrega al body en index.html */
-body.home-page .footer-payment-section {
-    display: block;
 }
 
 .footer-payment-section p {
@@ -391,7 +421,7 @@ body.home-page .footer-payment-section {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 40px; /* Espacio generoso entre logos */
+    gap: 40px;
     flex-wrap: wrap;
 }
 
@@ -399,21 +429,19 @@ body.home-page .footer-payment-section {
     height: 35px;
     width: auto;
     object-fit: contain;
-    
-    /* FILTRO MÁGICO: Los vuelve blancos y brillantes */
     filter: grayscale(100%) brightness(1000%); 
-    opacity: 0.5; /* Sutil por defecto */
+    opacity: 0.5;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
 }
 
 .payment-logos img:hover {
-    filter: none; /* Recupera color original */
-    opacity: 1;   /* Brillo total */
-    transform: translateY(-3px) scale(1.1); /* Efecto de elevación */
+    filter: none;
+    opacity: 1;
+    transform: translateY(-3px) scale(1.1);
 }
 
-/* --- LÍNEA DIVISORIA --- */
+/* LÍNEA DIVISORIA */
 .footer-divider {
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--color-border), transparent);
@@ -422,7 +450,7 @@ body.home-page .footer-payment-section {
     opacity: 0.5;
 }
 
-/* --- SECCIÓN 2: LEGAL Y COPYRIGHT --- */
+/* SECCIÓN 2: LEGAL Y COPYRIGHT */
 .footer-bottom {
     display: flex;
     justify-content: space-between;
@@ -430,8 +458,8 @@ body.home-page .footer-payment-section {
     flex-wrap: wrap;
     gap: 20px;
     
-    /* FIX: Espacio a la derecha para que no choque con el botón flotante */
-    padding-right: 90px; 
+    /* CORRECCIÓN: ESPACIO PARA EL BOTÓN FLOTANTE */
+    padding-right: 160px; 
 }
 
 .footer-brand p {
@@ -457,7 +485,6 @@ body.home-page .footer-payment-section {
     color: var(--color-primary);
 }
 
-/* Pequeño subrayado animado al pasar el mouse */
 .footer-links a::after {
     content: '';
     position: absolute;
@@ -477,14 +504,14 @@ body.home-page .footer-payment-section {
    ========================================================================== */
 .help-trigger-btn { 
     position: fixed; 
-    bottom: 30px; /* Subido para que no estorbe */
+    bottom: 25px; /* CORRECCIÓN: UBICACIÓN */
     right: 25px; 
     width: 50px; height: 50px; border-radius: 50%; 
     background: var(--color-primary); color: #000; 
     border: none; font-size: 1.8rem; 
     display: flex; justify-content: center; align-items: center; 
     cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.3); 
-    z-index: 9999; /* Siempre encima */
+    z-index: 9999; 
     transition: transform 0.3s ease, background-color 0.3s ease; 
 }
 .help-trigger-btn:hover { transform: scale(1.1) rotate(10deg); background: var(--color-primary-light); }
@@ -533,34 +560,8 @@ body.home-page .footer-payment-section {
     .header-left { flex-grow: 0; }
     .main-container { grid-template-columns: 1fr; min-height: 0; }
     .sports-nav:not(.sports-panel__nav) { display: none; }
-    .mobile-sports-trigger-container {
-    display: block !important;
-    margin-bottom: 20px;
-    }
-.sport-link-trigger {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: var(--color-surface-2); /* Fondo gris suave */
-        color: var(--color-primary); /* Texto verde */
-        padding: 15px 20px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        border: 1px solid var(--color-border);
-        transition: all 0.2s ease;
-    }
-
-    .sport-link-trigger:hover, .sport-link-trigger:active {
-        background-color: var(--color-surface-1);
-        border-color: var(--color-primary);
-    }
-
-    .sport-link-trigger i {
-        font-size: 1.2rem;
-    }
+    .mobile-sports-trigger-container { display: block; }
 }
-
 @media (max-width: 768px) {
     body { font-size: 15px; }
     .game-slider-container { height: 350px; }
@@ -577,7 +578,7 @@ body.home-page .footer-payment-section {
     
     /* Responsive Footer */
     .main-footer {
-        padding: 40px 0 80px; /* Más padding abajo para no chocar con el menú móvil si lo hubiera */
+        padding: 40px 0 80px; 
     }
     .payment-logos {
         gap: 25px;
@@ -588,7 +589,7 @@ body.home-page .footer-payment-section {
     .footer-bottom {
         flex-direction: column;
         gap: 15px;
-        padding-right: 0; /* En móvil quitamos el padding derecho porque se apila verticalmente */
+        padding-right: 0; /* En móvil quitamos el padding derecho porque se apila */
     }
     .footer-links {
         gap: 15px;
@@ -843,32 +844,3 @@ body.role-admin #admin-panel-link { display: flex !important; }
 .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; color: var(--color-text-secondary); }
 .faq-answer p { padding-bottom: 20px; margin: 0; }
 .faq-question.active i { transform: rotate(180deg); }
-/* ==========================================================================
-   PARCHE FINAL: VISIBILIDAD DEL MENÚ MÓVIL
-   ========================================================================== */
-
-/* 1. Ocultar SIEMPRE por defecto (PC y Pantallas grandes) */
-.mobile-sports-trigger-container {
-    display: none !important;
-}
-
-/* 2. Mostrar SOLO si la pantalla es menor a 1024px (Tablets y Celulares) */
-@media (max-width: 1024px) {
-    .mobile-sports-trigger-container {
-        display: block !important;
-        margin-bottom: 20px;
-    }
-
-    .sport-link-trigger {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: var(--color-surface-2);
-        color: var(--color-primary);
-        padding: 15px 20px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        border: 1px solid var(--color-border);
-    }
-}

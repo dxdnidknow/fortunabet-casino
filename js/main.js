@@ -702,20 +702,6 @@ async function main() {
             await initAccountDashboard(); 
         }
     }
-
-    // PROTECCIÓN DE LA PÁGINA DE RESULTADOS
-if (window.location.pathname.includes('resultados')) {
-    const token = localStorage.getItem('fortunaToken');
-    if (!token) {
-        window.location.href = '/index.html';
-    } else {
-        loadRealResults(); // <--- AGREGA ESTA LÍNEA
-    }
-}
-
-    if (document.getElementById('featured-events-container')) {
-        loadFeaturedEvents();
-    }
 }
 
 document.addEventListener('DOMContentLoaded', main);
