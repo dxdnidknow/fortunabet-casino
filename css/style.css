@@ -1,5 +1,5 @@
 /* ==========================================================================
-   style.css (VERSIÓN FINAL DEFINITIVA - AJUSTE BOTÓN AYUDA)
+   style.css (VERSIÓN FINAL MAESTRA - FORTUNABET)
    ========================================================================== */
 
 /* ==========================================================================
@@ -205,7 +205,7 @@ a:hover { color: var(--color-primary-light); }
 .bet-slip h3 { text-align: center; margin-bottom: calc(var(--spacing-unit) * 3); font-size: 1.3rem; }
 .bet-slip .empty-message { text-align: center; color: var(--color-text-secondary); }
 
-/* CORRECCIÓN: ALINEACIÓN DEL CUPÓN */
+/* Alineación del Cupón y Botón */
 .bet-summary { 
     border-top: 1px solid var(--color-border); 
     padding-top: 20px; 
@@ -218,7 +218,7 @@ a:hover { color: var(--color-primary-light); }
 .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .stake-input { width: 100px; background-color: var(--color-background); border: 1px solid var(--color-border); color: var(--color-text-primary); padding: 8px 12px; border-radius: var(--border-radius-sm); text-align: right; font-size: 1rem; }
 
-/* CORRECCIÓN: BOTÓN REALIZAR APUESTA CENTRADO */
+/* BOTÓN REALIZAR APUESTA CENTRADO */
 #place-bet-btn {
     width: 100%;
     display: flex;
@@ -375,128 +375,155 @@ a:hover { color: var(--color-primary-light); }
 .sports-panel .nav-container { height: 100%; overflow-y: auto; }
 
 /* ==========================================================================
-   9. FOOTER (DISEÑO UNIFICADO Y PROFESIONAL)
+   9. FOOTER (DISEÑO FORTUNABET - 4 COLUMNAS)
    ========================================================================== */
 
-/* CORRECCIÓN: OCULTAR FOOTER POR DEFECTO PARA EVITAR PROBLEMAS */
+/* Contenedor Principal - Oculto por defecto */
 .main-footer {
     display: none;
-    background-color: #0f1115;
+    background-color: #0b0d10; /* Negro suave */
+    color: var(--color-text-secondary);
     border-top: 1px solid var(--color-border);
     padding: 60px 0 30px;
     margin-top: auto;
-    width: 100%;
+    font-size: 0.9rem;
     position: relative;
     z-index: 10;
 }
 
-/* CORRECCIÓN: MOSTRAR SOLO EN HOME */
+/* Solo se muestra en la Home */
 body.home-page .main-footer {
     display: block;
 }
 
 .footer-container {
-    max-width: var(--container-max-width);
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 25px;
-    text-align: center;
 }
 
-/* SECCIÓN 1: MÉTODOS DE PAGO */
-.footer-payment-section {
-    margin-bottom: 40px;
+/* --- GRID DE 4 COLUMNAS --- */
+.footer-links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 40px;
+    margin-bottom: 50px;
+    text-align: left;
 }
 
-.footer-payment-section p {
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
-    margin-bottom: 25px;
+.footer-col h3 {
+    color: var(--color-primary); /* Verde Fortuna */
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 20px;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 500;
-    opacity: 0.8;
+    letter-spacing: 0.5px;
+    position: relative;
+    display: inline-block;
+}
+
+/* Pequeña línea decorativa */
+.footer-col h3::after {
+    content: '';
+    display: block;
+    width: 30px;
+    height: 2px;
+    background-color: var(--color-primary);
+    margin-top: 8px;
+    opacity: 0.5;
+}
+
+.footer-col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-col li {
+    margin-bottom: 12px;
+}
+
+.footer-col a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-weight: 400;
+    display: inline-block;
+}
+
+.footer-col a:hover {
+    color: #fff;
+    transform: translateX(5px);
+}
+
+/* --- DIVISOR --- */
+.footer-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+    margin-bottom: 40px;
+    opacity: 0.5;
+}
+
+/* --- MÉTODOS DE PAGO --- */
+.footer-payment-section {
+    text-align: center;
+    margin-bottom: 30px;
 }
 
 .payment-logos {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 40px;
+    gap: 30px;
     flex-wrap: wrap;
 }
 
 .payment-logos img {
-    height: 35px;
+    height: 32px;
     width: auto;
-    object-fit: contain;
-    filter: grayscale(100%) brightness(1000%); 
-    opacity: 0.5;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
+    /* Filtro blanco brillante */
+    filter: grayscale(100%) brightness(500%); 
+    opacity: 0.6;
+    transition: all 0.3s ease;
 }
 
 .payment-logos img:hover {
     filter: none;
     opacity: 1;
-    transform: translateY(-3px) scale(1.1);
+    transform: scale(1.1);
 }
 
-/* LÍNEA DIVISORIA */
-.footer-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--color-border), transparent);
-    margin: 0 auto 30px;
-    width: 80%;
-    opacity: 0.5;
-}
-
-/* SECCIÓN 2: LEGAL Y COPYRIGHT */
-.footer-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 20px;
-    
-    /* CORRECCIÓN: ESPACIO PARA EL BOTÓN FLOTANTE */
+/* --- TEXTO LEGAL --- */
+.footer-legal {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #555;
+    padding-top: 20px;
+    /* CORRECCIÓN: Espacio derecho para evitar solapamiento con botón flotante */
     padding-right: 160px; 
 }
 
-.footer-brand p {
+.footer-legal .copyright {
     color: var(--color-text-secondary);
-    font-size: 0.9rem;
-    margin: 0;
+    font-weight: 500;
 }
 
-.footer-links {
-    display: flex;
-    gap: 25px;
-}
+/* --- RESPONSIVIDAD --- */
+@media (max-width: 768px) {
+    .footer-links-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 30px;
+    }
 
-.footer-links a {
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
-    text-decoration: none;
-    transition: color 0.2s;
-    position: relative;
-}
-
-.footer-links a:hover {
-    color: var(--color-primary);
-}
-
-.footer-links a::after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 1px;
-    bottom: -2px;
-    left: 0;
-    background-color: var(--color-primary);
-    transition: width 0.3s;
-}
-.footer-links a:hover::after {
-    width: 100%;
+    .footer-col h3::after {
+        margin: 8px auto 0;
+    }
+    
+    .footer-legal {
+        padding-right: 0; /* En móvil el botón flota encima sin problema */
+        padding-bottom: 80px; 
+    }
 }
 
 /* ==========================================================================
@@ -504,14 +531,14 @@ body.home-page .main-footer {
    ========================================================================== */
 .help-trigger-btn { 
     position: fixed; 
-    bottom: 25px; /* CORRECCIÓN: UBICACIÓN */
+    bottom: 25px; /* CORRECCIÓN: Posición cómoda */
     right: 25px; 
     width: 50px; height: 50px; border-radius: 50%; 
     background: var(--color-primary); color: #000; 
     border: none; font-size: 1.8rem; 
     display: flex; justify-content: center; align-items: center; 
     cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.3); 
-    z-index: 9999; 
+    z-index: 9999; /* Siempre encima */
     transition: transform 0.3s ease, background-color 0.3s ease; 
 }
 .help-trigger-btn:hover { transform: scale(1.1) rotate(10deg); background: var(--color-primary-light); }
@@ -589,7 +616,7 @@ body.home-page .main-footer {
     .footer-bottom {
         flex-direction: column;
         gap: 15px;
-        padding-right: 0; /* En móvil quitamos el padding derecho porque se apila */
+        padding-right: 0; 
     }
     .footer-links {
         gap: 15px;
@@ -802,30 +829,6 @@ input[type="password"]::-webkit-reveal, input[type="password"]::-webkit-clear-bu
 body.role-admin #admin-panel-link { display: flex !important; }
 .verification-notice { font-size: 0.8rem; color: var(--color-pending); margin-top: 15px; background-color: rgba(241, 196, 15, 0.1); padding: 8px; border-radius: var(--border-radius-sm); }
 .verification-notice i { margin-right: 5px; }
-
-/* ==========================================================================
-   NUEVOS ESTILOS PARA PAGO/MÉTODOS (MI CUENTA)
-   ========================================================================== */
-#payout-methods-list .card { padding: 10px; }
-.data-list-item { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 20px; background-color: var(--color-surface-2); border-radius: var(--border-radius-sm); margin-bottom: 10px; border: 1px solid var(--color-border); }
-.data-list-item:last-child { margin-bottom: 0; }
-.item-info h4 { display: flex; align-items: center; gap: 10px; font-size: 1rem; font-weight: 600; margin-bottom: 5px; }
-.item-info i { color: var(--color-primary); }
-.item-info p { font-size: 0.9rem; color: var(--color-text-secondary); word-break: break-all; }
-.item-action { display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
-.tag { font-size: 0.8rem; font-weight: 700; padding: 5px 12px; border-radius: 20px; text-transform: uppercase; }
-.tag-primary { background-color: var(--color-primary); color: #000; }
-.item-action .btn-sm { padding: 8px 15px; }
-
-/* Checkbox customizado */
-.checkbox-group { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-.checkbox-group input[type="checkbox"] { appearance: none; -webkit-appearance: none; position: absolute; opacity: 0; }
-.checkbox-group label { color: var(--color-text-primary); position: relative; padding-left: 30px; cursor: pointer; }
-.checkbox-group label::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; background-color: var(--color-background); border: 2px solid var(--color-border); border-radius: 4px; transition: var(--main-transition); }
-.checkbox-group label::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; left: 4px; top: 50%; transform: translateY(-50%) scale(0); font-size: 14px; color: #000; transition: var(--main-transition); }
-.checkbox-group input[type="checkbox"]:checked + label::before { background-color: var(--color-primary); border-color: var(--color-primary); }
-.checkbox-group input[type="checkbox"]:checked + label::after { transform: translateY(-50%) scale(1); }
-.checkbox-group input[type="checkbox"]:focus-visible + label::before { outline: 2px solid var(--color-primary-light); outline-offset: 2px; }
 
 /* ==========================================================================
    PÁGINAS LEGALES Y AYUDA
