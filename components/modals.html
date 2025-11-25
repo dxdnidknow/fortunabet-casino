@@ -1,360 +1,297 @@
-<!-- Archivo: components/modals.html (VERSIÓN BOLÍVARES) -->
+<!-- ======================================================================= -->
+<!--       ARCHIVO components/modals.html (COMPLETO Y SEPARADO)              -->
+<!-- ======================================================================= -->
 
+<!-- 1. REGISTRO -->
 <div id="register-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
-		
         <div id="success-message" class="hidden" style="text-align: center;">
             <i class="fa-solid fa-circle-check" style="font-size: 48px; color: var(--color-success); margin-bottom: 15px;"></i>
-            <h2 style="color: var(--primary-color);">¡Registro Exitoso!</h2>
-            <p>Tu cuenta ha sido creada. Ya puedes iniciar sesión y comenzar a jugar.</p>
-            <button class="btn btn-primary btn-cta" data-modal-switch="login-modal" style="margin-top: 20px;">Iniciar Sesión Ahora</button>
+            <h2 style="color: var(--color-primary);">¡Registro Exitoso!</h2>
+            <p>Tu cuenta ha sido creada.</p>
+            <button class="btn btn-primary btn-cta" data-modal-switch="login-modal" style="margin-top: 20px;">Iniciar Sesión</button>
         </div>
-
 		<div id="register-form-container">
-			<div class="auth-header">
-				<h2>Crea tu cuenta</h2>
-				<p>Únete a la acción en menos de un minuto.</p>
-			</div>
+			<div class="auth-header"><h2>Crea tu cuenta</h2><p>Únete a la acción en menos de un minuto.</p></div>
 			<form id="register-form" class="auth-form">
 				<div class="form-group">
-					<label for="username">Nombre de usuario</label>
+					<label>Nombre de usuario</label>
 					<div class="input-wrapper">
-						<input type="text" id="username" name="username" placeholder="Elige un nombre único" 
-							   required 
-							   minlength="4"
-                               maxlength="20"
-							   pattern="[a-zA-Z]+" 
-							   title="Solo letras, sin espacios ni números. Mínimo 4 caracteres.">
-						
-						<span class="tooltip-trigger" 
-							  data-tooltip="El nombre de usuario debe tener al menos 4 letras. No se permiten espacios, números ni caracteres especiales.">
-							<i class="fa-solid fa-circle-info"></i>
-						</span>
+						<input type="text" id="username" name="username" placeholder="Usuario único" required minlength="4" maxlength="20" pattern="[a-zA-Z]+">
 					</div>
 				</div>
-				<div class="form-group">
-					<label for="email">Correo Electrónico</label>
-					<input type="email" id="email" name="email" placeholder="tu@correo.com" required autocomplete="email">
-				</div>
-
+				<div class="form-group"><label>Correo</label><input type="email" id="email" name="email" placeholder="tu@correo.com" required></div>
 				<div class="form-group password-group">
-					<label for="register-password">Contraseña</label>
-					<div class="input-wrapper">
-						<input type="password" id="register-password" name="register-password" placeholder="Mínimo 8 caracteres" required autocomplete="new-password" title="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.">
-						<button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
-							<i class="fa-solid fa-eye" aria-hidden="true"></i>
-						</button>
-					</div>
+					<label>Contraseña</label>
+					<div class="input-wrapper"><input type="password" id="register-password" name="register-password" placeholder="Mínimo 8 caracteres" required><button type="button" class="toggle-password"><i class="fa-solid fa-eye"></i></button></div>
 				</div>
-
 				<div class="form-group password-group">
-					<label for="register-confirm-password">Confirmar Contraseña</label>
-					<div class="input-wrapper">
-						<input type="password" id="register-confirm-password" name="register-confirm-password" placeholder="Repite la contraseña" required autocomplete="new-password" title="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.">
-						<button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
-							<i class="fa-solid fa-eye" aria-hidden="true"></i>
-						</button>
-					</div>
+					<label>Confirmar</label>
+					<div class="input-wrapper"><input type="password" id="register-confirm-password" name="register-confirm-password" placeholder="Repite la contraseña" required><button type="button" class="toggle-password"><i class="fa-solid fa-eye"></i></button></div>
 				</div>
-
-				<p id="error-message" class="error-message" aria-live="polite"></p>
-
+				<p id="error-message" class="error-message"></p>
 				<button type="submit" class="btn btn-primary btn-cta">Crear Cuenta</button>
 			</form>
-			<div class="auth-footer">
-				<p>¿Ya tienes una cuenta? <a href="#" data-modal-switch="login-modal">Inicia sesión aquí</a></p>
-			</div>
+			<div class="auth-footer"><p>¿Ya tienes cuenta? <a href="#" data-modal-switch="login-modal">Inicia sesión</a></p></div>
 		</div>
 	</div>
 </div>
 
+<!-- 2. LOGIN -->
 <div id="login-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
-		<div class="auth-header">
-			<h2>Iniciar Sesión</h2>
-			<p>Bienvenido de vuelta.</p>
-		</div>
+		<div class="auth-header"><h2>Iniciar Sesión</h2><p>Bienvenido de vuelta.</p></div>
 		<form id="login-form" class="auth-form">
-			<div class="form-group">
-				<label for="login-identifier">Correo o Usuario</label>
-				<input type="text" id="login-identifier" name="login-identifier" placeholder="tu@correo.com o tu_usuario" required>
-			</div>
-
+			<div class="form-group"><label>Correo o Usuario</label><input type="text" id="login-identifier" name="login-identifier" required></div>
 			<div class="form-group password-group">
-				<label for="login-password">Contraseña</label>
-				<div class="input-wrapper">
-					<input type="password" id="login-password" name="login-password" placeholder="Ingresa tu contraseña" required autocomplete="current-password">
-					<button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
-						<i class="fa-solid fa-eye" aria-hidden="true"></i>
-					</button>
-				</div>
+				<label>Contraseña</label>
+				<div class="input-wrapper"><input type="password" id="login-password" name="login-password" required><button type="button" class="toggle-password"><i class="fa-solid fa-eye"></i></button></div>
 			</div>
-			
 			<a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
-
-			<p id="login-error-message" class="error-message" aria-live="polite"></p>
-
+			<p id="login-error-message" class="error-message"></p>
 			<button type="submit" class="btn btn-primary btn-cta">Ingresar</button>
 		</form>
-		<div class="auth-footer">
-			<p>¿No tienes una cuenta? <a href="#" data-modal-switch="register-modal">Crea una aquí</a></p>
-		</div>
+		<div class="auth-footer"><p>¿No tienes cuenta? <a href="#" data-modal-switch="register-modal">Crea una aquí</a></p></div>
 	</div>
 </div>
 
+<!-- 3. FORGOT PASSWORD -->
 <div id="forgot-password-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
-		
 		<div id="forgot-form-container">
-			<div class="auth-header">
-				<h2>Recuperar Contraseña</h2>
-				<p>Ingresa tu correo y te enviaremos un enlace para restablecerla.</p>
-			</div>
+			<div class="auth-header"><h2>Recuperar Contraseña</h2><p>Ingresa tu correo.</p></div>
 			<form id="forgot-password-form" class="auth-form">
-				<div class="form-group">
-					<label for="forgot-email">Correo Electrónico</label>
-					<input type="email" id="forgot-email" name="forgot-email" placeholder="tu@correo.com" required autocomplete="email">
-				</div>
-				<p id="forgot-error-message" class="error-message" aria-live="polite"></p>
-				<button type="submit" class="btn btn-primary btn-cta">Enviar Enlace</button>
+				<div class="form-group"><label>Correo</label><input type="email" id="forgot-email" name="forgot-email" required></div>
+				<p id="forgot-error-message" class="error-message"></p>
+				<button type="submit" class="btn btn-primary btn-cta">Enviar</button>
 			</form>
-			<div class="auth-footer">
-				<p>¿Recordaste tu contraseña? <a href="#" data-modal-switch="login-modal">Vuelve a Iniciar Sesión</a></p>
-			</div>
+            <div class="auth-footer"><p><a href="#" data-modal-switch="login-modal">Volver</a></p></div>
 		</div>
-
 		<div id="forgot-success-message" class="hidden" style="text-align: center;">
             <i class="fa-solid fa-paper-plane" style="font-size: 48px; color: var(--color-primary); margin-bottom: 15px;"></i>
-            <h2>Revisa tu Correo</h2>
-            <p>Si tu cuenta existe, hemos enviado un enlace a tu dirección de correo para que puedas restablecer tu contraseña.</p>
+            <h2>Revisa tu Correo</h2><p>Enviamos un enlace de recuperación.</p>
         </div>
 	</div>
 </div>
 
+<!-- 4. RESET PASSWORD -->
 <div id="reset-password-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
 		<div id="reset-form-container">
-			<div class="auth-header">
-				<h2>Crear Nueva Contraseña</h2>
-				<p>Ingresa una nueva contraseña segura para tu cuenta.</p>
-			</div>
+			<div class="auth-header"><h2>Nueva Contraseña</h2></div>
 			<form id="reset-password-form" class="auth-form">
 				<div class="form-group password-group">
-					<label for="reset-password">Nueva Contraseña</label>
-					<div class="input-wrapper">
-						<input type="password" id="reset-password" name="reset-password" placeholder="Mínimo 8 caracteres" required autocomplete="new-password" title="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.">
-						<button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
-							<i class="fa-solid fa-eye" aria-hidden="true"></i>
-						</button>
-					</div>
+					<label>Nueva Contraseña</label>
+					<div class="input-wrapper"><input type="password" id="reset-password" required><button type="button" class="toggle-password"><i class="fa-solid fa-eye"></i></button></div>
 				</div>
 				<div class="form-group password-group">
-					<label for="reset-confirm-password">Confirmar Nueva Contraseña</label>
-					<div class="input-wrapper">
-						<input type="password" id="reset-confirm-password" name="reset-confirm-password" placeholder="Repite la nueva contraseña" required autocomplete="new-password" title="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.">
-						<button type="button" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
-							<i class="fa-solid fa-eye" aria-hidden="true"></i>
-						</button>
-					</div>
+					<label>Confirmar</label>
+					<div class="input-wrapper"><input type="password" id="reset-confirm-password" required><button type="button" class="toggle-password"><i class="fa-solid fa-eye"></i></button></div>
 				</div>
-				<p id="reset-error-message" class="error-message" aria-live="polite"></p>
-				<button type="submit" class="btn btn-primary btn-cta">Actualizar Contraseña</button>
+				<p id="reset-error-message" class="error-message"></p>
+				<button type="submit" class="btn btn-primary btn-cta">Actualizar</button>
 			</form>
 		</div>
-
 		<div id="reset-success-message" class="hidden" style="text-align: center;">
-            <i class="fa-solid fa-circle-check" style="font-size: 48px; color: var(--color-success); margin-bottom: 15px;"></i>
-            <h2>¡Contraseña Actualizada!</h2>
-            <p>Tu contraseña ha sido cambiada con éxito. Ya puedes iniciar sesión.</p>
-			<button class="btn btn-primary btn-cta" data-modal-switch="login-modal" style="margin-top: 20px;">Ir a Iniciar Sesión</button>
+            <i class="fa-solid fa-circle-check" style="font-size: 48px; color: var(--color-success);"></i>
+            <h2>¡Listo!</h2><button class="btn btn-primary btn-cta" data-modal-switch="login-modal">Iniciar Sesión</button>
         </div>
 	</div>
 </div>
 
-<!-- ================================================================== -->
-<!-- MODAL DE DEPÓSITO (ACTUALIZADO A BS.) -->
-<!-- ================================================================== -->
+<!-- 5. DEPÓSITO -->
 <div id="deposit-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
-		<div class="auth-header">
-			<h2>Realizar un Depósito</h2>
-			<p>Selecciona tu método de pago preferido.</p>
-		</div>
-
+		<div class="auth-header"><h2>Depositar</h2><p>Selecciona un método.</p></div>
 		<div id="deposit-flow-container">
 			<div id="deposit-step-1" class="deposit-step active">
 				<div class="payment-methods-grid">
-					<button class="payment-method-btn" data-method="pago-movil">
-						<i class="fa-solid fa-mobile-screen-button"></i>
-						<span>Pago Móvil</span>
-					</button>
-					<button class="payment-method-btn" data-method="transferencia">
-						<i class="fa-solid fa-building-columns"></i>
-						<span>Transferencia Bs.</span>
-					</button>
-					<!-- Opcional: Mantener USDT si aceptas -->
-					<button class="payment-method-btn" data-method="usdt">
-						<i class="fa-brands fa-bitcoin"></i>
-						<span>Cripto (USDT)</span>
-					</button>
+					<button class="payment-method-btn" data-method="pago-movil"><i class="fa-solid fa-mobile-screen-button"></i><span>Pago Móvil</span></button>
+					<button class="payment-method-btn" data-method="transferencia"><i class="fa-solid fa-building-columns"></i><span>Transferencia</span></button>
+					<button class="payment-method-btn" data-method="usdt"><i class="fa-brands fa-bitcoin"></i><span>USDT</span></button>
 				</div>
 			</div>
-
 			<div id="deposit-step-2" class="deposit-step">
 				<button class="back-to-methods btn btn-secondary" style="margin-bottom: 20px;">&lt; Volver</button>
-				
 				<div id="instructions-pago-movil" class="payment-instructions">
-					<h4>Instrucciones para Pago Móvil</h4>
-					<p>Realiza el pago a los siguientes datos y luego reporta tu pago:</p>
-					<ul class="payment-details">
-						<li><strong>Banco:</strong> 0102 - Banco de Venezuela</li>
-						<li><strong>CI:</strong> V-12.345.678</li>
-						<li><strong>Teléfono:</strong> 0414-1234567</li>
-					</ul>
+					<h4>Pago Móvil</h4><ul class="payment-details"><li><strong>Banco:</strong> 0102 - Venezuela</li><li><strong>CI:</strong> V-12.345.678</li><li><strong>Tlf:</strong> 0414-1234567</li></ul>
 				</div>
 				<div id="instructions-transferencia" class="payment-instructions">
-					<h4>Instrucciones para Transferencia</h4>
-					<p>Realiza el pago a la siguiente cuenta y luego reporta tu pago:</p>
-					<ul class="payment-details">
-						<li><strong>Banco:</strong> 0102 - Banco de Venezuela</li>
-						<li><strong>Titular:</strong> FortunaBet C.A.</li>
-						<li><strong>RIF:</strong> J-12345678-9</li>
-						<li><strong>N° de Cuenta:</strong> 01020123456789012345</li>
-					</ul>
+					<h4>Transferencia</h4><ul class="payment-details"><li><strong>Banco:</strong> 0102 - Venezuela</li><li><strong>Cuenta:</strong> 01020123456789012345</li></ul>
 				</div>
 				<div id="instructions-usdt" class="payment-instructions">
-					<h4>Instrucciones para USDT (Tether)</h4>
-					<p>Envía el monto exacto a la siguiente dirección de billetera (Red TRC20):</p>
-					<div class="wallet-address">
-						<span>TAbcDEfgHiJkLMnOpqRSTuvwxyz12345</span>
-						<button class="copy-btn" aria-label="Copiar dirección"><i class="fa-solid fa-copy"></i></button>
-					</div>
+					<h4>USDT (TRC20)</h4><div class="wallet-address"><span>TAbcDEfgHiJkLMnOpqRSTuvwxyz12345</span><button class="copy-btn"><i class="fa-solid fa-copy"></i></button></div>
 				</div>
-
 				<form id="report-payment-form" class="auth-form" style="margin-top: 20px;">
-					<div class="form-group">
-						<!-- CAMBIO AQUÍ: Etiqueta y Placeholder en Bs. -->
-						<label for="deposit-amount">Monto a Depositar (Bs.)</label>
-						<input type="number" id="deposit-amount" name="deposit-amount" placeholder="Ej: 500.00" step="0.01" required>
-					</div>
-					<div class="form-group">
-						<label for="deposit-reference">N° de Referencia o Hash</label>
-						<input type="text" id="deposit-reference" name="deposit-reference" placeholder="Ej: 00123456" required>
-					</div>
-					<button type="submit" class="btn btn-primary btn-cta">Reportar Pago</button>
+					<div class="form-group"><label>Monto (Bs.)</label><input type="number" name="deposit-amount" placeholder="Ej: 500.00" required step="0.01"></div>
+					<div class="form-group"><label>Referencia</label><input type="text" name="deposit-reference" required></div>
+					<button type="submit" class="btn btn-primary btn-cta">Reportar</button>
 				</form>
 			</div>
 		</div>
 	</div>
 </div>
 
-<!-- ================================================================== -->
-<!-- MODAL DE RETIRO (ACTUALIZADO A BS.) -->
-<!-- ================================================================== -->
+<!-- 6. RETIRO -->
 <div id="withdraw-modal" class="modal-overlay">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
-		<div class="auth-header">
-			<h2>Solicitar un Retiro</h2>
-			<p>Tu retiro será procesado en un plazo de 24 horas.</p>
-		</div>
-		
+		<div class="auth-header"><h2>Retirar</h2></div>
         <form id="withdraw-form" class="auth-form">
-			<div class="form-group">
-				<!-- CAMBIO AQUÍ: Etiqueta y Placeholder en Bs. -->
-				<label for="withdraw-amount">Monto a Retirar (Bs.)</label>
-				<input type="number" id="withdraw-amount" name="withdraw-amount" placeholder="Mínimo Bs. 10.00" step="0.01" required>
-			</div>
-			
-			<div class="form-group">
-				<label for="withdraw-method">Método de Retiro</label>
-				<div class="select-wrapper">
-                     <select id="withdraw-method" name="withdraw-method" required>
-						<option value="">Cargando métodos...</option>
-					</select>
-				</div>
-			</div>
-			
-			<p class="small-notice">
-				Los retiros se procesan al método de pago seleccionado. 
-                <a href="#" class="edit-method-link account-menu-link" data-target="mis-datos">Administrar métodos</a>.
-			</p>
-			
-			<p id="withdraw-error-message" class="error-message" aria-live="polite"></p>
-
-			<button type="submit" class="btn btn-primary btn-cta">Solicitar Retiro</button>
+			<div class="form-group"><label>Monto (Bs.)</label><input type="number" name="withdraw-amount" placeholder="Mínimo 10.00" required step="0.01"></div>
+			<div class="form-group"><label>Método</label><div class="select-wrapper"><select name="withdraw-method" id="withdraw-method" required><option value="">Cargando...</option></select></div></div>
+			<p class="small-notice"><a href="#mis-datos" class="edit-method-link account-menu-link" data-target="mis-datos">Gestionar métodos</a></p>
+			<p id="withdraw-error-message" class="error-message"></p>
+			<button type="submit" class="btn btn-primary btn-cta">Solicitar</button>
 		</form>
     </div>
 </div>
 
-<div id="game-modal" class="modal-overlay">
-	<div class="game-container">
-		<button class="close-modal close-game-btn" aria-label="Cerrar Juego">&times;</button>
-		<iframe id="game-iframe" src="" frameborder="0" allowfullscreen></iframe>
-	</div>
-</div>
-
+<!-- 7. VERIFICACIONES -->
 <div id="email-verification-modal" class="modal-overlay" data-persistent="true">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
-		<div id="email-verification-container">
-			<div class="auth-header">
-				<h2>Verifica tu Correo</h2>
-				<p>Enviamos un código de 6 dígitos a <strong id="email-display"></strong>. Por favor, ingrésalo a continuación.</p>
-			</div>
-			<form id="email-verification-form" class="auth-form">
-				<div class="form-group">
-					<label for="email-otp-input">Código de Verificación</label>
-					<input 
-						type="text" 
-						id="email-otp-input" 
-						name="otp-code" 
-						placeholder="123456" 
-						required 
-						maxlength="6" 
-						pattern="\d{6}"
-						inputmode="numeric"
-						title="Ingresa el código de 6 dígitos numéricos.">
-				</div>
-				<p id="email-verification-error" class="error-message" aria-live="polite"></p>
-				<button type="submit" class="btn btn-primary btn-cta">Confirmar y Activar Cuenta</button>
-			</form>
-            <div class="auth-footer">
-				<p>¿No recibiste el código? <a href="#" id="resend-otp-link">Reenviar código</a></p>
-			</div>
-		</div>
+		<div class="auth-header"><h2>Verificar Correo</h2><p>Código enviado a <strong id="email-display"></strong></p></div>
+		<form id="email-verification-form" class="auth-form">
+			<div class="form-group"><input type="text" id="email-otp-input" placeholder="123456" required maxlength="6"></div>
+			<p id="email-verification-error" class="error-message"></p>
+			<button type="submit" class="btn btn-primary btn-cta">Confirmar</button>
+		</form>
+        <div class="auth-footer"><p><a href="#" id="resend-otp-link">Reenviar código</a></p></div>
 	</div>
 </div>
 
-<!-- AQUÍ ESTÁ EL CAMBIO QUE PEDISTE ANTES PARA EL MODAL DE TELÉFONO TAMBIÉN (PERSISTENTE) -->
 <div id="phone-verification-modal" class="modal-overlay" data-persistent="true">
 	<div class="auth-container">
 		<button class="close-modal" aria-label="Cerrar">&times;</button>
-		<div class="auth-header">
-			<h2>Verificar Teléfono</h2>
-			<p>Ingresa el código de 6 dígitos que enviamos a tu número.</p>
-		</div>
+		<div class="auth-header"><h2>Verificar Teléfono</h2><p>Código SMS enviado.</p></div>
 		<form id="phone-verification-form" class="auth-form">
-			<div class="form-group">
-				<label for="phone-otp-input">Código de Verificación</label>
-				<input 
-					type="text" 
-					id="phone-otp-input" 
-					name="verification-code" 
-					placeholder="123456" 
-					required 
-					maxlength="6" 
-					pattern="\d{6}"
-					inputmode="numeric"
-					title="Ingresa el código de 6 dígitos numéricos.">
-			</div>
-			<p id="phone-verification-error" class="error-message" aria-live="polite"></p>
-			<button type="submit" class="btn btn-primary btn-cta">Confirmar Código</button>
+			<div class="form-group"><input type="text" id="phone-otp-input" placeholder="123456" required maxlength="6"></div>
+			<p id="phone-verification-error" class="error-message"></p>
+			<button type="submit" class="btn btn-primary btn-cta">Confirmar</button>
 		</form>
 	</div>
+</div>
+
+<div id="game-modal" class="modal-overlay">
+	<div class="game-container"><button class="close-modal close-game-btn">&times;</button><iframe id="game-iframe" src="" frameborder="0" allowfullscreen></iframe></div>
+</div>
+
+<!-- ======================================================================= -->
+<!--                 NUEVOS MODALES DE INFORMACIÓN (SEPARADOS)               -->
+<!-- ======================================================================= -->
+
+<!-- 8. SOBRE NOSOTROS -->
+<div id="about-modal" class="modal-overlay">
+    <div class="auth-container modal-large">
+        <button class="close-modal" aria-label="Cerrar">&times;</button>
+        <div class="auth-header"><h2><i class="fa-solid fa-building"></i> Sobre FortunaBet</h2></div>
+        <div class="modal-scroll-content">
+            <p>FortunaBet es la plataforma líder en entretenimiento digital en Venezuela. Nos dedicamos a ofrecer la experiencia de apuestas más segura, rápida y emocionante del mercado.</p>
+            <h3>Nuestra Misión</h3>
+            <p>Proporcionar un entorno de juego transparente y divertido, donde cada usuario se sienta valorado y protegido.</p>
+            <h3>Licencia y Seguridad</h3>
+            <p>Operamos bajo estrictos estándares de seguridad internacional. Todos los datos están encriptados y nuestros juegos son auditados para garantizar la aleatoriedad y justicia.</p>
+        </div>
+    </div>
+</div>
+
+<!-- 9. REGLAS DE LA CASA -->
+<div id="rules-modal" class="modal-overlay">
+    <div class="auth-container modal-large">
+        <button class="close-modal" aria-label="Cerrar">&times;</button>
+        <div class="auth-header"><h2><i class="fa-solid fa-book-open"></i> Reglas de la Casa</h2></div>
+        <div class="modal-scroll-content">
+            <h3>Reglas Generales</h3>
+            <p>Al realizar una apuesta, el usuario acepta que conoce las reglas del deporte específico.</p>
+            <h3>Anulación de Apuestas</h3>
+            <p>FortunaBet se reserva el derecho de anular apuestas si:</p>
+            <ul>
+                <li>El evento no se juega en la fecha programada.</li>
+                <li>Hay un error evidente en la cuota ofrecida.</li>
+                <li>Se detecta comportamiento fraudulento.</li>
+            </ul>
+            <h3>Resultados</h3>
+            <p>Los resultados se basan en la información oficial de la liga organizadora al finalizar el tiempo reglamentario.</p>
+        </div>
+    </div>
+</div>
+
+<!-- 10. TÉRMINOS Y CONDICIONES -->
+<div id="terms-modal" class="modal-overlay">
+    <div class="auth-container modal-large">
+        <button class="close-modal" aria-label="Cerrar">&times;</button>
+        <div class="auth-header"><h2><i class="fa-solid fa-scale-balanced"></i> Términos y Condiciones</h2></div>
+        <div class="modal-scroll-content">
+            <h3>1. Aceptación</h3>
+            <p>Al registrarse, el usuario confirma que es mayor de 18 años y acepta estos términos en su totalidad.</p>
+            <h3>2. Cuentas</h3>
+            <p>Solo se permite una cuenta por persona, hogar o dirección IP. Las cuentas duplicadas serán cerradas.</p>
+            <h3>3. Fondos</h3>
+            <p>Los depósitos deben provenir de cuentas a nombre del titular registrado. No se permiten pagos de terceros.</p>
+            <h3>4. Modificaciones</h3>
+            <p>Nos reservamos el derecho de modificar estos términos en cualquier momento. Es responsabilidad del usuario revisarlos periódicamente.</p>
+        </div>
+    </div>
+</div>
+
+<!-- 11. JUEGO RESPONSABLE -->
+<div id="responsible-modal" class="modal-overlay">
+    <div class="auth-container modal-large">
+        <button class="close-modal" aria-label="Cerrar">&times;</button>
+        <div class="auth-header"><h2><i class="fa-solid fa-hand-holding-heart"></i> Juego Responsable</h2></div>
+        <div class="modal-scroll-content">
+            <p>El juego debe ser una forma de entretenimiento, no una forma de ganar dinero. Si sientes que pierdes el control, podemos ayudarte.</p>
+            <h3>Herramientas de Control</h3>
+            <ul>
+                <li><strong>Límites de Depósito:</strong> Configura cuánto puedes depositar por día/semana.</li>
+                <li><strong>Autoexclusión:</strong> Solicita el bloqueo temporal o permanente de tu cuenta.</li>
+            </ul>
+            <h3>Señales de Alerta</h3>
+            <p>Si persigues pérdidas, juegas con dinero destinado a gastos básicos o el juego afecta tus relaciones, busca ayuda inmediatamente.</p>
+        </div>
+    </div>
+</div>
+
+<!-- 12. POLÍTICA DE PRIVACIDAD -->
+<div id="privacy-modal" class="modal-overlay">
+    <div class="auth-container modal-large">
+        <button class="close-modal" aria-label="Cerrar">&times;</button>
+        <div class="auth-header"><h2><i class="fa-solid fa-user-shield"></i> Política de Privacidad</h2></div>
+        <div class="modal-scroll-content">
+            <h3>Uso de Datos</h3>
+            <p>Recopilamos tu información personal únicamente para verificar tu identidad, procesar transacciones y mejorar nuestro servicio.</p>
+            <h3>Protección</h3>
+            <p>Utilizamos tecnología SSL de última generación para encriptar toda la comunicación. Tus datos nunca serán vendidos a terceros.</p>
+            <h3>Cookies</h3>
+            <p>Utilizamos cookies para mejorar la experiencia de navegación y mantener tu sesión activa de forma segura.</p>
+        </div>
+    </div>
+</div>
+
+<!-- 13. PREGUNTAS FRECUENTES (FAQ) -->
+<div id="help-modal" class="modal-overlay">
+    <div class="auth-container modal-large">
+        <button class="close-modal" aria-label="Cerrar">&times;</button>
+        <div class="auth-header"><h2><i class="fa-solid fa-circle-question"></i> Preguntas Frecuentes</h2></div>
+        <div class="modal-scroll-content">
+            <div class="faq-item">
+                <button class="faq-question">¿Cómo deposito? <i class="fa-solid fa-chevron-down"></i></button>
+                <div class="faq-answer"><p>Ve a Mi Cuenta > Depositar, selecciona Pago Móvil, Transferencia o USDT, realiza el pago y repórtalo.</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">¿Cuánto tardan los retiros? <i class="fa-solid fa-chevron-down"></i></button>
+                <div class="faq-answer"><p>Normalmente minutos, pero garantizamos un plazo máximo de 24 horas hábiles.</p></div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question">¿Monto mínimo de retiro? <i class="fa-solid fa-chevron-down"></i></button>
+                <div class="faq-answer"><p>El mínimo para retirar es de Bs. 10.00.</p></div>
+            </div>
+        </div>
+    </div>
 </div>

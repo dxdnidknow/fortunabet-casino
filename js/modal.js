@@ -1,4 +1,4 @@
-// Archivo: js/modal.js (COMPLETO Y MEJORADO)
+// Archivo: js/modal.js (COMPLETO Y DEFINITIVO)
 
 let activeModal = null;
 let lastActiveElement = null;
@@ -86,22 +86,28 @@ export function closeModal(modal) {
 
 export function initModals() {
     document.body.addEventListener('click', (event) => {
-        // 1. Abrir modal
+        // 1. Abrir modal (Funciona para Login, Register, Términos, Ayuda, etc.)
         const trigger = event.target.closest('[data-modal-trigger]');
         if (trigger) {
-            const modal = document.getElementById(trigger.dataset.modalTrigger);
-            openModal(modal);
+            event.preventDefault(); // Evita que el enlace recargue la página
+            const modalId = trigger.dataset.modalTrigger;
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                openModal(modal);
+            } else {
+                console.warn(`Modal con ID '${modalId}' no encontrado.`);
+            }
             return;
         }
 
-        // 2. Cerrar con botón X (Esto SIEMPRE funciona)
+        // 2. Cerrar con botón X
         const closeBtn = event.target.closest('.close-modal');
         if (closeBtn) {
             closeModal(closeBtn.closest('.modal-overlay'));
             return;
         }
 
-        // 3. Cambiar de modal
+        // 3. Cambiar de modal (Switch)
         const switcher = event.target.closest('[data-modal-switch]');
         if (switcher) {
             event.preventDefault();
@@ -112,13 +118,13 @@ export function initModals() {
             return;
         }
 
-        // 4. Cerrar al hacer clic afuera (Solo si NO es persistente)
+        // 4. Cerrar al hacer clic afuera (Fondo oscuro)
         if (event.target.classList.contains('modal-overlay')) {
-            // Si tiene data-persistent="true", NO hacemos nada (no cerramos)
+            // Si es persistente (ej: verificación), NO cerrar
             if (event.target.dataset.persistent === "true") {
-                // Opcional: Hacer un pequeño efecto de vibración o parpadeo
                 const container = event.target.querySelector('.auth-container');
                 if(container) {
+                    // Efecto visual de "rebote" para indicar que está bloqueado
                     container.style.transform = 'scale(1.02)';
                     setTimeout(() => container.style.transform = 'scale(1)', 100);
                 }
@@ -126,9 +132,25 @@ export function initModals() {
             }
             closeModal(event.target);
         }
+
+        // 5. Lógica para Acordeón de Ayuda (Preguntas Frecuentes dentro del Modal)
+        const faqBtn = event.target.closest('.faq-question');
+        if (faqBtn) {
+            event.preventDefault();
+            faqBtn.classList.toggle('active');
+            const answer = faqBtn.nextElementSibling;
+            
+            if (faqBtn.classList.contains('active')) {
+                answer.style.maxHeight = answer.scrollHeight + 'px';
+                answer.style.paddingBottom = '15px'; // Espacio visual extra
+            } else {
+                answer.style.maxHeight = null;
+                answer.style.paddingBottom = '0';
+            }
+        }
     });
 
-    // 5. Cerrar con tecla Escape (Solo si NO es persistente)
+    // 6. Cerrar con tecla Escape
     window.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && activeModal) {
             if (activeModal.dataset.persistent === "true") {
