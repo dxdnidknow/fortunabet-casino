@@ -1,5 +1,5 @@
 /* ==========================================================================
-   style.css (VERSIÓN FINAL MAESTRA - FORTUNABET)
+   style.css (VERSIÓN DEFINITIVA: DISEÑO PREMIUM + EFECTOS)
    ========================================================================== */
 
 /* ==========================================================================
@@ -14,6 +14,7 @@
     /* --- Acentos de Color (Verde Fortuna) --- */
     --color-primary: #2ECC71;
     --color-primary-light: #58D68D;
+    --color-primary-glow: rgba(46, 204, 113, 0.5); /* Para el brillo */
     
     /* --- Colores de Texto y Bordes --- */
     --color-text-primary: #F5F5F5;
@@ -204,17 +205,7 @@ a:hover { color: var(--color-primary-light); }
 .bet-slip { background-color: var(--color-surface-1); padding: calc(var(--spacing-unit) * 3); border-radius: var(--border-radius-md); position: sticky; top: calc(var(--header-height) + var(--top-bar-height) + 25px); border: 1px solid var(--color-border); }
 .bet-slip h3 { text-align: center; margin-bottom: calc(var(--spacing-unit) * 3); font-size: 1.3rem; }
 .bet-slip .empty-message { text-align: center; color: var(--color-text-secondary); }
-
-/* Alineación del Cupón y Botón */
-.bet-summary { 
-    border-top: 1px solid var(--color-border); 
-    padding-top: 20px; 
-    margin-top: 20px; 
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 15px;
-}
+.bet-summary { border-top: 1px solid var(--color-border); padding-top: 20px; margin-top: 20px; display: flex; flex-direction: column; align-items: stretch; gap: 15px; }
 .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .stake-input { width: 100px; background-color: var(--color-background); border: 1px solid var(--color-border); color: var(--color-text-primary); padding: 8px 12px; border-radius: var(--border-radius-sm); text-align: right; font-size: 1rem; }
 
@@ -375,18 +366,18 @@ a:hover { color: var(--color-primary-light); }
 .sports-panel .nav-container { height: 100%; overflow-y: auto; }
 
 /* ==========================================================================
-   9. FOOTER (DISEÑO FORTUNABET - 4 COLUMNAS)
+   9. FOOTER (DISEÑO 3 COLUMNAS LIMPIO - HOME ONLY)
    ========================================================================== */
 
 /* Contenedor Principal - Oculto por defecto */
 .main-footer {
     display: none;
     background-color: #0b0d10; /* Negro suave */
-    color: var(--color-text-secondary);
     border-top: 1px solid var(--color-border);
     padding: 60px 0 30px;
     margin-top: auto;
     font-size: 0.9rem;
+    width: 100%;
     position: relative;
     z-index: 10;
 }
@@ -400,15 +391,16 @@ body.home-page .main-footer {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 25px;
+    text-align: center;
 }
 
-/* --- GRID DE 4 COLUMNAS --- */
+/* --- GRID DE 3 COLUMNAS --- */
 .footer-links-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 40px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 50px;
     margin-bottom: 50px;
-    text-align: left;
+    text-align: center;
 }
 
 .footer-col h3 {
@@ -418,130 +410,78 @@ body.home-page .main-footer {
     margin-bottom: 20px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    /* Posición relativa para la línea decorativa */
     position: relative;
     display: inline-block;
 }
 
-/* Pequeña línea decorativa */
+/* LÍNEA VERDE DECORATIVA BAJO TÍTULOS (SOLUCIÓN) */
 .footer-col h3::after {
     content: '';
     display: block;
-    width: 30px;
+    width: 40px;
     height: 2px;
     background-color: var(--color-primary);
-    margin-top: 8px;
-    opacity: 0.5;
+    margin: 8px auto 0; /* Centrado automáticamente */
+    border-radius: 2px;
 }
 
-.footer-col ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.footer-col li {
-    margin-bottom: 12px;
-}
+.footer-col ul { list-style: none; padding: 0; margin: 0; }
+.footer-col li { margin-bottom: 12px; }
 
 .footer-col a {
     color: var(--color-text-secondary);
     text-decoration: none;
     transition: all 0.2s ease;
     font-weight: 400;
+}
+
+/* EFECTO HOVER: Color blanco y pequeño movimiento */
+.footer-col a:hover {
+    color: #fff;
+    text-decoration: none;
+    transform: translateX(3px);
     display: inline-block;
 }
 
-.footer-col a:hover {
-    color: #fff;
-    transform: translateX(5px);
-}
-
-/* --- DIVISOR --- */
-.footer-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--color-border), transparent);
-    margin-bottom: 40px;
-    opacity: 0.5;
-}
-
-/* --- MÉTODOS DE PAGO --- */
-.footer-payment-section {
+/* --- BARRA INFERIOR (COPYRIGHT) --- */
+.footer-bottom-bar {
+    background-color: #050607; /* Más oscuro que el footer */
+    padding: 20px 0;
+    border-top: 1px solid #1a1d24;
     text-align: center;
-    margin-bottom: 30px;
-}
-
-.payment-logos {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
-    flex-wrap: wrap;
-}
-
-.payment-logos img {
-    height: 32px;
-    width: auto;
-    /* Filtro blanco brillante */
-    filter: grayscale(100%) brightness(500%); 
-    opacity: 0.6;
-    transition: all 0.3s ease;
-}
-
-.payment-logos img:hover {
-    filter: none;
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-/* --- TEXTO LEGAL --- */
-.footer-legal {
-    text-align: center;
-    font-size: 0.8rem;
     color: #555;
-    padding-top: 20px;
+    font-size: 0.85rem;
     /* CORRECCIÓN: Espacio derecho para evitar solapamiento con botón flotante */
-    padding-right: 160px; 
+    padding-right: 0; 
 }
 
-.footer-legal .copyright {
-    color: var(--color-text-secondary);
-    font-weight: 500;
-}
-
-/* --- RESPONSIVIDAD --- */
-@media (max-width: 768px) {
-    .footer-links-grid {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: 30px;
-    }
-
-    .footer-col h3::after {
-        margin: 8px auto 0;
-    }
-    
-    .footer-legal {
-        padding-right: 0; /* En móvil el botón flota encima sin problema */
-        padding-bottom: 80px; 
-    }
-}
+.footer-bottom-bar p { margin: 0; }
 
 /* ==========================================================================
    10. WIDGET DE AYUDA RÁPIDA
    ========================================================================== */
 .help-trigger-btn { 
     position: fixed; 
-    bottom: 25px; /* CORRECCIÓN: Posición cómoda */
+    bottom: 25px; 
     right: 25px; 
     width: 50px; height: 50px; border-radius: 50%; 
     background: var(--color-primary); color: #000; 
     border: none; font-size: 1.8rem; 
     display: flex; justify-content: center; align-items: center; 
-    cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.3); 
-    z-index: 9999; /* Siempre encima */
-    transition: transform 0.3s ease, background-color 0.3s ease; 
+    cursor: pointer; 
+    /* EFECTO DE ILUMINACIÓN/RESPLANDOR */
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.5); 
+    z-index: 9999; 
+    transition: transform 0.3s ease, box-shadow 0.3s ease; 
 }
-.help-trigger-btn:hover { transform: scale(1.1) rotate(10deg); background: var(--color-primary-light); }
+
+/* GLOW MÁS INTENSO AL PASAR EL MOUSE */
+.help-trigger-btn:hover { 
+    transform: scale(1.1) rotate(10deg); 
+    background: var(--color-primary-light); 
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.8);
+}
 
 .help-widget { 
     position: fixed; bottom: 100px; right: 25px; width: 90%; max-width: 380px; 
@@ -604,24 +544,15 @@ body.home-page .main-footer {
     .account-card .balance { font-size: 2.8rem; }
     
     /* Responsive Footer */
-    .main-footer {
-        padding: 40px 0 80px; 
+    .main-footer { padding: 40px 0 80px; }
+    .footer-links-grid {
+        grid-template-columns: 1fr; /* Una columna en móvil */
+        text-align: center;
+        gap: 30px;
     }
-    .payment-logos {
-        gap: 25px;
-    }
-    .payment-logos img {
-        height: 28px;
-    }
-    .footer-bottom {
-        flex-direction: column;
-        gap: 15px;
+    .footer-bottom-bar {
         padding-right: 0; 
-    }
-    .footer-links {
-        gap: 15px;
-        flex-wrap: wrap;
-        justify-content: center;
+        padding-bottom: 80px; /* Espacio para botón en móvil */
     }
 }
 @media (max-width: 480px) {
@@ -829,21 +760,3 @@ input[type="password"]::-webkit-reveal, input[type="password"]::-webkit-clear-bu
 body.role-admin #admin-panel-link { display: flex !important; }
 .verification-notice { font-size: 0.8rem; color: var(--color-pending); margin-top: 15px; background-color: rgba(241, 196, 15, 0.1); padding: 8px; border-radius: var(--border-radius-sm); }
 .verification-notice i { margin-right: 5px; }
-
-/* ==========================================================================
-   PÁGINAS LEGALES Y AYUDA
-   ========================================================================== */
-.legal-content { background-color: var(--color-surface-1); padding: 40px; border-radius: var(--border-radius-md); border: 1px solid var(--color-border); line-height: 1.8; }
-.legal-content h2 { color: var(--color-primary); margin-top: 30px; margin-bottom: 15px; font-size: 1.5rem; }
-.legal-content h3 { color: var(--color-text-primary); margin-top: 20px; margin-bottom: 10px; font-size: 1.2rem; }
-.legal-content p { margin-bottom: 15px; color: var(--color-text-secondary); text-align: justify; }
-.legal-content ul { margin-bottom: 15px; padding-left: 20px; color: var(--color-text-secondary); }
-.legal-content li { margin-bottom: 8px; }
-
-.faq-container { margin-top: 20px; }
-.faq-item { border-bottom: 1px solid var(--color-border); }
-.faq-question { width: 100%; text-align: left; padding: 20px 0; background: none; border: none; color: var(--color-text-primary); font-weight: 600; font-size: 1.1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-.faq-question:hover { color: var(--color-primary); }
-.faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; color: var(--color-text-secondary); }
-.faq-answer p { padding-bottom: 20px; margin: 0; }
-.faq-question.active i { transform: rotate(180deg); }
