@@ -1,268 +1,269 @@
-// Archivo: admin/admin.js (COMPLETO Y FUNCIONAL)
+// Archivo: backend/routes/admin.js (VERSIÓN FINAL)
 
-document.addEventListener('DOMContentLoaded', () => {
+const express = require('express');
+const { getDb, client } = require('../db'); // Asegúrate de exportar 'client' en db.js
+const { ObjectId } = require('mongodb');
+const rateLimit = require('express-rate-limit');
+const authAdmin = require('../middleware/authAdmin');
 
-    const API_URL = 'https://fortunabet-api.onrender.com/api'; 
-    // const API_URL = 'http://localhost:3001/api'; 
+const router = express.Router();
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }); // Aumentado un poco para el admin
 
-    let authToken = localStorage.getItem('adminToken');
-    let adminUser = JSON.parse(localStorage.getItem('adminUser'));
-    let revenueChart = null; 
+router.use(authLimiter);
+router.use(authAdmin);
 
-    let state = {
-        users: [],
-        deposits: [],
-        withdrawals: []
-    };
+// =======================================================================
+//  1. RUTAS DE ESTADÍSTICAS (¡CRÍTICAS PARA EL DASHBOARD!)
+// =======================================================================
 
-    // --- HELPERS ---
-    async function apiFetch(endpoint, method = 'GET', body = null) {
-        const headers = new Headers({ 'Authorization': `Bearer ${authToken}` });
-        const options = { method, headers };
-        if (method !== 'GET') {
-            headers.append('Content-Type', 'application/json');
-            if(body) options.body = JSON.stringify(body);
-        }
-        const res = await fetch(`${API_URL}${endpoint}`, options);
-        if (res.status === 401) { logout(); throw new Error('Expirado'); }
-        if (!res.ok) throw new Error('Error API');
-        return await res.json();
-    }
-
-    function formatCurrency(amount) {
-        return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES' }).format(amount).replace('VES', 'Bs.');
-    }
-
-    // --- LOGIN ---
-    document.getElementById('login-form')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        try {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            const res = await fetch(`${API_URL}/login`, {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ identifier: email, password })
-            });
-            const loginData = await res.json();
-            if(!res.ok) throw new Error(loginData.message);
-            if(loginData.user.role !== 'admin') throw new Error('Acceso denegado');
-
-            localStorage.setItem('adminToken', loginData.token);
-            localStorage.setItem('adminUser', JSON.stringify(loginData.user));
-            location.reload();
-        } catch (err) {
-            const errP = document.getElementById('error-message');
-            errP.textContent = err.message;
-            errP.style.display = 'block';
-        }
-    });
-
-    function logout() {
-        localStorage.clear();
-        location.reload();
-    }
-    document.getElementById('logout-btn')?.addEventListener('click', logout);
-
-    // --- NAVIGATION ---
-    document.querySelectorAll('.nav-link').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-            
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.target).classList.add('active');
-        });
-    });
-
-    // --- DATA LOADING ---
-    async function loadDashboard() {
-        // Animación de carga en TODOS los botones de refresh
-        document.querySelectorAll('.btn-refresh').forEach(btn => {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
-        });
-
-        try {
-            const [stats, users, deposits, withdrawals, revenue] = await Promise.all([
-                apiFetch('/admin/stats'),
-                apiFetch('/admin/users'),
-                apiFetch('/admin/deposits/pending'),
-                apiFetch('/admin/withdrawals/pending'),
-                apiFetch('/admin/analytics/revenue')
-            ]);
-
-            state.users = users;
-            state.deposits = deposits;
-            state.withdrawals = withdrawals;
-
-            // Update UI
-            document.getElementById('stat-users').textContent = stats.totalUsers;
-            document.getElementById('stat-balance').textContent = formatCurrency(stats.totalBalance);
-            document.getElementById('stat-pending').textContent = stats.pendingDepositsCount + stats.pendingWithdrawalsCount;
-
-            updateBadge('badge-deposits', stats.pendingDepositsCount);
-            updateBadge('badge-withdrawals', stats.pendingWithdrawalsCount);
-
-            renderUsersTable(state.users);
-            renderDepositsTable(state.deposits);
-            renderWithdrawalsTable(state.withdrawals);
-            renderRevenueChart(revenue);
-
-        } catch (error) {
-            console.error(error);
-        } finally {
-            // Restaurar botones
-            document.querySelectorAll('.btn-refresh').forEach(btn => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Actualizar'; // Texto simplificado si se desea, o dejar icono en móvil
-                if (btn.title === "Recargar lista") btn.innerHTML = '<i class="fa-solid fa-rotate"></i>'; // Solo icono para los pequeños
-            });
-        }
-    }
-
-    function updateBadge(id, count) {
-        const el = document.getElementById(id);
-        el.textContent = count;
-        el.classList.toggle('hidden', count === 0);
-    }
-
-    // --- RENDER FUNCTIONS ---
-    function renderTable(id, data, columnsFn, page = 1, perPage = 10) {
-        const tbody = document.getElementById(id);
-        const paginationDiv = document.getElementById(id.replace('body', 'pagination'));
+// GET /api/admin/stats
+router.get('/stats', async (req, res) => {
+    try {
+        const db = getDb();
         
-        if(data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">Sin datos encontrados</td></tr>';
-            paginationDiv.innerHTML = '';
-            return;
-        }
-
-        const start = (page - 1) * perPage;
-        const pagedData = data.slice(start, start + perPage);
-        tbody.innerHTML = pagedData.map(columnsFn).join('');
-
-        const totalPages = Math.ceil(data.length / perPage);
-        if (totalPages > 1) {
-            let html = '';
-            for(let i=1; i<=totalPages; i++) {
-                html += `<button class="page-btn ${i===page?'active':''}" onclick="changePage('${id}', ${i})">${i}</button>`;
-            }
-            paginationDiv.innerHTML = html;
-        } else {
-            paginationDiv.innerHTML = '';
-        }
-    }
-
-    const renderUsersTable = (data) => renderTable('users-body', data, u => `
-        <tr>
-            <td><div style="font-weight:bold">${u.username}</div></td>
-            <td>${u.email}</td>
-            <td>${u.personalInfo?.cedula || '-'}</td>
-            <td>${u.personalInfo?.phone || '-'}</td>
-            <td style="color: var(--primary)">${formatCurrency(u.balance)}</td>
-            <td><span class="badge">${u.isVerified ? 'Verificado' : 'Pendiente'}</span></td>
-        </tr>
-    `);
-
-    const renderDepositsTable = (data) => renderTable('deposits-body', data, tx => `
-        <tr>
-            <td>${tx.fullName || tx.username}</td>
-            <td style="color:var(--primary); font-weight:bold">${formatCurrency(tx.amount)}</td>
-            <td>${tx.reference}</td>
-            <td>${new Date(tx.createdAt).toLocaleDateString()}</td>
-            <td>
-                <button class="btn-sm btn-primary" onclick="processTx('deposits', 'approve', '${tx._id}')"><i class="fa-solid fa-check"></i></button>
-                <button class="btn-sm btn-danger" onclick="processTx('deposits', 'reject', '${tx._id}')"><i class="fa-solid fa-xmark"></i></button>
-            </td>
-        </tr>
-    `);
-
-    const renderWithdrawalsTable = (data) => renderTable('withdrawals-body', data, tx => `
-        <tr>
-            <td>${tx.fullName || tx.username}</td>
-            <td style="color:var(--danger); font-weight:bold">${formatCurrency(tx.amount)}</td>
-            <td>${tx.methodType}</td>
-            <td>${new Date(tx.requestedAt).toLocaleDateString()}</td>
-            <td>
-                <button class="btn-sm btn-primary" onclick="processTx('withdrawals', 'approve', '${tx._id}')"><i class="fa-solid fa-check"></i></button>
-                <button class="btn-sm btn-danger" onclick="processTx('withdrawals', 'reject', '${tx._id}')"><i class="fa-solid fa-xmark"></i></button>
-            </td>
-        </tr>
-    `);
-
-    // --- SEARCH ---
-    function setupSearch(inputId, dataKey, renderFn, filterFn) {
-        document.getElementById(inputId)?.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtered = state[dataKey].filter(item => filterFn(item, term));
-            renderFn(filtered);
-        });
-    }
-
-    setupSearch('search-users', 'users', renderUsersTable, (item, term) => 
-        item.username.toLowerCase().includes(term) || item.email.toLowerCase().includes(term)
-    );
-    setupSearch('search-deposits', 'deposits', renderDepositsTable, (item, term) => 
-        (item.username||'').toLowerCase().includes(term) || item.reference.toLowerCase().includes(term)
-    );
-    setupSearch('search-withdrawals', 'withdrawals', renderWithdrawalsTable, (item, term) => 
-        (item.username||'').toLowerCase().includes(term)
-    );
-
-    // --- CHART ---
-    function renderRevenueChart(data) {
-        const ctx = document.getElementById('revenueChart');
-        if(!ctx) return;
+        const totalUsers = await db.collection('users').countDocuments({});
+        const pendingDepositsCount = await db.collection('transactions').countDocuments({ type: 'deposit', status: 'pending' });
+        const pendingWithdrawalsCount = await db.collection('withdrawalRequests').countDocuments({ status: 'pending' });
         
-        if (revenueChart) revenueChart.destroy();
+        // Calcular balance total en juego (suma de todos los saldos de usuarios)
+        const balanceAggr = await db.collection('users').aggregate([
+            { $group: { _id: null, total: { $sum: "$balance" } } }
+        ]).toArray();
+        const totalBalance = balanceAggr.length > 0 ? balanceAggr[0].total : 0;
 
-        revenueChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.map(d => d._id),
-                datasets: [{
-                    label: 'Ingresos (Bs.)',
-                    data: data.map(d => d.total),
-                    borderColor: '#2ECC71',
-                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { grid: { color: '#2d3748' }, ticks: { color: '#9ca3af' } },
-                    x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
-                }
-            }
+        res.status(200).json({
+            totalUsers,
+            totalBalance,
+            pendingDepositsCount,
+            pendingWithdrawalsCount
         });
-    }
-
-    // --- ACTIONS ---
-    window.processTx = async (type, action, id) => {
-        if(!confirm('¿Confirmar acción?')) return;
-        try {
-            await apiFetch(`/admin/${type}/${action}/${id}`, 'POST', action==='reject'?{reason:'Admin'}:null);
-            loadDashboard();
-        } catch (e) { alert(e.message); }
-    };
-
-    // CAMBIO: Ahora seleccionamos TODOS los botones de refresh
-    document.querySelectorAll('.btn-refresh').forEach(btn => {
-        btn.addEventListener('click', loadDashboard);
-    });
-
-    // --- INIT ---
-    if (authToken) {
-        document.getElementById('login-view').style.display = 'none';
-        document.getElementById('dashboard-view').style.display = 'grid';
-        document.getElementById('admin-email-display').textContent = adminUser.email.split('@')[0];
-        loadDashboard();
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Error obteniendo estadísticas.' });
     }
 });
+
+// GET /api/admin/analytics/revenue (Gráfica)
+router.get('/analytics/revenue', async (req, res) => {
+    try {
+        const db = getDb();
+        // Agrupar depósitos aprobados por fecha (últimos 30 días)
+        const revenueData = await db.collection('transactions').aggregate([
+            { $match: { type: 'deposit', status: 'approved' } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    total: { $sum: "$amount" }
+                }
+            },
+            { $sort: { _id: 1 } },
+            { $limit: 30 }
+        ]).toArray();
+
+        res.status(200).json(revenueData);
+    } catch (e) {
+        res.status(500).json({ message: 'Error calculando ingresos.' });
+    }
+});
+
+// GET /api/admin/users
+router.get('/users', async (req, res) => {
+    try {
+        const db = getDb();
+        const users = await db.collection('users')
+            .find({}, { projection: { password: 0, otp: 0, otpExpires: 0 } })
+            .sort({ createdAt: -1 })
+            .limit(50)
+            .toArray();
+        res.status(200).json(users);
+    } catch (e) {
+        res.status(500).json({ message: 'Error obteniendo usuarios.' });
+    }
+});
+
+// =======================================================================
+//  2. GESTIÓN DE DEPÓSITOS
+// =======================================================================
+
+router.get('/deposits/pending', async (req, res) => {
+    try {
+        const db = getDb();
+        // Usamos aggregate para unir con la colección de usuarios y traer nombres
+        const pendingDeposits = await db.collection('transactions').aggregate([
+            { $match: { type: 'deposit', status: 'pending' } },
+            { $lookup: { from: 'users', localField: 'userId', foreignField: '_id', as: 'userDetails' } },
+            { $unwind: '$userDetails' },
+            { $project: {
+                _id: 1, amount: 1, method: 1, reference: 1, createdAt: 1,
+                userEmail: '$userDetails.email', username: '$userDetails.username',
+                fullName: '$userDetails.personalInfo.fullName'
+            }}
+        ]).sort({ createdAt: 1 }).toArray();
+        res.status(200).json(pendingDeposits);
+    } catch (e) {
+        res.status(500).json({ message: 'Error al obtener depósitos.' });
+    }
+});
+
+router.post('/deposits/approve/:txId', async (req, res) => {
+    const { txId } = req.params;
+    const session = client.startSession(); // Transacción ACID
+    try {
+        await session.startTransaction();
+        const db = getDb();
+        
+        const transaction = await db.collection('transactions').findOne({ _id: new ObjectId(txId) }, { session });
+
+        if (!transaction || transaction.status !== 'pending') {
+            await session.abortTransaction();
+            return res.status(404).json({ message: 'Transacción no válida o ya procesada.' });
+        }
+
+        // 1. Marcar transacción como aprobada
+        await db.collection('transactions').updateOne(
+            { _id: transaction._id },
+            { $set: { status: 'approved', processedBy: req.user.username, processedAt: new Date() }},
+            { session }
+        );
+
+        // 2. Sumar saldo al usuario
+        await db.collection('users').updateOne(
+            { _id: new ObjectId(transaction.userId) },
+            { $inc: { balance: transaction.amount } },
+            { session }
+        );
+
+        await session.commitTransaction();
+        res.status(200).json({ message: 'Depósito aprobado y saldo acreditado.' });
+    } catch (e) {
+        if (session.inTransaction()) await session.abortTransaction();
+        console.error(e);
+        res.status(500).json({ message: 'Error interno al aprobar.' });
+    } finally {
+        await session.endSession();
+    }
+});
+
+router.post('/deposits/reject/:txId', async (req, res) => {
+    const { txId } = req.params;
+    const { reason } = req.body;
+    try {
+        const db = getDb();
+        await db.collection('transactions').updateOne(
+            { _id: new ObjectId(txId), status: 'pending' },
+            { $set: { status: 'rejected', processedBy: req.user.username, processedAt: new Date(), rejectionReason: reason || 'N/A' }}
+        );
+        res.status(200).json({ message: 'Depósito rechazado.' });
+    } catch (e) {
+        res.status(500).json({ message: 'Error interno.' });
+    }
+});
+
+// =======================================================================
+//  3. GESTIÓN DE RETIROS
+// =======================================================================
+
+router.get('/withdrawals/pending', async (req, res) => {
+    try {
+        const db = getDb();
+        const pendingWithdrawals = await db.collection('withdrawalRequests').aggregate([
+            { $match: { status: 'pending' } },
+            { $lookup: { from: 'users', localField: 'userId', foreignField: '_id', as: 'userDetails' } },
+            { $unwind: '$userDetails' },
+            { $project: {
+                _id: 1, amount: 1, methodDetails: 1, methodType: 1, requestedAt: 1,
+                username: 1, userId: 1, transactionId: 1,
+                fullName: '$userDetails.personalInfo.fullName', cedula: '$userDetails.personalInfo.cedula'
+            }}
+        ]).sort({ requestedAt: 1 }).toArray();
+        res.status(200).json(pendingWithdrawals);
+    } catch (e) {
+        res.status(500).json({ message: 'Error al obtener retiros.' });
+    }
+});
+
+router.post('/withdrawals/approve/:reqId', async (req, res) => {
+    const { reqId } = req.params;
+    const session = client.startSession();
+    try {
+        await session.startTransaction();
+        const db = getDb();
+        
+        const request = await db.collection('withdrawalRequests').findOne({ _id: new ObjectId(reqId), status: 'pending' }, { session });
+
+        if (!request) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: 'Solicitud no encontrada.' });
+        }
+
+        // 1. Marcar solicitud como completada
+        await db.collection('withdrawalRequests').updateOne(
+            { _id: request._id },
+            { $set: { status: 'completed', processedBy: req.user.username, processedAt: new Date() }},
+            { session }
+        );
+        
+        // 2. Marcar la transacción asociada como aprobada (ya se descontó el saldo al pedirlo)
+        await db.collection('transactions').updateOne(
+            { _id: request.transactionId },
+            { $set: { status: 'approved' } },
+            { session }
+        );
+
+        await session.commitTransaction();
+        res.status(200).json({ message: 'Retiro marcado como completado.' });
+    } catch (e) {
+        if (session.inTransaction()) await session.abortTransaction();
+        res.status(500).json({ message: 'Error interno.' });
+    } finally {
+        await session.endSession();
+    }
+});
+
+router.post('/withdrawals/reject/:reqId', async (req, res) => {
+    const { reqId } = req.params;
+    const { reason } = req.body;
+    const session = client.startSession();
+    try {
+        await session.startTransaction();
+        const db = getDb();
+        
+        const request = await db.collection('withdrawalRequests').findOne({ _id: new ObjectId(reqId), status: 'pending' }, { session });
+
+        if (!request) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: 'Solicitud no encontrada.' });
+        }
+
+        // 1. Marcar solicitud como rechazada
+        await db.collection('withdrawalRequests').updateOne(
+            { _id: request._id },
+            { $set: { status: 'rejected', processedBy: req.user.username, processedAt: new Date(), rejectionReason: reason || 'N/A' }},
+            { session }
+        );
+
+        // 2. DEVOLVER EL DINERO AL USUARIO
+        await db.collection('users').updateOne(
+            { _id: new ObjectId(request.userId) },
+            { $inc: { balance: request.amount } }, 
+            { session }
+        );
+        
+        // 3. Marcar transacción como rechazada
+        await db.collection('transactions').updateOne(
+            { _id: request.transactionId },
+            { $set: { status: 'rejected' } },
+            { session }
+        );
+
+        await session.commitTransaction();
+        res.status(200).json({ message: 'Retiro rechazado y saldo devuelto.' });
+    } catch (e) {
+        if (session.inTransaction()) await session.abortTransaction();
+        res.status(500).json({ message: 'Error interno.' });
+    } finally {
+        await session.endSession();
+    }
+});
+
+module.exports = router;

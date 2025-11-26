@@ -1,4 +1,4 @@
-// Archivo: js/main.js (PROTEGIDO Y CORREGIDO)
+// Archivo: js/main.js
 
 import { API_BASE_URL } from './config.js';
 import { addBet, initBetSlip, subscribe, getBets } from './bet.js';
@@ -112,47 +112,24 @@ function renderEvents(allEvents) {
     const contentLive = document.getElementById('live');
     const contentUpcoming = document.getElementById('upcoming');
 
+    // Lógica para activar la pestaña correcta si una está vacía
     if (liveEvents.length > 0) {
-        tabLive.classList.add('active');
-        contentLive.classList.add('active');
-        tabUpcoming.classList.remove('active');
-        contentUpcoming.classList.remove('active');
+        if(tabLive) tabLive.classList.add('active');
+        if(contentLive) contentLive.classList.add('active');
+        if(tabUpcoming) tabUpcoming.classList.remove('active');
+        if(contentUpcoming) contentUpcoming.classList.remove('active');
     } else if (upcomingEvents.length > 0) {
-        tabLive.classList.remove('active');
-        contentLive.classList.remove('active');
-        tabUpcoming.classList.add('active');
-        contentUpcoming.classList.add('active');
+        if(tabLive) tabLive.classList.remove('active');
+        if(contentLive) contentLive.classList.remove('active');
+        if(tabUpcoming) tabUpcoming.classList.add('active');
+        if(contentUpcoming) contentUpcoming.classList.add('active');
     } else {
-        tabLive.classList.add('active');
-        contentLive.classList.add('active');
-        tabUpcoming.classList.remove('active');
-        contentUpcoming.classList.remove('active');
+        if(tabLive) tabLive.classList.add('active');
+        if(contentLive) contentLive.classList.add('active');
     }
     
     updateFavoritesUI();
     updateSelectedOddsUI();
-}
-
-async function loadFeaturedEvents() {
-    const container = document.getElementById('featured-events-container');
-    const loader = document.getElementById('loader-featured');
-    if (!container || !loader) return;
-
-    try {
-        const events = await fetchLiveEvents('soccer_epl');
-        
-        if (events && events.length > 0) {
-            const featured = events.slice(0, 6); 
-            container.innerHTML = featured.map(renderEventCard).join('');
-            updateSelectedOddsUI(); 
-        } else {
-            container.innerHTML = '<p class="empty-message">No hay partidos destacados disponibles en este momento.</p>';
-        }
-    } catch (error) {
-        container.innerHTML = '<p class="error-message">No se pudieron cargar los partidos.</p>';
-    } finally {
-        loader.style.display = 'none';
-    }
 }
 
 function renderEventDetail(eventData) {
@@ -172,9 +149,9 @@ function renderEventDetail(eventData) {
                     <span>${outcome.price.toFixed(2)}</span>
                 </button>`
             ).join('');
-            return `<div class="market-container">
-                        <h3 class="market-title"><i class="fa-solid ${icon}"></i> ${market.key.replace(/_/g, ' ')}</h3>
-                        <div class="market-odds-grid">${outcomesHtml}</div>
+            return `<div class="event-card" style="flex-direction: column; align-items: flex-start; margin-bottom: 10px;">
+                        <h4 style="margin-bottom: 10px; color: var(--color-primary);"><i class="fa-solid ${icon}"></i> ${market.key.replace(/_/g, ' ')}</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%;">${outcomesHtml}</div>
                     </div>`;
         }).join('');
     } else {
@@ -183,9 +160,9 @@ function renderEventDetail(eventData) {
 
     detailView.innerHTML = `
         <div class="event-detail-header">
-            <button id="back-to-list-btn" class="btn btn-secondary">&lt; Volver a la lista</button>
-            <h2>${eventData.home_team} vs ${eventData.away_team}</h2>
-            <p>${new Date(eventData.commence_time).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}</p>
+            <button id="back-to-list-btn" class="btn btn-secondary" style="margin-bottom: 20px;">&lt; Volver a la lista</button>
+            <h2 class="page-title" style="font-size: 1.8rem; margin-bottom: 10px;">${eventData.home_team} vs ${eventData.away_team}</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 20px;">${new Date(eventData.commence_time).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}</p>
         </div>
         <div class="event-detail-markets">${marketsHtml}</div>`;
     
@@ -215,6 +192,10 @@ function handleActiveNav() {
 async function initSportsNav() {
     const sportsNavDesktop = document.querySelector('.main-container .sports-nav');
     const sportsPanelNav = document.querySelector('.sports-panel__nav');
+    
+    // Si no existen (ej: login), no hacemos nada
+    if (!sportsNavDesktop && !sportsPanelNav) return;
+
     try {
         const response = await fetch(`${API_BASE_URL}/sports`);
         if (!response.ok) throw new Error('Network response was not ok');
@@ -259,7 +240,6 @@ function showInitialMessage() {
     const liveContainer = document.getElementById('live-events-container');
     const upcomingContainer = document.getElementById('upcoming-events-container');
     
-    // NUEVO DISEÑO BONITO PARA DEPORTES
     const emptyStateHtml = `
         <div class="initial-message" style="text-align: center; padding: 60px 20px;">
             <i class="fa-solid fa-trophy" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 20px; opacity: 0.8;"></i>
@@ -267,20 +247,11 @@ function showInitialMessage() {
             <p style="color: var(--color-text-secondary); max-width: 400px; margin: 0 auto 20px;">
                 Selecciona una liga del menú de la izquierda para ver los partidos en vivo y las mejores cuotas del mercado.
             </p>
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <i class="fa-solid fa-futbol" style="font-size: 1.5rem; color: var(--color-text-secondary);"></i>
-                <i class="fa-solid fa-basketball" style="font-size: 1.5rem; color: var(--color-text-secondary);"></i>
-                <i class="fa-solid fa-baseball" style="font-size: 1.5rem; color: var(--color-text-secondary);"></i>
-            </div>
         </div>
     `;
 
-    if (liveContainer) {
-        liveContainer.innerHTML = emptyStateHtml;
-    }
-    if (upcomingContainer) {
-        upcomingContainer.innerHTML = '';
-    }
+    if (liveContainer) liveContainer.innerHTML = emptyStateHtml;
+    if (upcomingContainer) upcomingContainer.innerHTML = '';
 }
 
 function handleSearch(searchTerm) {
@@ -288,38 +259,26 @@ function handleSearch(searchTerm) {
     const navContainers = document.querySelectorAll('.sports-nav .nav-container, .sports-panel__nav .nav-container');
 
     navContainers.forEach(container => {
-        let firstResultCategory = null;
-
         const categories = container.querySelectorAll('.nav-category');
-
         categories.forEach(category => {
             const links = category.querySelectorAll('.sport-link');
             const accordionHeader = category.querySelector('.accordion');
             const submenu = category.querySelector('.submenu');
-            let categoryHasVisibleLinks = false;
+            let hasVisible = false;
 
             links.forEach(link => {
-                const linkText = link.textContent.toLowerCase();
-                const listItem = link.closest('li');
-                const matches = linkText.includes(term);
-                
-                listItem.style.display = matches ? '' : 'none';
-                
-                if (matches) {
-                    categoryHasVisibleLinks = true;
-                }
+                const matches = link.textContent.toLowerCase().includes(term);
+                link.closest('li').style.display = matches ? '' : 'none';
+                if (matches) hasVisible = true;
             });
 
-            if (term.length === 0 || categoryHasVisibleLinks) {
+            if (term.length === 0 || hasVisible) {
                 category.style.display = '';
-                if (categoryHasVisibleLinks && !firstResultCategory) {
-                    firstResultCategory = category;
-                }
             } else {
                 category.style.display = 'none';
             }
 
-            if (term.length > 0 && categoryHasVisibleLinks) {
+            if (term.length > 0 && hasVisible) {
                 accordionHeader.classList.add('active');
                 submenu.style.maxHeight = submenu.scrollHeight + 'px';
             } else {
@@ -327,25 +286,6 @@ function handleSearch(searchTerm) {
                 submenu.style.maxHeight = null;
             }
         });
-
-        if (firstResultCategory) {
-            const scrollTop = firstResultCategory.offsetTop - container.offsetTop;
-            container.scrollTo({ top: scrollTop, behavior: 'smooth' });
-        }
-
-        let noResultsMessage = container.querySelector('.no-results-message');
-        const resultsFound = firstResultCategory !== null;
-
-        if (!resultsFound && term.length > 0) {
-            if (!noResultsMessage) {
-                noResultsMessage = document.createElement('p');
-                noResultsMessage.className = 'no-results-message empty-message';
-                noResultsMessage.textContent = 'No se encontraron ligas.';
-                container.appendChild(noResultsMessage);
-            }
-        } else if (noResultsMessage) {
-            noResultsMessage.remove();
-        }
     });
 }
 
@@ -360,38 +300,35 @@ function initGameSlider() {
         if (slide.dataset.background) slide.style.backgroundImage = `url('${slide.dataset.background}')`;
     });
 
-    const dotsContainer = sliderContainer.querySelector('.slider-dots');
-    dotsContainer.innerHTML = slides.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></div>`).join('');
-    const dots = dotsContainer.querySelectorAll('.dot');
+    const dotsContainer = document.createElement('div');
+    dotsContainer.className = 'slider-dots';
+    dotsContainer.style.cssText = 'position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:5;';
+    sliderContainer.appendChild(dotsContainer);
+    
+    // Crear dots
+    dotsContainer.innerHTML = slides.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" data-index="${i}" style="width:10px; height:10px; background:${i===0?'#2ECC71':'rgba(255,255,255,0.5)'}; border-radius:50%; cursor:pointer;"></div>`).join('');
     
     let currentIndex = 0;
-    let autoPlayInterval;
 
     function goToSlide(index) {
         currentIndex = (index + slides.length) % slides.length;
         sliderWrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
-        dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+        Array.from(dotsContainer.children).forEach((dot, i) => {
+            dot.classList.toggle('active', i === currentIndex);
+            dot.style.background = i === currentIndex ? '#2ECC71' : 'rgba(255,255,255,0.5)';
+        });
     }
 
-    function startAutoPlay() {
-        clearInterval(autoPlayInterval);
-        autoPlayInterval = setInterval(() => goToSlide(currentIndex + 1), 5000);
-    }
-
-    sliderContainer.addEventListener('click', (e) => {
-        if (e.target.closest('.next-btn')) goToSlide(currentIndex + 1);
-        if (e.target.closest('.prev-btn')) goToSlide(currentIndex - 1);
-        if (e.target.matches('.dot')) goToSlide(parseInt(e.target.dataset.index));
-        if (e.target.closest('.slider-btn, .dot')) startAutoPlay();
+    setInterval(() => goToSlide(currentIndex + 1), 5000);
+    
+    dotsContainer.addEventListener('click', (e) => {
+        if(e.target.dataset.index) goToSlide(parseInt(e.target.dataset.index));
     });
-
-    startAutoPlay();
 }
 
 function initCasinoFilters() {
     const filterContainer = document.querySelector('.game-filters');
     const gameGrid = document.querySelector('.game-grid');
-
     if (!filterContainer || !gameGrid) return; 
 
     filterContainer.addEventListener('click', (e) => {
@@ -402,114 +339,58 @@ function initCasinoFilters() {
         filterBtn.classList.add('active');
 
         const filterValue = filterBtn.dataset.filter;
-        const gameCards = gameGrid.querySelectorAll('.game-card');
-
-        gameCards.forEach(card => {
+        gameGrid.querySelectorAll('.game-card').forEach(card => {
             const categories = card.dataset.category.split(' '); 
-            
-            if (filterValue === 'all' || categories.includes(filterValue)) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
+            card.style.display = (filterValue === 'all' || categories.includes(filterValue)) ? 'block' : 'none';
         });
     });
 }
-async function loadRealResults() {
-    const container = document.querySelector('.results-container');
-    if (!container) return;
 
-    container.innerHTML = '<div class="loader-container"><div class="spinner"></div></div>';
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/scores`); // Llamamos al backend
-        if (!response.ok) throw new Error('Error cargando resultados');
-        const scores = await response.json();
-
-        // Filtramos solo los que ya terminaron (completed: true)
-        const finishedGames = scores.filter(game => game.completed);
-
-        if (finishedGames.length === 0) {
-            container.innerHTML = `
-                <div class="initial-message" style="padding: 40px;">
-                    <i class="fa-solid fa-calendar-xmark"></i>
-                    <h2>Sin resultados recientes</h2>
-                    <p>No hay partidos finalizados en los últimos 3 días en esta liga.</p>
-                </div>`;
-            return;
-        }
-
-        container.innerHTML = finishedGames.map(game => {
-            const homeScore = game.scores?.find(s => s.name === game.home_team)?.score || 0;
-            const awayScore = game.scores?.find(s => s.name === game.away_team)?.score || 0;
-            
-            // Determinar color (verde si ganó local, rojo si perdió, etc. - opcional)
-            let scoreClass = 'pending'; 
-            if(game.completed) scoreClass = 'win'; // Clase genérica para finalizado
-
-            return `
-            <div class="result-card">
-                <div class="result-league">
-                    <i class="fa-solid fa-trophy" style="color: var(--color-primary); margin-right:10px;"></i>
-                    ${game.sport_title}
-                </div>
-                <div class="result-teams">
-                    <span>${game.home_team}</span>
-                    <span class="result-score ${scoreClass}">${homeScore} - ${awayScore}</span>
-                    <span>${game.away_team}</span>
-                </div>
-                <div class="result-date">
-                    ${new Date(game.commence_time).toLocaleDateString('es-ES', {weekday: 'short', day: 'numeric'})}
-                </div>
-            </div>`;
-        }).join('');
-
-    } catch (error) {
-        console.error(error);
-        container.innerHTML = '<p class="error-message">No se pudieron cargar los resultados en vivo.</p>';
-    }
-}
+// --- CONFIGURACIÓN DE EVENT LISTENERS PRINCIPALES ---
 function setupEventListeners() {
     document.body.addEventListener('click', async (event) => {
         const target = event.target;
 
+        // 1. ABRIR/CERRAR MENÚ MÓVIL
         if (target.closest('#mobile-menu-toggle, .close-menu-btn')) {
             const mobileMenu = document.getElementById('mobile-menu');
             const toggleBtn = document.getElementById('mobile-menu-toggle');
-            if (!mobileMenu || !toggleBtn) return;
+            if (!mobileMenu) return;
+            
             const isOpen = mobileMenu.classList.toggle('is-open');
-            toggleBtn.classList.toggle('is-active', isOpen);
-            toggleBtn.setAttribute('aria-expanded', String(isOpen));
-            const icon = toggleBtn.querySelector('i');
-            if (icon) {
-                icon.classList.toggle('fa-bars', !isOpen);
-                icon.classList.toggle('fa-times', isOpen);
-            }
+            if(toggleBtn) toggleBtn.classList.toggle('is-active', isOpen);
             document.body.classList.toggle('panel-open', isOpen);
             return;
         }
 
+        // 2. CLICK EN ENLACE DENTRO DEL MENÚ MÓVIL (Navegación)
+        if (target.closest('#mobile-menu a')) {
+            document.getElementById('mobile-menu').classList.remove('is-open');
+            document.body.classList.remove('panel-open');
+        }
+
+        // 3. ABRIR PANEL DEPORTES (MÓVIL)
         if (target.closest('#mobile-sports-panel-trigger, #close-sports-panel-btn')) {
             event.preventDefault();
             const sportsPanel = document.getElementById('sports-panel');
-            if (!sportsPanel) return;
-            const isOpen = sportsPanel.classList.toggle('is-open');
+            const isOpen = sportsPanel?.classList.toggle('is-open');
             document.body.classList.toggle('panel-open', isOpen);
             return;
         }
 
+        // 4. CLICK EN LIGA/DEPORTE
         const sportLink = target.closest('.sport-link');
         if (sportLink) {
             event.preventDefault();
             document.getElementById('sports-panel')?.classList.remove('is-open');
             document.body.classList.remove('panel-open');
 
-            if (!window.location.pathname.includes('deportes')) {
-                window.location.href = `deportes.html?sport=${sportLink.dataset.sportKey}`;
+            const sportKey = sportLink.dataset.sportKey;
+
+            if (!window.location.pathname.includes('deportes.html')) {
+                window.location.href = `/deportes.html?sport=${sportKey}`;
                 return;
             }
-            
-            const sportKey = sportLink.dataset.sportKey;
             
             const liveContainer = document.getElementById('live-events-container');
             const upcomingContainer = document.getElementById('upcoming-events-container');
@@ -518,157 +399,123 @@ function setupEventListeners() {
             if (upcomingContainer) upcomingContainer.innerHTML = spinnerHtml;
 
             const events = await fetchLiveEvents(sportKey);
-            
             renderEvents(events);
-            document.querySelectorAll('.sport-link.active').forEach(link => link.classList.remove('active'));
-            sportLink.classList.add('active');
             return;
         }
 
-        const mobileMenuLink = target.closest('#mobile-menu a');
-        if (mobileMenuLink) {
-            const mobileMenu = document.getElementById('mobile-menu');
-            if (mobileMenu && mobileMenu.classList.contains('is-open')) {
-                mobileMenu.classList.remove('is-open');
-                document.body.classList.remove('panel-open');
-                const toggleBtn = document.getElementById('mobile-menu-toggle');
-                if (toggleBtn) {
-                    toggleBtn.classList.remove('is-active');
-                    toggleBtn.setAttribute('aria-expanded', 'false');
-                }
-            }
-            return; 
-        }
-
-        const tabLink = target.closest('.tab-link');
-        if (tabLink) {
-            if (tabLink.classList.contains('active')) return;
-            document.querySelector('.tab-link.active')?.classList.remove('active');
-            document.querySelector('.tab-content.active')?.classList.remove('active');
-            tabLink.classList.add('active');
-            document.getElementById(tabLink.dataset.tab)?.classList.add('active');
-            return;
-        }
-        
+        // 5. CLICK EN CUOTA (AÑADIR APUESTA)
         const oddsButton = target.closest('.odds-button');
         if (oddsButton) {
             const isLoggedIn = localStorage.getItem('fortunaUser');
-            
             if (!isLoggedIn) {
-                openModal(document.getElementById('login-modal'));
+                const loginModal = document.getElementById('login-modal');
+                if(loginModal) openModal(loginModal);
                 return;
             }
-            addBet({ team: oddsButton.dataset.team, odds: parseFloat(oddsButton.dataset.odds), id: `${oddsButton.dataset.team}-${oddsButton.dataset.odds}` });
-            
-            if (oddsButton.closest('#featured-events-container')) {
-                window.location.href = 'deportes.html';
-            }
+            addBet({ 
+                team: oddsButton.dataset.team, 
+                odds: parseFloat(oddsButton.dataset.odds), 
+                id: `${oddsButton.dataset.team}-${oddsButton.dataset.odds}` 
+            });
             return;
         }
 
+        // 6. ACORDEÓN DE DEPORTES
         const accordion = target.closest('.accordion');
         if (accordion) {
-            const parentNav = accordion.closest('.sports-nav, .sports-panel__nav');
             const submenu = accordion.nextElementSibling;
-            const isActive = accordion.classList.contains('active');
-
-            if (parentNav) {
-                parentNav.querySelectorAll('.accordion.active').forEach(activeAccordion => {
-                    if (activeAccordion !== accordion) {
-                        activeAccordion.classList.remove('active');
-                        activeAccordion.nextElementSibling.style.maxHeight = null;
-                    }
-                });
-            }
-
-            if (!isActive && submenu) {
-                accordion.classList.add('active');
-                submenu.style.maxHeight = submenu.scrollHeight + 'px';
-            } else if (submenu) {
-                accordion.classList.remove('active');
-                submenu.style.maxHeight = null;
-            }
+            accordion.classList.toggle('active');
+            submenu.style.maxHeight = accordion.classList.contains('active') ? submenu.scrollHeight + 'px' : null;
             return;
         }
 
+        // 7. DETALLE DEL EVENTO
         const detailLink = target.closest('.event-detail-link');
         if (detailLink) {
             event.preventDefault();
             const { eventId, sportKey } = detailLink.dataset;
-            document.getElementById('loader-live')?.style.setProperty('display', 'flex');
+            document.getElementById('live-events-container').innerHTML = '<div class="loader-container"><div class="spinner"></div></div>';
+            
             try {
                 const eventData = await fetchEventDetails(sportKey, eventId);
                 renderEventDetail(eventData);
                 switchView('#event-detail-view');
-            } catch (error) { console.error("Error al obtener detalles:", error); } 
-            finally { document.getElementById('loader-live')?.style.setProperty('display', 'none'); }
+            } catch (error) { 
+                console.error(error); 
+            }
             return;
         }
 
-        const backButton = target.closest('#back-to-list-btn');
-        if (backButton) {
+        // 8. VOLVER A LISTA
+        if (target.closest('#back-to-list-btn')) {
             event.preventDefault();
-            const activeSportKey = document.querySelector('.sport-link.active')?.dataset.sportKey;
-            if (activeSportKey) {
-                const loader = document.getElementById('loader-live');
-                if (loader) loader.style.display = 'flex';
-                const events = await fetchLiveEvents(activeSportKey);
-                if (loader) loader.style.display = 'none';
-                renderEvents(events);
-            }
-            document.querySelector('.event-tabs').classList.remove('hidden');
             document.querySelector('#event-detail-view').classList.add('hidden');
+            document.querySelector('.event-tabs').classList.remove('hidden');
+            document.querySelector('.tab-content.active')?.classList.remove('hidden');
+            switchView('#live');
             return;
         }
         
-        const gameCard = target.closest('.game-card');
+        // 9. ABRIR JUEGO (CASINO)
+        const gameCard = target.closest('.game-card[data-game-url]');
         if (gameCard) {
             event.preventDefault();
-            const isLoggedIn = localStorage.getItem('fortunaUser');
-            
-            if (!isLoggedIn) {
+            if (!localStorage.getItem('fortunaUser')) {
                 openModal(document.getElementById('login-modal'));
             } else {
                 const gameUrl = gameCard.dataset.gameUrl;
-                if (gameUrl) {
-                    const gameModal = document.getElementById('game-modal');
-                    const gameIframe = document.getElementById('game-iframe');
-                    
-                    gameIframe.src = gameUrl;
-                    openModal(gameModal);
-                }
+                const gameModal = document.getElementById('game-modal');
+                const gameIframe = document.getElementById('game-iframe');
+                if(gameIframe) gameIframe.src = gameUrl;
+                if(gameModal) openModal(gameModal);
+            }
+            return;
+        }
+
+        // 10. PESTAÑAS (TABS)
+        const tabLink = target.closest('.tab-link');
+        if (tabLink) {
+            if (tabLink.classList.contains('active')) return;
+            document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            tabLink.classList.add('active');
+            document.getElementById(tabLink.dataset.tab).classList.add('active');
+            return;
+        }
+
+        // 11. CLICK EN LA BARRA DE NOTIFICACIÓN MÓVIL
+        if (target.closest('#open-mobile-slip') || target.closest('#mobile-bet-notification')) {
+            const betSlip = document.querySelector('.bet-slip');
+            if (betSlip) {
+                betSlip.classList.add('active'); // Usamos clase CSS en vez de style inline
+                document.body.classList.add('modal-open'); // Bloquear scroll de fondo
+            }
+            return;
+        }
+        if (target.closest('#close-mobile-slip')) {
+            const betSlip = document.querySelector('.bet-slip');
+            if (betSlip) {
+                betSlip.classList.remove('active');
+                document.body.classList.remove('modal-open');
             }
             return;
         }
     });
 
     document.body.addEventListener('input', (event) => {
-        const searchInput = event.target.closest('.sport-search-input');
-        if (searchInput) {
-            handleSearch(searchInput.value);
+        if (event.target.classList.contains('sport-search-input')) {
+            handleSearch(event.target.value);
         }
     });
 }
 
+// --- FUNCIÓN DE INICIO ---
 async function main() {
     document.body.classList.remove('modal-open', 'panel-open');
+    
     await initSharedComponents();
     
-    const urlParams = new URLSearchParams(window.location.search);
-    const action = urlParams.get('action');
-    const userId = urlParams.get('id');
-    const token = urlParams.get('token');
-
-    if (action === 'reset' && userId && token) {
-        const resetModal = document.getElementById('reset-password-modal');
-        if (resetModal) {
-            resetModal.dataset.id = userId;
-            resetModal.dataset.token = token;
-            openModal(resetModal);
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-    }
-
     initModals();
     initAuth();
     handleActiveNav();
@@ -682,7 +529,7 @@ async function main() {
     setupEventListeners();
     subscribe(updateSelectedOddsUI);
 
-    if (window.location.pathname.includes('deportes')) {
+    if (window.location.pathname.includes('deportes.html')) {
         const urlParams = new URLSearchParams(window.location.search);
         const sportKeyFromUrl = urlParams.get('sport');
         if (sportKeyFromUrl) {
@@ -691,20 +538,23 @@ async function main() {
         } else {
             showInitialMessage();
         }
-    }
-    
-    if (window.location.pathname.includes('mi-cuenta') || document.querySelector('.account-dashboard-grid')) {
-        const token = localStorage.getItem('fortunaToken');
-        
-        if (!token) {
+    } else if (window.location.pathname.includes('mi-cuenta.html')) {
+        if (!localStorage.getItem('fortunaToken')) {
             window.location.href = '/index.html';
         } else {
             await initAccountDashboard(); 
         }
     }
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'reset' && urlParams.get('token')) {
+        const resetModal = document.getElementById('reset-password-modal');
+        if (resetModal) {
+            resetModal.dataset.id = urlParams.get('id');
+            resetModal.dataset.token = urlParams.get('token');
+            openModal(resetModal);
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', main);
-window.addEventListener('beforeunload', () => {
-    document.body.classList.remove('modal-open', 'panel-open');
-});

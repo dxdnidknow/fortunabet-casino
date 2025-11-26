@@ -21,13 +21,16 @@
         <div class="body-container">
             <div class="main-container">
                 
+                <!-- Barra Lateral Izquierda (Menú Deportes Desktop) -->
                 <nav class="sports-nav">
                     <!-- JS insertará el menú de escritorio con su búsqueda aquí -->
                 </nav>
 
+                <!-- Contenido Central -->
                 <main class="content-area">
                     <h2 class="visually-hidden">Eventos deportivos disponibles</h2>
 
+                    <!-- Botón para abrir menú de deportes en Móvil -->
                     <div class="mobile-sports-trigger-container">
                         <a href="#" id="mobile-sports-panel-trigger" class="sport-link-trigger">
                             <span><i class="fa-solid fa-bars-staggered"></i> Ver Ligas y Deportes</span>
@@ -35,37 +38,39 @@
                         </a>
                     </div>
 
+                    <!-- Pestañas En Vivo / Próximos -->
                     <div class="event-tabs">
                         <button class="tab-link active" data-tab="live">En Vivo</button>
                         <button class="tab-link" data-tab="upcoming">Próximos</button>
                     </div>
 
-                    <!-- ===== INICIO DE LA CORRECCIÓN ESTRUCTURAL ===== -->
+                    <!-- Sección En Vivo -->
                     <section id="live" class="event-list tab-content active">
                         <div id="live-events-container">
-                            <!-- El loader ahora vive aquí como estado inicial -->
                             <div class="loader-container">
                                 <div class="spinner"></div>
                             </div>
                         </div>
                     </section>
 
+                    <!-- Sección Próximos -->
                     <section id="upcoming" class="event-list tab-content">
                         <div id="upcoming-events-container">
-                             <!-- El loader ahora vive aquí como estado inicial -->
                             <div class="loader-container" style="display: none;">
                                 <div class="spinner"></div>
                             </div>
                         </div>
                     </section>
-                    <!-- ===== FIN DE LA CORRECCIÓN ESTRUCTURAL ===== -->
 
+                    <!-- Vista de Detalle de Evento -->
                     <section id="event-detail-view" class="hidden">
                         <!-- JS llenará esto con los detalles del evento -->
                     </section>
                 </main>
 
+                <!-- Barra Lateral Derecha (Cupón de Apuesta) -->
                 <aside class="bet-slip">
+                     <button id="close-mobile-slip" class="close-panel-btn mobile-only" style="position: absolute; top: 15px; right: 15px; color: var(--color-text-secondary);">&times;</button>
                     <h3>Cupón de Apuesta</h3>
                     <div id="bet-slip-content">
                         <p class="empty-message">Tu cupón está vacío. Haz clic en una cuota para agregar una apuesta.</p>
@@ -83,10 +88,21 @@
         <div id="footer-placeholder"></div>
     </div>
 
+    <!-- Componentes Flotantes -->
     <div id="mobile-menu-placeholder"></div>
     <div id="sports-panel-placeholder"></div>
 	<div id="modals-placeholder"></div>
     <div id="help-widget-placeholder"></div>
+
+    <!-- NUEVO: Barra de notificación de apuestas para móvil -->
+    <div id="mobile-bet-notification">
+        <div class="bet-info">
+            <span style="font-weight: 700; color: var(--color-primary);"><span id="mobile-bet-count">0</span> Selecciones</span>
+            <small style="display:block; color: #aaa; font-size: 0.8rem;">Toque para ver cupón</small>
+        </div>
+        <button class="btn btn-primary" id="open-mobile-slip">Ver Cupón</button>
+    </div>
+
 	<script type="module" src="/js/main.js"></script>
 </body>
 </html>

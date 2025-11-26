@@ -1,29 +1,55 @@
-<!-- Archivo: components/mobile-menu.html (COMPLETO Y CORREGIDO) -->
 <nav id="mobile-menu" class="mobile-menu">
-	<button class="close-menu-btn" aria-label="Cerrar menú">&times;</button>
-	
-	<!-- SECCIÓN DE AUTENTICACIÓN RESTAURADA -->
-	<div class="mobile-menu-auth">
-		<div class="auth-wrapper-mobile">
-			<div class="auth-buttons">
-				<button class="btn btn-secondary btn-cta" data-modal-trigger="login-modal">Iniciar Sesión</button>
-				<button class="btn btn-primary btn-cta" data-modal-trigger="register-modal">Registrarse</button>
-			</div>
-			<div class="user-info hidden">
-				<span class="welcome-message"></span>
-				<button class="btn btn-secondary btn-cta" id="logout-btn-mobile">Cerrar Sesión</button>
-			</div>
-		</div>
-	</div>
-
-	<div class="mobile-menu-divider"></div>
-
-<div class="mobile-menu-links">
-    <a href="deportes.html"><i class="fa-solid fa-trophy"></i> Deportes</a>
-<a href="casino-en-vivo.html"><i class="fa-solid fa-dice"></i> Casino en Vivo</a>
-<a href="casino.html"><i class="fa-solid fa-gamepad"></i> Casino</a>
     
-    <!-- Estos enlaces solo se muestran si el usuario SÍ ha iniciado sesión -->
-    <a href="mi-cuenta.html" class="logged-in-only"><i class="fa-solid fa-user"></i> Mi Cuenta</a>
-</div>
+    <div class="mobile-menu-header">
+        <img src="/images/logo-fortuna.png" alt="FortunaBet" class="menu-logo">
+        <button class="close-menu-btn" aria-label="Cerrar menú">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div class="mobile-menu-content">
+        
+        <div class="mobile-menu-links">
+            <a href="/deportes.html">
+                <i class="fa-solid fa-trophy"></i> <span>Deportes</span>
+                <i class="fa-solid fa-chevron-right arrow-icon"></i>
+            </a>
+            <a href="/casino-en-vivo.html">
+                <i class="fa-solid fa-dice"></i> <span>Casino en Vivo</span>
+                <i class="fa-solid fa-chevron-right arrow-icon"></i>
+            </a>
+            <a href="/casino.html">
+                <i class="fa-solid fa-gamepad"></i> <span>Casino</span>
+                <i class="fa-solid fa-chevron-right arrow-icon"></i>
+            </a>
+            
+            <div class="mobile-menu-divider logged-in-only"></div>
+
+            <a href="/mi-cuenta.html" class="logged-in-only">
+                <i class="fa-solid fa-user"></i> <span>Mi Cuenta</span>
+                <i class="fa-solid fa-chevron-right arrow-icon"></i>
+            </a>
+            <a href="/admin/index.html" target="_blank" class="logged-in-only" id="admin-panel-link">
+                <i class="fa-solid fa-shield-halved"></i> <span>Panel Admin</span>
+                <i class="fa-solid fa-chevron-right arrow-icon"></i>
+            </a>
+        </div>
+        
+    </div>
+
+    <div class="mobile-menu-auth-fixed logged-out-only"> 
+        <button class="btn btn-secondary" data-modal-trigger="login-modal">Iniciar Sesión</button>
+        <button class="btn btn-primary" data-modal-trigger="register-modal">Registrarse</button>
+    </div>
+
+    <div class="mobile-menu-auth-fixed logged-in-only"> 
+         <div class="user-badge" style="display:flex; align-items:center; gap:10px; width:100%; justify-content: flex-start; margin-bottom: 5px;">
+            <i class="fa-solid fa-circle-user" style="font-size:2rem; color: var(--color-text-secondary);"></i>
+            <span class="welcome-message" style="font-weight:600; color:var(--color-primary);">Bienvenido, Usuario</span>
+        </div>
+        <button class="btn btn-secondary btn-full btn-logout-mobile" id="logout-btn-mobile">
+            <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+        </button>
+    </div>
+    
 </nav>
