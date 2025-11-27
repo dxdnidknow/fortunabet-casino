@@ -5,12 +5,9 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
 	<title>Deportes - FortunaBet</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 	<link rel="stylesheet" href="/css/style.css">
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -21,80 +18,72 @@
         <div class="body-container">
             <div class="main-container">
                 
-                <!-- Barra Lateral Izquierda (Menú Deportes Desktop) -->
+                <!-- Barra Izquierda (Escritorio) -->
                 <nav class="sports-nav">
-                    <!-- JS insertará el menú de escritorio con su búsqueda aquí -->
+                    <!-- Se llena con JS -->
+                    <div class="loader-container"><div class="spinner-sm"></div></div>
                 </nav>
 
-                <!-- Contenido Central -->
+                <!-- Centro -->
                 <main class="content-area">
-                    <h2 class="visually-hidden">Eventos deportivos disponibles</h2>
-
-                    <!-- Botón para abrir menú de deportes en Móvil -->
                     <div class="mobile-sports-trigger-container">
                         <a href="#" id="mobile-sports-panel-trigger" class="sport-link-trigger">
-                            <span><i class="fa-solid fa-bars-staggered"></i> Ver Ligas y Deportes</span>
+                            <span><i class="fa-solid fa-bars-staggered"></i> Ver Ligas</span>
                             <i class="fa-solid fa-chevron-right"></i>
                         </a>
                     </div>
 
-                    <!-- Pestañas En Vivo / Próximos -->
                     <div class="event-tabs">
                         <button class="tab-link active" data-tab="live">En Vivo</button>
                         <button class="tab-link" data-tab="upcoming">Próximos</button>
                     </div>
 
-                    <!-- Sección En Vivo -->
                     <section id="live" class="event-list tab-content active">
                         <div id="live-events-container">
-                            <div class="loader-container">
-                                <div class="spinner"></div>
+                            <!-- Mensaje inicial -->
+                            <div class="initial-message" style="text-align: center; padding: 40px; color: #aaa;">
+                                <i class="fa-solid fa-trophy" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                                <h3>Bienvenido a Deportes</h3>
+                                <p>Selecciona una liga en el menú para comenzar.</p>
                             </div>
                         </div>
                     </section>
 
-                    <!-- Sección Próximos -->
                     <section id="upcoming" class="event-list tab-content">
-                        <div id="upcoming-events-container">
-                            <div class="loader-container" style="display: none;">
-                                <div class="spinner"></div>
-                            </div>
-                        </div>
+                        <div id="upcoming-events-container"></div>
                     </section>
 
-                    <!-- Vista de Detalle de Evento -->
-                    <section id="event-detail-view" class="hidden">
-                        <!-- JS llenará esto con los detalles del evento -->
-                    </section>
+                    <section id="event-detail-view" class="hidden"></section>
                 </main>
 
-                <!-- Barra Lateral Derecha (Cupón de Apuesta) -->
+                <!-- Barra Derecha (Cupón) -->
                 <aside class="bet-slip">
-                     <button id="close-mobile-slip" class="close-panel-btn mobile-only" style="position: absolute; top: 15px; right: 15px; color: var(--color-text-secondary);">&times;</button>
+                    <!-- Botón cerrar solo para móvil -->
+                    <button id="close-mobile-slip" class="mobile-only" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#fff; font-size:1.5rem;">&times;</button>
+                    
                     <h3>Cupón de Apuesta</h3>
                     <div id="bet-slip-content">
-                        <p class="empty-message">Tu cupón está vacío. Haz clic en una cuota para agregar una apuesta.</p>
+                        <p class="empty-message">Tu cupón está vacío.</p>
                         <ul id="bet-list"></ul>
                     </div>
                     <div class="bet-summary">
-                        <div class="summary-row"><span>Monto a Apostar:</span><input type="number" placeholder="0.00" class="stake-input"></div>
-                        <div class="summary-row"><span>Ganancia Potencial:</span><span id="potential-winnings">Bs. 0.00</span></div>
-                        <button id="place-bet-btn" class="btn btn-primary btn-cta">Realizar Apuesta</button>
+                        <div class="summary-row"><span>Apuesta:</span><input type="number" placeholder="0.00" class="stake-input"></div>
+                        <div class="summary-row"><span>Ganancia:</span><span id="potential-winnings">Bs. 0.00</span></div>
+                        <button id="place-bet-btn" class="btn btn-primary btn-cta">Apostar</button>
                     </div>
                 </aside>
             </div>
         </div>
-
         <div id="footer-placeholder"></div>
     </div>
 
     <!-- Componentes Flotantes -->
     <div id="mobile-menu-placeholder"></div>
     <div id="sports-panel-placeholder"></div>
-	<div id="modals-placeholder"></div>
+    <div id="modals-placeholder"></div>
     <div id="help-widget-placeholder"></div>
 
-    <!-- NUEVO: Barra de notificación de apuestas para móvil -->
+    <!-- Barra verde inferior (Móvil) -->
     <div id="mobile-bet-notification">
         <div class="bet-info">
             <span style="font-weight: 700; color: var(--color-primary);"><span id="mobile-bet-count">0</span> Selecciones</span>

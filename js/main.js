@@ -11,6 +11,7 @@ import { sportTranslations } from './translations.js';
 import { initPaymentModals } from './payments.js'; 
 import { initHelpWidget } from './help-widget.js';
 
+// --- ESTADO GLOBAL Y UTILIDADES ---
 let favorites = JSON.parse(localStorage.getItem('fortunaFavorites')) || [];
 
 function updateFavoritesUI() {
@@ -32,10 +33,15 @@ function updateSelectedOddsUI() {
     document.querySelectorAll('.odds-button').forEach(button => {
         const betId = `${button.dataset.team}-${button.dataset.odds}`;
         const isSelected = betIds.includes(betId);
-        button.classList.toggle('selected', isSelected);
+        if (isSelected) {
+            button.classList.add('selected');
+        } else {
+            button.classList.remove('selected');
+        }
     });
 }
 
+// --- RENDERIZADO DE EVENTOS ---
 function renderEventCard(event, index) {
     const teamName = event.teams || 'Evento';
     let oddsHtml = '';
@@ -60,7 +66,7 @@ function renderEventCard(event, index) {
     <div class="event-card" style="--i: ${index};">
         <div class="event-card__header">
             <div class="event-card__teams-container">
-                <a href="#" class="event-detail-link" data-event-id="${event.id}" data-sport-key="${event.sport_key}">
+                <a href="#" class="event-detail-link" data-event-id="${event.id}" data-sport-key="${event.sport_key}" style="text-decoration:none; color:inherit;">
                     <strong class="event-card__teams">${teamName}</strong>
                 </a>
             </div>
@@ -75,6 +81,13 @@ function renderEvents(allEvents) {
     const upcomingContainer = document.getElementById('upcoming-events-container');
     
     if (!liveContainer || !upcomingContainer) return;
+
+    if (!allEvents || allEvents.length === 0) {
+        const noDataHtml = `<div class="initial-message" style="padding: 40px; text-align: center;"><i class="fa-solid fa-calendar-xmark" style="font-size: 2rem; color: #555; margin-bottom:10px;"></i><p>No hay eventos disponibles en este momento para esta categoría.</p></div>`;
+        liveContainer.innerHTML = noDataHtml;
+        upcomingContainer.innerHTML = noDataHtml;
+        return;
+    }
 
     const liveEvents = allEvents.filter(event => event.is_live);
     const upcomingEvents = allEvents.filter(event => !event.is_live);
@@ -93,7 +106,7 @@ function renderEvents(allEvents) {
             const eventsInLeague = groupedByLeague[sportKey];
             const meta = eventsInLeague[0];
             const translatedTitle = sportTranslations[meta.sport_title] || meta.sport_title;
-            const leagueLogoHtml = meta.logoUrl ? `<img src="${meta.logoUrl}" alt="" class="league-logo">` : '<i class="fa-solid fa-trophy"></i>';
+            const leagueLogoHtml = meta.logoUrl ? `<img src="${meta.logoUrl}" alt="" class="league-logo">` : '<i class="fa-solid fa-trophy" style="color:var(--color-primary);"></i>';
             const headerHtml = `<div class="league-header"><h4>${leagueLogoHtml} ${translatedTitle}</h4></div>`;
             const cardsHtml = eventsInLeague.map(renderEventCard).join('');
             finalHtml += `<div class="league-group">${headerHtml}<div class="league-events">${cardsHtml}</div></div>`;
@@ -102,32 +115,17 @@ function renderEvents(allEvents) {
     };
 
     const liveHtml = buildHtmlFor(liveEvents);
-    liveContainer.innerHTML = liveHtml || `<div class="initial-message" style="padding: 40px 20px;"><i class="fa-solid fa-face-frown"></i><h2>Sin Eventos En Vivo</h2></div>`;
+    liveContainer.innerHTML = liveHtml || `<div class="initial-message" style="padding: 40px; text-align: center; color: #777;">No hay eventos en vivo ahora mismo.</div>`;
     
     const upcomingHtml = buildHtmlFor(upcomingEvents);
-    upcomingContainer.innerHTML = upcomingHtml || `<div class="initial-message" style="padding: 40px 20px;"><i class="fa-solid fa-face-frown"></i><h2>Sin Eventos Próximos</h2></div>`;
+    upcomingContainer.innerHTML = upcomingHtml || `<div class="initial-message" style="padding: 40px; text-align: center; color: #777;">No hay eventos próximos programados.</div>`;
 
-    const tabLive = document.querySelector('.tab-link[data-tab="live"]');
-    const tabUpcoming = document.querySelector('.tab-link[data-tab="upcoming"]');
-    const contentLive = document.getElementById('live');
-    const contentUpcoming = document.getElementById('upcoming');
-
-    // Lógica para activar la pestaña correcta si una está vacía
-    if (liveEvents.length > 0) {
-        if(tabLive) tabLive.classList.add('active');
-        if(contentLive) contentLive.classList.add('active');
-        if(tabUpcoming) tabUpcoming.classList.remove('active');
-        if(contentUpcoming) contentUpcoming.classList.remove('active');
-    } else if (upcomingEvents.length > 0) {
-        if(tabLive) tabLive.classList.remove('active');
-        if(contentLive) contentLive.classList.remove('active');
-        if(tabUpcoming) tabUpcoming.classList.add('active');
-        if(contentUpcoming) contentUpcoming.classList.add('active');
+    if (liveEvents.length === 0 && upcomingEvents.length > 0) {
+        document.querySelector('.tab-link[data-tab="upcoming"]')?.click();
     } else {
-        if(tabLive) tabLive.classList.add('active');
-        if(contentLive) contentLive.classList.add('active');
+        document.querySelector('.tab-link[data-tab="live"]')?.click();
     }
-    
+
     updateFavoritesUI();
     updateSelectedOddsUI();
 }
@@ -150,7 +148,7 @@ function renderEventDetail(eventData) {
                 </button>`
             ).join('');
             return `<div class="event-card" style="flex-direction: column; align-items: flex-start; margin-bottom: 10px;">
-                        <h4 style="margin-bottom: 10px; color: var(--color-primary);"><i class="fa-solid ${icon}"></i> ${market.key.replace(/_/g, ' ')}</h4>
+                        <h4 style="margin-bottom: 10px; color: var(--color-primary); display:flex; align-items:center; gap:10px;"><i class="fa-solid ${icon}"></i> ${market.key.replace(/_/g, ' ').toUpperCase()}</h4>
                         <div style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%;">${outcomesHtml}</div>
                     </div>`;
         }).join('');
@@ -159,10 +157,10 @@ function renderEventDetail(eventData) {
     }
 
     detailView.innerHTML = `
-        <div class="event-detail-header">
-            <button id="back-to-list-btn" class="btn btn-secondary" style="margin-bottom: 20px;">&lt; Volver a la lista</button>
-            <h2 class="page-title" style="font-size: 1.8rem; margin-bottom: 10px;">${eventData.home_team} vs ${eventData.away_team}</h2>
-            <p style="color: var(--color-text-secondary); margin-bottom: 20px;">${new Date(eventData.commence_time).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}</p>
+        <div class="event-detail-header" style="margin-bottom: 20px;">
+            <button id="back-to-list-btn" class="btn btn-secondary" style="margin-bottom: 15px;">&lt; Volver a la lista</button>
+            <h2 style="font-size: 1.5rem; margin-bottom:5px;">${eventData.home_team} vs ${eventData.away_team}</h2>
+            <p style="color: var(--color-text-secondary);"><i class="fa-regular fa-clock"></i> ${new Date(eventData.commence_time).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}</p>
         </div>
         <div class="event-detail-markets">${marketsHtml}</div>`;
     
@@ -179,6 +177,7 @@ function switchView(viewToShow) {
     if (viewElementToShow) viewElementToShow.classList.remove('hidden');
 }
 
+// --- NAVEGACIÓN Y MENÚS ---
 function handleActiveNav() {
     const navLinks = document.querySelectorAll('.main-nav ul a, #mobile-menu a');
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -193,20 +192,21 @@ async function initSportsNav() {
     const sportsNavDesktop = document.querySelector('.main-container .sports-nav');
     const sportsPanelNav = document.querySelector('.sports-panel__nav');
     
-    // Si no existen (ej: login), no hacemos nada
     if (!sportsNavDesktop && !sportsPanelNav) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/sports`);
-        if (!response.ok) throw new Error('Network response was not ok');
+        if (!response.ok) throw new Error('Error de red');
         const sports = await response.json();
+        
         const sportsGrouped = sports.reduce((acc, sport) => {
             if (!acc[sport.group]) acc[sport.group] = [];
             acc[sport.group].push(sport);
             return acc;
         }, {});
 
-        const icons = { 'Soccer': 'fa-futbol', 'Basketball': 'fa-basketball', 'Tennis': 'fa-tennis-ball' };
+        const icons = { 'Soccer': 'fa-futbol', 'Basketball': 'fa-basketball', 'Tennis': 'fa-tennis-ball', 'Baseball': 'fa-baseball-bat-ball', 'American Football': 'fa-football' };
+        
         let navHtml = Object.entries(sportsGrouped).map(([groupName, leagues]) => {
             const translatedGroupName = sportTranslations[groupName] || groupName;
             const iconClass = icons[groupName] || 'fa-trophy';
@@ -215,43 +215,26 @@ async function initSportsNav() {
                 return `<li><a href="#" class="sport-link" data-sport-key="${sport.key}">${translatedTitle}</a></li>`;
             }).join('');
             return `<div class="nav-category">
-                        <h4 class="category-title accordion"><i class="fa-solid ${iconClass}"></i> ${translatedGroupName}</h4>
+                        <div class="category-title accordion"><i class="fa-solid ${iconClass}"></i> ${translatedGroupName}</div>
                         <ul class="submenu">${leaguesHtml}</ul>
                     </div>`;
         }).join('');
 
+        const content = `<div class="nav-container">${navHtml}</div>`;
+
         if (sportsNavDesktop) {
-            const searchBarHtml = `<div class="search-container"><i class="fa-solid fa-search"></i><input type="text" class="sport-search-input" placeholder="Buscar liga..."></div>`;
-            sportsNavDesktop.innerHTML = searchBarHtml + `<div class="nav-container">${navHtml}</div>`; 
+            const searchHtml = `<div class="search-container"><i class="fa-solid fa-search"></i><input type="text" class="sport-search-input" placeholder="Buscar liga..."></div>`;
+            sportsNavDesktop.innerHTML = searchHtml + content; 
         }
         if (sportsPanelNav) {
-            sportsPanelNav.innerHTML = `<div class="nav-container">${navHtml}</div>`;
+            sportsPanelNav.innerHTML = content;
         }
 
     } catch (error) {
-        console.error("Error al inicializar la navegación de deportes:", error);
-        const errorMessage = `<p class="error-message" style="padding: 1rem;">No se pudo cargar el menú.</p>`;
-        if (sportsNavDesktop) sportsNavDesktop.innerHTML = errorMessage;
-        if (sportsPanelNav) sportsPanelNav.innerHTML = errorMessage;
+        console.error("Error al inicializar menú deportes:", error);
+        const errorHtml = `<div style="padding:20px; text-align:center; color:#E74C3C;">No se pudo cargar el menú.</div>`;
+        if (sportsNavDesktop) sportsNavDesktop.innerHTML = errorHtml;
     }
-}
-
-function showInitialMessage() {
-    const liveContainer = document.getElementById('live-events-container');
-    const upcomingContainer = document.getElementById('upcoming-events-container');
-    
-    const emptyStateHtml = `
-        <div class="initial-message" style="text-align: center; padding: 60px 20px;">
-            <i class="fa-solid fa-trophy" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 20px; opacity: 0.8;"></i>
-            <h2 style="font-size: 1.8rem; margin-bottom: 10px;">¡Bienvenido a la Zona de Deportes!</h2>
-            <p style="color: var(--color-text-secondary); max-width: 400px; margin: 0 auto 20px;">
-                Selecciona una liga del menú de la izquierda para ver los partidos en vivo y las mejores cuotas del mercado.
-            </p>
-        </div>
-    `;
-
-    if (liveContainer) liveContainer.innerHTML = emptyStateHtml;
-    if (upcomingContainer) upcomingContainer.innerHTML = '';
 }
 
 function handleSearch(searchTerm) {
@@ -272,11 +255,7 @@ function handleSearch(searchTerm) {
                 if (matches) hasVisible = true;
             });
 
-            if (term.length === 0 || hasVisible) {
-                category.style.display = '';
-            } else {
-                category.style.display = 'none';
-            }
+            category.style.display = (term.length === 0 || hasVisible) ? '' : 'none';
 
             if (term.length > 0 && hasVisible) {
                 accordionHeader.classList.add('active');
@@ -289,41 +268,59 @@ function handleSearch(searchTerm) {
     });
 }
 
+// --- SLIDER ---
 function initGameSlider() {
     const sliderContainer = document.querySelector('.game-slider-container');
     if (!sliderContainer) return;
+    
     const sliderWrapper = sliderContainer.querySelector('.slider-wrapper');
     const slides = Array.from(sliderWrapper.children);
     if (slides.length < 2) return;
 
-    slides.forEach(slide => {
-        if (slide.dataset.background) slide.style.backgroundImage = `url('${slide.dataset.background}')`;
-    });
-
     const dotsContainer = document.createElement('div');
     dotsContainer.className = 'slider-dots';
-    dotsContainer.style.cssText = 'position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:5;';
     sliderContainer.appendChild(dotsContainer);
     
-    // Crear dots
-    dotsContainer.innerHTML = slides.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" data-index="${i}" style="width:10px; height:10px; background:${i===0?'#2ECC71':'rgba(255,255,255,0.5)'}; border-radius:50%; cursor:pointer;"></div>`).join('');
+    dotsContainer.innerHTML = slides.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></div>`).join('');
     
     let currentIndex = 0;
+    let autoPlayInterval;
 
     function goToSlide(index) {
         currentIndex = (index + slides.length) % slides.length;
         sliderWrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
         Array.from(dotsContainer.children).forEach((dot, i) => {
             dot.classList.toggle('active', i === currentIndex);
-            dot.style.background = i === currentIndex ? '#2ECC71' : 'rgba(255,255,255,0.5)';
         });
     }
 
-    setInterval(() => goToSlide(currentIndex + 1), 5000);
-    
-    dotsContainer.addEventListener('click', (e) => {
-        if(e.target.dataset.index) goToSlide(parseInt(e.target.dataset.index));
+    function resetAutoPlay() {
+        clearInterval(autoPlayInterval);
+        autoPlayInterval = setInterval(() => goToSlide(currentIndex + 1), 5000);
+    }
+
+    sliderContainer.addEventListener('click', (e) => {
+        const nextBtn = e.target.closest('.next-btn');
+        const prevBtn = e.target.closest('.prev-btn');
+        const dot = e.target.closest('.dot');
+
+        if (nextBtn) {
+            goToSlide(currentIndex + 1);
+            resetAutoPlay();
+        } else if (prevBtn) {
+            goToSlide(currentIndex - 1);
+            resetAutoPlay();
+        } else if (dot) {
+            goToSlide(parseInt(dot.dataset.index));
+            resetAutoPlay();
+        }
     });
+
+    slides.forEach(slide => {
+        if(slide.dataset.background) slide.style.backgroundImage = `url('${slide.dataset.background}')`;
+    });
+    
+    resetAutoPlay();
 }
 
 function initCasinoFilters() {
@@ -341,35 +338,65 @@ function initCasinoFilters() {
         const filterValue = filterBtn.dataset.filter;
         gameGrid.querySelectorAll('.game-card').forEach(card => {
             const categories = card.dataset.category.split(' '); 
-            card.style.display = (filterValue === 'all' || categories.includes(filterValue)) ? 'block' : 'none';
+            card.style.display = (filterValue === 'all' || categories.includes(filterValue)) ? 'flex' : 'none';
         });
     });
 }
 
-// --- CONFIGURACIÓN DE EVENT LISTENERS PRINCIPALES ---
+// --- GESTOR DE EVENTOS GLOBAL ---
 function setupEventListeners() {
     document.body.addEventListener('click', async (event) => {
         const target = event.target;
 
-        // 1. ABRIR/CERRAR MENÚ MÓVIL
+        // 1. Menú Móvil
         if (target.closest('#mobile-menu-toggle, .close-menu-btn')) {
             const mobileMenu = document.getElementById('mobile-menu');
-            const toggleBtn = document.getElementById('mobile-menu-toggle');
-            if (!mobileMenu) return;
-            
-            const isOpen = mobileMenu.classList.toggle('is-open');
-            if(toggleBtn) toggleBtn.classList.toggle('is-active', isOpen);
-            document.body.classList.toggle('panel-open', isOpen);
+            if (mobileMenu) {
+                const isOpen = mobileMenu.classList.toggle('is-open');
+                const toggleBtn = document.getElementById('mobile-menu-toggle');
+                if(toggleBtn) toggleBtn.classList.toggle('is-active', isOpen);
+                document.body.classList.toggle('panel-open', isOpen);
+            }
             return;
         }
 
-        // 2. CLICK EN ENLACE DENTRO DEL MENÚ MÓVIL (Navegación)
+        // 2. Navegación Móvil
         if (target.closest('#mobile-menu a')) {
             document.getElementById('mobile-menu').classList.remove('is-open');
             document.body.classList.remove('panel-open');
         }
 
-        // 3. ABRIR PANEL DEPORTES (MÓVIL)
+        // 3. ACORDEÓN DEPORTES (¡CORREGIDO PARA CERRAR OTROS!)
+        const accordion = target.closest('.accordion');
+        if (accordion) {
+            const submenu = accordion.nextElementSibling;
+            const parentNav = accordion.closest('.sports-nav') || accordion.closest('.sports-panel__nav');
+            
+            // Cerrar otros acordeones abiertos
+            if (parentNav) {
+                parentNav.querySelectorAll('.accordion.active').forEach(activeAcc => {
+                    if (activeAcc !== accordion) {
+                        activeAcc.classList.remove('active');
+                        if (activeAcc.nextElementSibling) {
+                            activeAcc.nextElementSibling.style.maxHeight = null;
+                        }
+                    }
+                });
+            }
+
+            // Alternar el actual
+            const isActive = accordion.classList.contains('active');
+            if (isActive) {
+                accordion.classList.remove('active');
+                if(submenu) submenu.style.maxHeight = null;
+            } else {
+                accordion.classList.add('active');
+                if(submenu) submenu.style.maxHeight = submenu.scrollHeight + 'px';
+            }
+            return;
+        }
+
+        // 4. Panel Deportes Móvil
         if (target.closest('#mobile-sports-panel-trigger, #close-sports-panel-btn')) {
             event.preventDefault();
             const sportsPanel = document.getElementById('sports-panel');
@@ -378,7 +405,7 @@ function setupEventListeners() {
             return;
         }
 
-        // 4. CLICK EN LIGA/DEPORTE
+        // 5. Cargar Liga
         const sportLink = target.closest('.sport-link');
         if (sportLink) {
             event.preventDefault();
@@ -392,24 +419,30 @@ function setupEventListeners() {
                 return;
             }
             
-            const liveContainer = document.getElementById('live-events-container');
-            const upcomingContainer = document.getElementById('upcoming-events-container');
-            const spinnerHtml = `<div class="loader-container"><div class="spinner"></div></div>`;
-            if (liveContainer) liveContainer.innerHTML = spinnerHtml;
-            if (upcomingContainer) upcomingContainer.innerHTML = spinnerHtml;
+            const liveCont = document.getElementById('live-events-container');
+            const upCont = document.getElementById('upcoming-events-container');
+            const spinner = '<div class="loader-container"><div class="spinner"></div></div>';
+            
+            if(liveCont) liveCont.innerHTML = spinner;
+            if(upCont) upCont.innerHTML = spinner;
 
-            const events = await fetchLiveEvents(sportKey);
-            renderEvents(events);
+            try {
+                const events = await fetchLiveEvents(sportKey);
+                renderEvents(events);
+            } catch (error) {
+                console.error(error);
+                if(liveCont) liveCont.innerHTML = '<div class="initial-message"><p class="error-message">Error cargando datos. Intenta de nuevo.</p></div>';
+                if(upCont) upCont.innerHTML = '';
+            }
             return;
         }
 
-        // 5. CLICK EN CUOTA (AÑADIR APUESTA)
+        // 6. Apostar
         const oddsButton = target.closest('.odds-button');
         if (oddsButton) {
             const isLoggedIn = localStorage.getItem('fortunaUser');
             if (!isLoggedIn) {
-                const loginModal = document.getElementById('login-modal');
-                if(loginModal) openModal(loginModal);
+                openModal(document.getElementById('login-modal'));
                 return;
             }
             addBet({ 
@@ -420,16 +453,32 @@ function setupEventListeners() {
             return;
         }
 
-        // 6. ACORDEÓN DE DEPORTES
-        const accordion = target.closest('.accordion');
-        if (accordion) {
-            const submenu = accordion.nextElementSibling;
-            accordion.classList.toggle('active');
-            submenu.style.maxHeight = accordion.classList.contains('active') ? submenu.scrollHeight + 'px' : null;
+        // 7. Cupón Móvil (Abrir)
+        if (target.closest('#open-mobile-slip') || target.closest('#mobile-bet-notification')) {
+            const betSlip = document.querySelector('.bet-slip');
+            if (betSlip) {
+                // Usamos una clase diferente para no activar el backdrop borroso si no queremos
+                betSlip.classList.add('active'); 
+                
+                // Opción A: Si quieres fondo oscuro detrás del cupón:
+                document.body.classList.add('panel-open'); // Usa panel-open en vez de modal-open
+                
+                // Opción B: Si NO quieres fondo oscuro, comenta la línea de arriba.
+            }
             return;
         }
 
-        // 7. DETALLE DEL EVENTO
+        // 8. Cupón Móvil (Cerrar)
+        if (target.closest('#close-mobile-slip')) {
+            const betSlip = document.querySelector('.bet-slip');
+            if (betSlip) {
+                betSlip.classList.remove('active');
+                document.body.classList.remove('panel-open'); // Quitar la clase correspondiente
+            }
+            return;
+        }
+
+        // 9. Detalle Evento
         const detailLink = target.closest('.event-detail-link');
         if (detailLink) {
             event.preventDefault();
@@ -440,13 +489,11 @@ function setupEventListeners() {
                 const eventData = await fetchEventDetails(sportKey, eventId);
                 renderEventDetail(eventData);
                 switchView('#event-detail-view');
-            } catch (error) { 
-                console.error(error); 
-            }
+            } catch (error) { console.error(error); }
             return;
         }
 
-        // 8. VOLVER A LISTA
+        // 10. Volver a lista
         if (target.closest('#back-to-list-btn')) {
             event.preventDefault();
             document.querySelector('#event-detail-view').classList.add('hidden');
@@ -456,7 +503,7 @@ function setupEventListeners() {
             return;
         }
         
-        // 9. ABRIR JUEGO (CASINO)
+        // 11. Casino Link
         const gameCard = target.closest('.game-card[data-game-url]');
         if (gameCard) {
             event.preventDefault();
@@ -465,14 +512,14 @@ function setupEventListeners() {
             } else {
                 const gameUrl = gameCard.dataset.gameUrl;
                 const gameModal = document.getElementById('game-modal');
-                const gameIframe = document.getElementById('game-iframe');
-                if(gameIframe) gameIframe.src = gameUrl;
+                const iframe = document.getElementById('game-iframe');
+                if(iframe) iframe.src = gameUrl;
                 if(gameModal) openModal(gameModal);
             }
             return;
         }
 
-        // 10. PESTAÑAS (TABS)
+        // 12. Tabs
         const tabLink = target.closest('.tab-link');
         if (tabLink) {
             if (tabLink.classList.contains('active')) return;
@@ -483,26 +530,9 @@ function setupEventListeners() {
             document.getElementById(tabLink.dataset.tab).classList.add('active');
             return;
         }
-
-        // 11. CLICK EN LA BARRA DE NOTIFICACIÓN MÓVIL
-        if (target.closest('#open-mobile-slip') || target.closest('#mobile-bet-notification')) {
-            const betSlip = document.querySelector('.bet-slip');
-            if (betSlip) {
-                betSlip.classList.add('active'); // Usamos clase CSS en vez de style inline
-                document.body.classList.add('modal-open'); // Bloquear scroll de fondo
-            }
-            return;
-        }
-        if (target.closest('#close-mobile-slip')) {
-            const betSlip = document.querySelector('.bet-slip');
-            if (betSlip) {
-                betSlip.classList.remove('active');
-                document.body.classList.remove('modal-open');
-            }
-            return;
-        }
     });
 
+    // BÚSQUEDA
     document.body.addEventListener('input', (event) => {
         if (event.target.classList.contains('sport-search-input')) {
             handleSearch(event.target.value);
@@ -510,7 +540,7 @@ function setupEventListeners() {
     });
 }
 
-// --- FUNCIÓN DE INICIO ---
+// --- MAIN ---
 async function main() {
     document.body.classList.remove('modal-open', 'panel-open');
     
@@ -518,7 +548,6 @@ async function main() {
     
     initModals();
     initAuth();
-    handleActiveNav();
     initGameSlider();
     initCasinoFilters();
     initBetSlip();
@@ -536,7 +565,18 @@ async function main() {
             const events = await fetchLiveEvents(sportKeyFromUrl);
             renderEvents(events);
         } else {
-            showInitialMessage();
+            const container = document.getElementById('live-events-container');
+            if(container) {
+                container.innerHTML = `
+                    <div class="initial-message" style="text-align: center; padding: 60px 20px;">
+                        <i class="fa-solid fa-trophy" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 20px; opacity: 0.8;"></i>
+                        <h2 style="font-size: 1.8rem; margin-bottom: 10px;">¡Bienvenido a la Zona de Deportes!</h2>
+                        <p style="color: var(--color-text-secondary); max-width: 400px; margin: 0 auto 20px;">
+                            Selecciona una liga del menú de la izquierda para ver los partidos.
+                        </p>
+                    </div>`;
+            }
+            document.getElementById('upcoming-events-container').innerHTML = '';
         }
     } else if (window.location.pathname.includes('mi-cuenta.html')) {
         if (!localStorage.getItem('fortunaToken')) {

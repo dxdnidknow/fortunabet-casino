@@ -1,79 +1,99 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- CORREGIDO: Rutas relativas para mayor portabilidad -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FortunaBet - Las mejores cuotas deportivas y casino en vivo. Regístrate y gana hoy mismo.">
+    
+    <!-- Favicon -->
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
-	<title>FortunaBet - Apuestas Deportivas</title>
-	<meta name="description" content="Las mejores cuotas para tus deportes favoritos. Apuesta en vivo y gana con FortunaBet.">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-	<link rel="stylesheet" href="/css/style.css">
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <title>FortunaBet - Apuestas Deportivas y Casino</title>
+    
+    <!-- Estilos y Fuentes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body class="home-page">
-<div id="page-backdrop" class="page-backdrop"></div>
+    
+    <!-- Fondo oscuro para modales -->
+    <div id="page-backdrop" class="page-backdrop"></div>
+    
+    <!-- Contenedor Principal -->
     <div id="page-wrapper">
+        
+        <!-- El Header se carga aquí via JS -->
         <div id="header-placeholder"></div>
 
+        <!-- SECCIÓN HERO SLIDER (Imágenes Online Corregidas) -->
         <section class="game-slider-container">
             <div class="slider-wrapper">
-                <!-- CORREGIDO: Rutas de imagen locales -->
-                <div class="slide" data-background="assets/images/slider/lucky-grace-charm.jpg">
+                
+                <!-- Slide 1: Casino General -->
+                <div class="slide" data-background="https://images.unsplash.com/photo-1596838132731-3301c3fd4317?q=80&w=1470&auto=format&fit=crop">
                     <div class="slide-content">
                         <h3>Tragamonedas Lucky, Grace & Charm</h3>
-                        <p>¡Dirige el barco hacia las mayores ganancias en Lucky, Grace & Charm.</p>
-                        <a href="#" class="btn btn-primary">Jugar Ahora</a>
+                        <p>¡Dirige el barco hacia las mayores ganancias! Una aventura vikinga te espera con jackpots increíbles.</p>
+                        <a href="/casino.html" class="btn btn-primary">Jugar Ahora</a>
                     </div>
                 </div>
-                <div class="slide" data-background="assets/images/slider/fortune-roulette.jpg">
+
+                <!-- Slide 2: Ruleta -->
+                <div class="slide" data-background="https://images.unsplash.com/photo-1605870445919-838d190e8e1b?q=80&w=1470&auto=format&fit=crop">
                     <div class="slide-content">
                         <h3>Fortune Roulette</h3>
-                        <p>Apuesta a tu número de la suerte y mira girar la rueda.</p>
-                        <a href="#" class="btn btn-primary">Girar y Ganar</a>
+                        <p>Apuesta a tu número de la suerte y mira girar la rueda. La emoción del casino en vivo.</p>
+                        <a href="/casino-en-vivo.html" class="btn btn-primary">Girar y Ganar</a>
                     </div>
                 </div>
-                <div class="slide" data-background="assets/images/slider/live-blackjack.jpg">
+
+                <!-- Slide 3: Blackjack -->
+                <div class="slide" data-background="https://images.unsplash.com/photo-1511193311914-0346f16efe90?q=80&w=1474&auto=format&fit=crop">
                     <div class="slide-content">
-                        <h3>Blackjack k-15</h3>
-                        <p>Siente la emoción del casino en vivo. ¿Puedes vencer al crupier?</p>
-                        <a href="#" class="btn btn-primary">Ir a la Mesa</a>
+                        <h3>Blackjack VIP</h3>
+                        <p>¿Puedes vencer al crupier y sumar 21? Las mesas más exclusivas están aquí.</p>
+                        <a href="/casino-en-vivo.html" class="btn btn-primary">Ir a la Mesa</a>
                     </div>
                 </div>
+
             </div>
+            
+            <!-- Flechas de navegación -->
             <div class="slider-nav">
-                <button class="slider-btn prev-btn" aria-label="Juego anterior">
-                    <span class="visually-hidden">Juego anterior</span>
-                    <span aria-hidden="true">&lt;</span>
-                </button>
-                <button class="slider-btn next-btn" aria-label="Siguiente juego">
-                    <span class="visually-hidden">Siguiente juego</span>
-                    <span aria-hidden="true">&gt;</span>
-                </button>
+                <button class="slider-btn prev-btn" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="slider-btn next-btn" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            <div class="slider-dots"></div>
+            <!-- Los puntos (dots) se generan con JS -->
         </section>
 
+        <!-- SECCIÓN DE EVENTOS DESTACADOS -->
         <section class="featured-events">
             <div class="page-container">
                 <div class="featured-events-header">
                     <h2>Acción del Día</h2>
                     <p>Los partidos más populares, en vivo y por comenzar.</p>
                 </div>
+                
+                <!-- Loader mientras cargan los datos -->
                 <div id="loader-featured" class="loader-container">
                     <div class="spinner"></div>
                 </div>
+                
+                <!-- Aquí se inyectan los partidos -->
                 <div id="featured-events-container" class="featured-grid"></div>
+                
                 <div class="view-all-link">
-                    <a href="deportes.html" class="btn btn-secondary">Ver todos los deportes</a>
+                    <a href="/deportes.html" class="btn btn-secondary">Ver todos los deportes</a>
                 </div>
             </div>
         </section>
 
+        <!-- SECCIÓN POR QUÉ ELEGIRNOS -->
         <section class="why-us-section">
             <div class="page-container">
                 <div class="featured-events-header">
@@ -84,12 +104,12 @@
                     <div class="feature-item">
                         <i class="fa-solid fa-shield-halved"></i>
                         <h3>Seguro y Confiable</h3>
-                        <p>Tus datos y tu dinero están protegidos con la mejor tecnología de encriptación.</p>
+                        <p>Tus datos y tu dinero están protegidos con la mejor tecnología de encriptación SSL.</p>
                     </div>
                     <div class="feature-item">
                         <i class="fa-solid fa-bolt-lightning"></i>
                         <h3>Pagos Rápidos</h3>
-                        <p>Deposita y retira tus ganancias en minutos con nuestros métodos de pago verificados.</p>
+                        <p>Deposita y retira tus ganancias en minutos con Pago Móvil, Transferencias y USDT.</p>
                     </div>
                     <div class="feature-item">
                         <i class="fa-solid fa-headset"></i>
@@ -100,13 +120,17 @@
             </div>
         </section>
 
-         <div id="footer-placeholder"></div>
+        <!-- El Footer se carga aquí via JS -->
+        <div id="footer-placeholder"></div>
     </div>
 
+    <!-- COMPONENTES FLOTANTES (Se inyectan via JS) -->
     <div id="mobile-menu-placeholder"></div>
     <div id="sports-panel-placeholder"></div>
     <div id="modals-placeholder"></div>
     <div id="help-widget-placeholder"></div>
-	<script type="module" src="/js/main.js"></script>
+
+    <!-- Script Principal -->
+    <script type="module" src="/js/main.js"></script>
 </body>
 </html>
