@@ -1,4 +1,4 @@
-// Archivo: backend/routes/user.js (VERSIÓN FINAL SEGURA)
+// Archivo: backend/routes/user.js (VERSIÓN FINAL COMPLETA)
 
 const express = require('express');
 const { ObjectId } = require('mongodb');
@@ -10,16 +10,20 @@ const twilio = require('twilio');
 
 const router = express.Router();
 
+// Rate limiter para acciones sensibles (15 mins, 20 intentos)
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
+
+// Middleware de autenticación global para este router
 router.use(authenticateToken);
 
+// Configuración de Twilio (puede fallar si no están las variables, se maneja en la ruta)
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
 // =======================================================================
-//  RUTAS DE DATOS DE USUARIO
+//  1. DATOS DE USUARIO
 // =======================================================================
 
 router.get('/user-data', async (req, res) => {
@@ -44,11 +48,11 @@ router.put('/user-data', authLimiter, async (req, res) => {
         const { fullName, cedula, birthDate, phone } = req.body;
         const db = req.db;
 
-        // 1. VALIDACIÓN DE DUPLICADOS: Si envían un teléfono, verificar que nadie más lo tenga
+        // VALIDACIÓN DE DUPLICADOS: Si envían un teléfono, verificar que nadie más lo tenga
         if (phone) {
             const existingUserWithPhone = await db.collection('users').findOne({
                 'personalInfo.phone': phone,
-                _id: { $ne: new ObjectId(userId) } // Excluir al usuario actual de la búsqueda
+                _id: { $ne: new ObjectId(userId) } // Excluir al usuario actual
             });
 
             if (existingUserWithPhone) {
@@ -65,17 +69,14 @@ router.put('/user-data', authLimiter, async (req, res) => {
         if (phone) {
              updateData['personalInfo.phone'] = phone;
              
-             // Buscamos al usuario actual de forma segura
+             // Buscamos al usuario actual para ver si cambió el número
              const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
-             
-             // CORRECCIÓN ANTI-CRASH 500:
-             // Verificamos paso a paso si existe personalInfo para no leer propiedades de undefined
              const currentPhone = (user && user.personalInfo) ? user.personalInfo.phone : null;
              
-             // Si el número cambió, reseteamos la verificación
+             // Si el número es diferente, reseteamos la verificación
              if (currentPhone !== phone) {
                  updateData['personalInfo.isPhoneVerified'] = false;
-                 updateData['personalInfo.phoneOtp'] = ""; // Limpiar código viejo
+                 updateData['personalInfo.phoneOtp'] = "";
              }
         }
 
@@ -86,13 +87,13 @@ router.put('/user-data', authLimiter, async (req, res) => {
         
         res.status(200).json({ message: 'Información personal actualizada con éxito.' });
     } catch (error) {
-        console.error('[ERROR] en update-personal-info:', error); // Esto saldrá en los logs de Render
+        console.error('[ERROR] en update-personal-info:', error);
         res.status(500).json({ message: 'Error interno del servidor: ' + error.message });
     }
 });
 
 // =======================================================================
-//  RUTA DE CAMBIO DE CONTRASEÑA
+//  2. CAMBIO DE CONTRASEÑA
 // =======================================================================
 
 router.post('/change-password', authLimiter, async (req, res) => {
@@ -109,14 +110,10 @@ router.post('/change-password', authLimiter, async (req, res) => {
 
     try {
         const user = await db.collection('users').findOne({ _id: userId });
-        if (!user) {
-            return res.status(404).json({ message: 'Usuario no encontrado.' });
-        }
+        if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
 
         const isMatch = await bcrypt.compare(currentPassword, user.password);
-        if (!isMatch) {
-            return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
-        }
+        if (!isMatch) return res.status(401).json({ message: 'La contraseña actual es incorrecta.' });
 
         const salt = await bcrypt.genSalt(10);
         const hashedNewPassword = await bcrypt.hash(newPassword, salt);
@@ -135,7 +132,7 @@ router.post('/change-password', authLimiter, async (req, res) => {
 });
 
 // =======================================================================
-//  RUTAS DE VERIFICACIÓN TELEFÓNICA
+//  3. VERIFICACIÓN TELEFÓNICA (TWILIO)
 // =======================================================================
 
 router.post('/request-phone-verification', authLimiter, async (req, res) => {
@@ -173,12 +170,8 @@ router.post('/request-phone-verification', authLimiter, async (req, res) => {
 
     } catch (error) {
         console.error("Error al enviar código con Twilio:", error);
-        if (error.code === 21211) {
-             return res.status(400).json({ message: "El número de teléfono proporcionado no es válido." });
-        }
-        if (error.code === 21608) {
-            return res.status(400).json({ message: "Este número no está verificado en la cuenta de prueba de Twilio." });
-        }
+        if (error.code === 21211) return res.status(400).json({ message: "El número de teléfono proporcionado no es válido." });
+        if (error.code === 21608) return res.status(400).json({ message: "Este número no está verificado en la cuenta de prueba de Twilio." });
         res.status(500).json({ message: "No se pudo enviar el código. Intenta de nuevo más tarde." });
     }
 });
@@ -218,7 +211,7 @@ router.post('/verify-phone-code', authLimiter, async (req, res) => {
 });
 
 // =======================================================================
-//  RUTAS DE MÉTODOS DE PAGO
+//  4. MÉTODOS DE PAGO
 // =======================================================================
 
 router.get('/payout-methods', async (req, res) => {
@@ -299,7 +292,7 @@ router.delete('/payout-methods/:id', authLimiter, async (req, res) => {
 });
 
 // =======================================================================
-//  RUTAS DE TRANSACCIONES (CON VALIDACIÓN DE VERIFICACIÓN)
+//  5. TRANSACCIONES (DEPÓSITOS Y RETIROS)
 // =======================================================================
 
 router.post('/request-deposit', authLimiter, async (req, res) => {
@@ -371,23 +364,25 @@ router.post('/withdraw', authLimiter, async (req, res) => {
             return res.status(404).json({ message: 'Método de retiro no encontrado.' });
         }
 
+        // Descontar saldo
         await db.collection('users').updateOne(
             { _id: userId },
             { $inc: { balance: -withdrawalAmount } },
             { session }
         );
 
-        const transactionRecord = { 
+        // Registro de transacción
+        const insertTx = await db.collection('transactions').insertOne({ 
             userId, 
             type: 'withdrawal', 
             amount: -withdrawalAmount,
             status: 'pending', 
             method: method.methodType, 
             createdAt: new Date() 
-        };
-        const insertTx = await db.collection('transactions').insertOne(transactionRecord, { session });
+        }, { session });
 
-        const withdrawalRequest = { 
+        // Solicitud de retiro para admin
+        await db.collection('withdrawalRequests').insertOne({ 
             userId, 
             username: user.username, 
             amount: withdrawalAmount,
@@ -396,24 +391,21 @@ router.post('/withdraw', authLimiter, async (req, res) => {
             status: 'pending', 
             requestedAt: new Date(),
             transactionId: insertTx.insertedId
-        };
-        await db.collection('withdrawalRequests').insertOne(withdrawalRequest, { session });
+        }, { session });
 
         await session.commitTransaction();
         res.status(200).json({ message: 'Solicitud de retiro enviada. Se procesará en breve.' });
     } catch (error) {
-        if (session.inTransaction()) {
-            await session.abortTransaction();
-        }
+        if (session.inTransaction()) await session.abortTransaction();
         console.error('[ERROR] en /api/withdraw:', error);
-        res.status(500).json({ message: 'Error interno al procesar el retiro. Intenta de nuevo.' });
+        res.status(500).json({ message: 'Error interno al procesar el retiro.' });
     } finally {
         await session.endSession();
     }
 });
 
 // =======================================================================
-//  RUTAS DE APUESTAS E HISTORIAL
+//  6. APUESTAS (¡MEJORADO!)
 // =======================================================================
 
 router.post('/place-bet', authLimiter, async (req, res) => {
@@ -422,30 +414,51 @@ router.post('/place-bet', authLimiter, async (req, res) => {
     const db = req.db;
     const session = client.startSession();
 
+    // 1. Validación de entrada mejorada
     const numericStake = parseFloat(stake);
-    if (!bets || bets.length === 0 || !numericStake || numericStake <= 0) {
-        return res.status(400).json({ message: 'Datos de la apuesta inválidos.' });
+    if (!bets || !Array.isArray(bets) || bets.length === 0) {
+        return res.status(400).json({ message: 'La apuesta debe contener al menos una selección.' });
+    }
+    if (isNaN(numericStake) || numericStake <= 0) {
+        return res.status(400).json({ message: 'El monto de la apuesta debe ser mayor a 0.' });
     }
 
     try {
         await session.startTransaction();
 
+        // 2. Verificar saldo
         const user = await db.collection('users').findOne({ _id: userId }, { session });
-
+        if (!user) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
         if (user.balance < numericStake) {
             await session.abortTransaction();
             return res.status(400).json({ message: 'Fondos insuficientes para esta apuesta.' });
         }
 
+        // 3. Calcular cuotas (Validando que sean números reales y positivos)
+        let totalOdds = 1;
+        for (const bet of bets) {
+            const odd = parseFloat(bet.odds);
+            // Si la cuota no es un número o es menor/igual a 1, hay un error
+            if (isNaN(odd) || odd <= 1.0) {
+                await session.abortTransaction();
+                return res.status(400).json({ message: 'Error en los datos de la apuesta (cuota inválida).' });
+            }
+            totalOdds *= odd;
+        }
+
+        // 4. Descontar saldo
         await db.collection('users').updateOne(
             { _id: userId },
             { $inc: { balance: -numericStake } },
             { session }
         );
 
-        const totalOdds = bets.reduce((acc, bet) => acc * parseFloat(bet.odds), 1);
         const potentialWinnings = numericStake * totalOdds;
 
+        // 5. Guardar apuesta
         await db.collection('bets').insertOne({
             userId: userId,
             selections: bets,
@@ -458,10 +471,9 @@ router.post('/place-bet', authLimiter, async (req, res) => {
 
         await session.commitTransaction();
         res.status(201).json({ message: '¡Apuesta realizada con éxito!' });
+
     } catch (error) {
-        if (session.inTransaction()) {
-            await session.abortTransaction();
-        }
+        if (session.inTransaction()) await session.abortTransaction();
         console.error('[ERROR] Realizando apuesta:', error);
         res.status(500).json({ message: 'Error interno al realizar la apuesta.' });
     } finally {
@@ -481,7 +493,6 @@ router.get('/get-bets', async (req, res) => {
             .toArray();
             
         res.status(200).json(betHistory);
-
     } catch (error) {
         console.error('[ERROR] Obteniendo historial de apuestas:', error);
         res.status(500).json({ message: 'Error interno al obtener el historial.' });
@@ -500,7 +511,6 @@ router.get('/transactions', async (req, res) => {
             .toArray();
             
         res.status(200).json(transactions);
-
     } catch (error) {
         console.error('[ERROR] Obteniendo historial de transacciones:', error);
         res.status(500).json({ message: 'Error interno al obtener transacciones.' });

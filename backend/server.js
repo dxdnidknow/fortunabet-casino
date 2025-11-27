@@ -1,4 +1,4 @@
-// Archivo: backend/server.js (CON RUTA DE RESULTADOS /api/scores)
+// Archivo: backend/server.js (CORREGIDO)
 
 require('dotenv').config();
 
@@ -27,8 +27,17 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.set('trust proxy', 1);
 
+// Inicializar Caché
+const eventsCache = new NodeCache({ stdTTL: 600 });
+
+// API KEY
+const API_KEY = process.env.ODDS_API_KEY;
+if (!API_KEY) { console.error('❌ Error: Falta ODDS_API_KEY.'); process.exit(1); }
+
+// Middleware Global: Inyectar DB y Caché en cada petición
 app.use((req, res, next) => {
     req.db = getDb();
+    req.eventsCache = eventsCache; // Compartimos la caché con las rutas (user.js, etc.)
     next();
 });
 
@@ -41,17 +50,11 @@ const sportsApiLimiter = rateLimit({
     message: { message: 'Demasiadas peticiones a la API de deportes.' }
 });
 
-// API KEY
-const API_KEY = process.env.ODDS_API_KEY;
-if (!API_KEY) { console.error('❌ Error: Falta ODDS_API_KEY.'); process.exit(1); }
-const eventsCache = new NodeCache({ stdTTL: 600 });
-
-// Rutas de Salud (UptimeRobot)
+// Rutas de Salud
 app.get('/', (req, res) => { res.status(200).send('Backend de FortunaBet está en línea 🟢'); });
 app.get('/health', (req, res) => { res.status(200).json({ status: 'ok', timestamp: new Date() }); });
 
-// --- RUTAS ---
-app.use('/api', authRoutes);
+// --- RUTAS PÚBLICAS (API DEPORTIVA) ---
 
 app.get('/api/sports', sportsApiLimiter, async (req, res) => {
     try {
@@ -76,16 +79,37 @@ app.get('/api/events/:sportKey', sportsApiLimiter, async (req, res) => {
     } catch (error) { handleApiError(error, res); }
 });
 
-app.get('/api/event/:sportKey/:eventId', sportsApiLimiter, (req, res) => {
-    const { sportKey, eventId } = req.params;
-    const sportEventsList = eventsCache.get(sportKey);
-    if (sportEventsList) {
-        const event = sportEventsList.find(e => e.id === eventId);
-        if (event) { return res.json(event); }
+// CORRECCIÓN IMPORTANTE EN ESTA RUTA:
+app.get('/api/event/:sportKey/:eventId', sportsApiLimiter, async (req, res) => {
+    try {
+        const { sportKey, eventId } = req.params;
+        
+        // 1. Intentar obtener de caché
+        let sportEventsList = eventsCache.get(sportKey);
+
+        // 2. Si no está en caché, buscar en la API externa y guardar
+        if (!sportEventsList) {
+            const response = await axios.get(`https://api.the-odds-api.com/v4/sports/${sportKey}/odds`, {
+                params: { apiKey: API_KEY, regions: 'us,eu,uk', markets: 'h2h,totals', oddsFormat: 'decimal' }
+            });
+            sportEventsList = response.data;
+            eventsCache.set(sportKey, sportEventsList);
+        }
+
+        // 3. Buscar el evento específico
+        if (sportEventsList) {
+            const event = sportEventsList.find(e => e.id === eventId);
+            if (event) { return res.json(event); }
+        }
+
+        res.status(404).json({ message: 'Evento no encontrado.' });
+    } catch (error) {
+        handleApiError(error, res);
     }
-    res.status(404).json({ message: 'Evento no encontrado o caché expirado.' });
 });
 
+// --- OTRAS RUTAS ---
+app.use('/api', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 

@@ -168,6 +168,8 @@ export async function loadPayoutMethods() {
 //  3. HISTORIAL DE APUESTAS Y TRANSACCIONES
 // =======================================================================
 
+// En js/account.js (Reemplaza la función renderBetHistory existente)
+
 export async function renderBetHistory() {
     const historyLists = document.querySelectorAll('.history-list.recent-bets, .history-list.full-history');
     if (historyLists.length === 0) return;
@@ -193,16 +195,37 @@ export async function renderBetHistory() {
             const historyToShow = isFullHistory ? betHistory : betHistory.slice(0, 5); 
 
             historyToShow.forEach(record => {
-                const betDescription = record.selections.map(b => b.team).join(', ');
-                const statusClass = record.status.toLowerCase();
+                // Diseño tipo Tarjeta
+                const statusClass = record.status.toLowerCase(); // 'pending', 'won', 'lost'
                 const winnings = record.potentialWinnings;
+                
+                // Icono según estado
+                let iconHtml = '<i class="fa-solid fa-hourglass-half"></i>'; // Pendiente
+                if (statusClass === 'won') iconHtml = '<i class="fa-solid fa-trophy"></i>';
+                if (statusClass === 'lost') iconHtml = '<i class="fa-solid fa-xmark"></i>';
+
+                // Formatear selecciones (Equipos)
+                const selectionsHtml = record.selections.map(sel => 
+                    `<div class="bet-selection-row">
+                        <span>${sel.team}</span>
+                        <span class="selection-odds">${sel.odds.toFixed(2)}</span>
+                    </div>`
+                ).join('');
 
                 const listItem = document.createElement('li');
+                listItem.className = `history-card-item ${statusClass}`;
+                
                 listItem.innerHTML = `
-                    <span>Apuesta en: ${betDescription} (Bs. ${record.stake.toFixed(2)})</span>
-                    <div style="text-align: right;">
-                        <span class="status-tag ${statusClass}">${record.status.charAt(0).toUpperCase() + record.status.slice(1)}</span>
-                        ${record.status === 'won' ? `<span style="display: block; font-size: 0.8rem; color: var(--color-success);">+ Bs. ${winnings.toFixed(2)}</span>` : ''}
+                    <div class="bet-card-header">
+                        <span class="bet-date">${new Date(record.createdAt).toLocaleDateString()}</span>
+                        <span class="bet-status-badge ${statusClass}">${iconHtml} ${record.status.toUpperCase()}</span>
+                    </div>
+                    <div class="bet-card-body">
+                        ${selectionsHtml}
+                    </div>
+                    <div class="bet-card-footer">
+                        <span>Apostado: <strong>Bs. ${record.stake.toFixed(2)}</strong></span>
+                        <span class="bet-return">Retorno: ${statusClass === 'won' ? `<span class="win-amount">+Bs. ${winnings.toFixed(2)}</span>` : `Bs. ${winnings.toFixed(2)}`}</span>
                     </div>
                 `;
                 list.appendChild(listItem);

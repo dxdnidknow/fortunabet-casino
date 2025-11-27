@@ -10,6 +10,7 @@ import { initAccountDashboard } from './account.js';
 import { sportTranslations } from './translations.js';
 import { initPaymentModals } from './payments.js'; 
 import { initHelpWidget } from './help-widget.js';
+import { showToast } from './ui.js'; 
 
 // --- ESTADO GLOBAL Y UTILIDADES ---
 let favorites = JSON.parse(localStorage.getItem('fortunaFavorites')) || [];
@@ -366,13 +367,13 @@ function setupEventListeners() {
             document.body.classList.remove('panel-open');
         }
 
-        // 3. ACORDEÓN DEPORTES (¡CORREGIDO PARA CERRAR OTROS!)
+        // 3. ACORDEÓN DEPORTES
         const accordion = target.closest('.accordion');
         if (accordion) {
             const submenu = accordion.nextElementSibling;
             const parentNav = accordion.closest('.sports-nav') || accordion.closest('.sports-panel__nav');
             
-            // Cerrar otros acordeones abiertos
+            // Cerrar otros acordeones
             if (parentNav) {
                 parentNav.querySelectorAll('.accordion.active').forEach(activeAcc => {
                     if (activeAcc !== accordion) {
@@ -384,7 +385,6 @@ function setupEventListeners() {
                 });
             }
 
-            // Alternar el actual
             const isActive = accordion.classList.contains('active');
             if (isActive) {
                 accordion.classList.remove('active');
@@ -457,13 +457,8 @@ function setupEventListeners() {
         if (target.closest('#open-mobile-slip') || target.closest('#mobile-bet-notification')) {
             const betSlip = document.querySelector('.bet-slip');
             if (betSlip) {
-                // Usamos una clase diferente para no activar el backdrop borroso si no queremos
                 betSlip.classList.add('active'); 
-                
-                // Opción A: Si quieres fondo oscuro detrás del cupón:
-                document.body.classList.add('panel-open'); // Usa panel-open en vez de modal-open
-                
-                // Opción B: Si NO quieres fondo oscuro, comenta la línea de arriba.
+                document.body.classList.add('panel-open'); 
             }
             return;
         }
@@ -473,7 +468,7 @@ function setupEventListeners() {
             const betSlip = document.querySelector('.bet-slip');
             if (betSlip) {
                 betSlip.classList.remove('active');
-                document.body.classList.remove('panel-open'); // Quitar la clase correspondiente
+                document.body.classList.remove('panel-open'); 
             }
             return;
         }
@@ -540,6 +535,31 @@ function setupEventListeners() {
     });
 }
 
+// --- FORMULARIO DE CONTACTO (NUEVO) ---
+function initContactForm() {
+    const contactForm = document.getElementById('contact-form');
+    if (!contactForm) return;
+
+    contactForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const submitBtn = contactForm.querySelector('button[type="submit"]');
+        if(submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Enviando...";
+        }
+        
+        // Simulación de envío
+        setTimeout(() => {
+            showToast('¡Mensaje enviado! Te contactaremos pronto.', 'success');
+            contactForm.reset();
+            if(submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Enviar Mensaje";
+            }
+        }, 1500);
+    });
+}
+
 // --- MAIN ---
 async function main() {
     document.body.classList.remove('modal-open', 'panel-open');
@@ -553,6 +573,7 @@ async function main() {
     initBetSlip();
     initHelpWidget();
     initPaymentModals();    
+    initContactForm(); // <-- AHORA SÍ ESTÁ DEFINIDA
     
     await initSportsNav();
     setupEventListeners();

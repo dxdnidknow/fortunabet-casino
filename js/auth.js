@@ -30,16 +30,20 @@ function validatePasswordStrength(password) {
     }
 }
 
+// En js/auth.js
+
 function updateLoginState(user) {
     if (!user || !user.username) return;
     document.body.classList.add('user-logged-in');
     
+    // Admin check
     if (user.role === 'admin') {
         document.body.classList.add('role-admin');
     } else {
         document.body.classList.remove('role-admin');
     }
 
+    // Desktop Header
     const authButtons = document.querySelector('.auth-wrapper .auth-buttons');
     const userInfo = document.querySelector('.auth-wrapper .user-info');
     if (authButtons) authButtons.classList.add('hidden');
@@ -49,13 +53,17 @@ function updateLoginState(user) {
         if (welcomeMsg) welcomeMsg.textContent = `Hola, ${user.username}`;
     }
 
-    const mobileAuthButtons = document.querySelector('.mobile-menu-auth .auth-buttons');
-    const mobileUserInfo = document.querySelector('.mobile-menu-auth .user-info');
-    if (mobileAuthButtons) mobileAuthButtons.style.display = 'none';
-    if (mobileUserInfo) {
-        mobileUserInfo.style.display = 'block';
-        const mobileWelcomeMsg = mobileUserInfo.querySelector('.welcome-message');
-        if (mobileWelcomeMsg) mobileWelcomeMsg.textContent = `Hola, ${user.username}`;
+    // --- CORRECCIÓN PARA MENÚ MÓVIL ---
+    // Buscamos dentro del contenedor fijo del menú móvil
+    const mobileAuthContainer = document.querySelector('.mobile-menu-auth-fixed.logged-in-only');
+    if (mobileAuthContainer) {
+        const mobileWelcomeMsg = mobileAuthContainer.querySelector('.welcome-message');
+        if (mobileWelcomeMsg) {
+            // Actualizamos el texto
+            mobileWelcomeMsg.textContent = `Hola, ${user.username}`;
+            // Color verde para resaltar
+            mobileWelcomeMsg.style.color = 'var(--color-primary)'; 
+        }
     }
 }
 

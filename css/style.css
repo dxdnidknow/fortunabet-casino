@@ -39,30 +39,32 @@
     --main-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     --container-max-width: 1440px;
 
-    /* --- Z-INDEX LAYERS (ESTRUCTURA CORREGIDA) --- */
+    /* --- Z-INDEX LAYERS --- */
     --z-header: 1000;
     --z-dropdown: 1100;
-    --z-backdrop: 2000;       /* Fondo oscuro */
-    --z-mobile-menu: 3000;    /* Menú lateral */
-    --z-panel: 3000;          /* Panel deportes */
-    --z-modal: 4000;          /* Modales de Login/Registro */
-    --z-toast: 5000;          /* Notificaciones */
-    --z-betslip-mobile: 6000; /* Cupón móvil (ENCIMA DE TODO) */
+    --z-backdrop: 2000;       
+    --z-mobile-menu: 3000;    
+    --z-panel: 3000;          
+    --z-modal: 4000;          
+    --z-toast: 5000;          
+    --z-betslip-mobile: 6000; /* Encima de todo */
+    --z-help-btn: 9000;       /* Botón de ayuda */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 ul, li { list-style: none; padding: 0; margin: 0; }
 
-/* --- SCROLLBAR CORREGIDO (SIN BORDE NEGRO) --- */
+/* --- SCROLLBAR PERSONALIZADO --- */
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: transparent; } /* Transparente para evitar el bloque negro */
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { 
     background: var(--color-surface-2); 
     border-radius: 10px; 
-    border: 2px solid var(--color-background); /* Efecto flotante */
+    border: 2px solid var(--color-background); 
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-border); }
+::-webkit-scrollbar-corner { background: transparent; } /* Elimina el punto blanco */
 
 body { 
     font-family: var(--font-family-base); 
@@ -174,6 +176,19 @@ a:hover { color: var(--color-primary-light); }
 .sport-search-input { width: 100%; padding: 12px 15px 12px 40px; background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: var(--border-radius-sm); color: var(--color-text-primary); font-size: 0.9rem; transition: var(--main-transition); }
 .sport-search-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2); }
 
+/* --- ARREGLO BOTÓN "VER LIGAS" (Móvil) --- */
+.sport-link-trigger {
+    display: flex; justify-content: space-between; align-items: center;
+    background-color: var(--color-surface-2); padding: 15px 20px;
+    border-radius: var(--border-radius-sm); color: var(--color-primary);
+    font-weight: 600; border: 1px solid var(--color-border);
+    transition: var(--main-transition); margin-bottom: 20px;
+}
+.sport-link-trigger:hover, .sport-link-trigger:active {
+    background-color: var(--color-surface-1); border-color: var(--color-primary); transform: translateX(5px);
+}
+.sport-link-trigger i { font-size: 1.1rem; }
+
 .nav-category { padding: 0 var(--spacing-unit); }
 .category-title { padding: 12px 15px; font-size: 1rem; font-weight: 600; border-radius: var(--border-radius-sm); color: var(--color-text-primary); cursor: pointer; display: flex; align-items: center; gap: calc(var(--spacing-unit) * 1.5); transition: var(--main-transition); }
 .category-title:hover { background-color: var(--color-surface-2); }
@@ -239,6 +254,17 @@ a:hover { color: var(--color-primary-light); }
 
 .mobile-sports-trigger-container { display: none !important; }
 
+/* --- DISEÑO MEJORADO: ESTADOS VACÍOS (Empty States) --- */
+.initial-message {
+    text-align: center; padding: 60px 20px; background-color: var(--color-surface-2);
+    border: 2px dashed var(--color-border); border-radius: var(--border-radius-md);
+    margin: 20px 0; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 15px;
+}
+.initial-message i { font-size: 3rem; color: var(--color-text-secondary); margin-bottom: 10px; opacity: 0.5; }
+.initial-message h3 { font-size: 1.2rem; color: var(--color-text-primary); margin: 0; }
+.initial-message p { color: var(--color-text-secondary); font-size: 0.95rem; max-width: 300px; margin: 0; }
+
 /* ==========================================================================
    5. PÁGINAS DE AUTH Y CONTACTO
    ========================================================================== */
@@ -281,7 +307,7 @@ a:hover { color: var(--color-primary-light); }
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
     background-color: rgba(18, 20, 24, 0.85); 
     backdrop-filter: blur(5px);
-    z-index: var(--z-modal); /* CORREGIDO: ENCIMA DE TODO */
+    z-index: var(--z-modal); 
     display: flex; justify-content: center; align-items: center; 
     opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; padding: 20px; 
 }
@@ -350,11 +376,43 @@ a:hover { color: var(--color-primary-light); }
 .mobile-menu a.active { background-color: var(--color-surface-2); color: var(--color-primary); font-weight: 600; border-right: 5px solid var(--color-primary); animation: pulse-border-mobile 3s infinite ease-in-out; }
 .mobile-menu a.active i { color: var(--color-primary); }
 .mobile-menu-divider { height: 1px; background-color: var(--color-border); margin: 10px 25px; opacity: 0.5; }
+
+/* ARREGLO MENÚ MÓVIL (SIN PUNTO BLANCO) */
+div.mobile-menu-auth-fixed.logged-in-only {
+    display: flex !important;       
+    list-style: none !important;    
+    flex-direction: column;         
+    gap: 15px;                      
+    padding: 25px;                  
+    background-color: var(--color-surface-2); 
+    border-top: 1px solid var(--color-border);
+}
+
 .mobile-menu-auth-fixed { padding: 30px 25px 20px 25px; border-top: 1px solid var(--color-border); background-color: var(--color-surface-1); display: flex; flex-direction: column; gap: 15px; align-items: center; flex-shrink: 0; }
 .mobile-menu-auth-fixed button { width: 100%; padding: 15px 10px; font-size: 1rem; font-weight: 700; display: flex; justify-content: center; align-items: center; border-radius: var(--border-radius-sm); white-space: nowrap; }
 .mobile-menu-auth-fixed .btn-secondary { background-color: var(--color-surface-2); border: 1px solid var(--color-border); color: var(--color-text-primary); }
 .mobile-menu-auth-fixed .btn-primary { box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4); }
 .mobile-menu-auth { display: none !important; }
+
+/* TARJETA DE USUARIO MÓVIL */
+.user-badge {
+    display: flex; align-items: center; gap: 15px; width: 100%;
+    background-color: var(--color-background); padding: 15px;
+    border-radius: var(--border-radius-sm); border: 1px solid var(--color-border);
+}
+.user-badge i { font-size: 2rem; color: var(--color-text-secondary); }
+.user-badge .welcome-message {
+    font-size: 1rem; font-weight: 600; color: var(--color-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+}
+
+/* BOTÓN CERRAR SESIÓN MÓVIL */
+.btn-logout-mobile {
+    width: 100%; justify-content: center;
+    background-color: rgba(231, 76, 60, 0.1); color: var(--color-loss);
+    border: 1px solid transparent;
+}
+.btn-logout-mobile:hover { background-color: var(--color-loss); color: white; }
 
 .sports-panel { 
     position: fixed; top: 0; left: 0; width: 85%; max-width: 350px; height: 100%; 
@@ -371,18 +429,21 @@ a:hover { color: var(--color-primary-light); }
 .sports-panel .nav-container { height: 100%; overflow-y: auto; }
 
 /* ==========================================================================
-   9. FOOTER
+   9. FOOTER (ARREGLADO ANCHO COMPLETO)
    ========================================================================== */
 .main-footer {
-    display: none; /* OCULTO POR DEFECTO EN TODAS LAS PÁGINAS */
+    display: none; /* OCULTO POR DEFECTO */
     background-color: #0b0d10; 
     border-top: 1px solid var(--color-border);
     padding: 60px 0 30px;
     margin-top: auto;
     font-size: 0.9rem;
-    width: 100%;
     position: relative;
     z-index: 10;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow-x: hidden;
 }
 body.home-page .main-footer { display: block; }
 
@@ -394,17 +455,27 @@ body.home-page .main-footer { display: block; }
 .footer-col li { margin-bottom: 12px; }
 .footer-col a { color: var(--color-text-secondary); text-decoration: none; transition: all 0.2s ease; font-weight: 400; }
 .footer-col a:hover { color: #fff; text-decoration: none; transform: translateX(3px); display: inline-block; }
-.footer-bottom-bar { background-color: #050607; padding: 20px 0; border-top: 1px solid #1a1d24; text-align: center; color: #555; font-size: 0.85rem; padding-right: 0; }
+
+.footer-bottom-bar { 
+    background-color: #050607; padding: 20px 0; border-top: 1px solid #1a1d24; 
+    text-align: center; color: #555; font-size: 0.85rem; padding-right: 0;
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    box-sizing: border-box;
+}
+.footer-bottom-bar .footer-container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 25px; }
 .footer-bottom-bar p { margin: 0; }
 
 /* ==========================================================================
    10. WIDGET DE AYUDA Y NOTIFICACIONES
    ========================================================================== */
 .help-trigger-btn { 
-    position: fixed; bottom: 30px; right: 25px; width: 50px; height: 50px; border-radius: 50%; 
+    position: fixed; bottom: 20px !important; right: 15px !important; 
+    width: 55px; height: 55px; border-radius: 50%; 
     background: var(--color-primary); color: #000; border: none; font-size: 1.8rem; 
     display: flex; justify-content: center; align-items: center; cursor: pointer; 
-    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.5); z-index: 9999; 
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.5); z-index: var(--z-help-btn); 
     transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease, visibility 0.3s ease; 
 }
 .help-trigger-btn:hover { transform: scale(1.1) rotate(10deg); background: var(--color-primary-light); box-shadow: 0 6px 20px rgba(46, 204, 113, 0.8); }
@@ -412,10 +483,7 @@ body.home-page .main-footer { display: block; }
 /* OCULTAR EL BOTÓN DE AYUDA CUANDO EL MENÚ O MODAL ESTÁ ABIERTO */
 body.panel-open .help-trigger-btn, 
 body.modal-open .help-trigger-btn {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transform: translateY(20px);
+    opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(20px);
 }
 
 .help-widget { 
@@ -440,7 +508,8 @@ body.modal-open .help-trigger-btn {
 .faq-question:hover { color: var(--color-primary); }
 .faq-question i { color: var(--color-text-secondary); transition: transform 0.3s ease; }
 .faq-question.active i { transform: rotate(180deg); color: var(--color-primary); }
-.faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, padding 0.3s ease-out; color: var(--color-text-secondary); font-size: 0.95rem; line-height: 1.6; }
+.faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, padding 0.3s ease; color: var(--color-text-secondary); font-size: 0.95rem; line-height: 1.6; padding-bottom: 0; }
+.faq-question.active + .faq-answer { border-bottom: 1px solid var(--color-border); margin-bottom: 10px; }
 .faq-answer p { padding-bottom: 20px; }
 
 /* TOAST */
@@ -557,12 +626,47 @@ body.user-logged-in .logged-out-only { display: none !important; }
 .feature-item p { color: var(--color-text-secondary); font-size: 0.95rem; line-height: 1.5; }
 
 /* ==========================================================================
-   14. RESPONSIVIDAD Y MEDIA QUERIES (EL FIX DEL CUPÓN)
+   14. ESTILOS DE HISTORIAL (TARJETAS)
+   ========================================================================== */
+.history-list { display: flex; flex-direction: column; gap: 15px; }
+
+.history-card-item {
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    padding: 15px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+.history-card-item:hover { transform: translateY(-2px); border-color: var(--color-text-secondary); }
+
+/* Estados */
+.history-card-item.pending { border-left: 4px solid var(--color-pending); }
+.history-card-item.won { border-left: 4px solid var(--color-success); background: linear-gradient(to right, rgba(46, 204, 113, 0.05), transparent); }
+.history-card-item.lost { border-left: 4px solid var(--color-loss); }
+
+.bet-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.8rem; color: var(--color-text-secondary); }
+
+.bet-status-badge { padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+.bet-status-badge.pending { background-color: rgba(241, 196, 15, 0.2); color: var(--color-pending); }
+.bet-status-badge.won { background-color: rgba(46, 204, 113, 0.2); color: var(--color-success); }
+.bet-status-badge.lost { background-color: rgba(231, 76, 60, 0.2); color: var(--color-loss); }
+
+.bet-card-body { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.bet-selection-row { display: flex; justify-content: space-between; font-size: 0.95rem; font-weight: 500; margin-bottom: 5px; }
+.selection-odds { color: var(--color-primary); font-weight: 700; }
+
+.bet-card-footer { display: flex; justify-content: space-between; font-size: 0.9rem; }
+.win-amount { color: var(--color-success); font-weight: 700; }
+
+/* ==========================================================================
+   15. RESPONSIVIDAD Y MEDIA QUERIES
    ========================================================================== */
 @media (max-width: 1200px) {
     .main-container { grid-template-columns: 280px 1fr; }
-    .bet-slip { display: none; } /* En tablet, se usa la barra flotante */
-    #mobile-bet-notification { display: flex; } /* Activamos barra inferior */
+    .bet-slip { display: none; } 
+    #mobile-bet-notification { display: flex; } 
 }
 
 @media (max-width: 1024px) {
@@ -585,29 +689,31 @@ body.user-logged-in .logged-out-only { display: none !important; }
     .account-sidebar { position: static; margin-bottom: 30px; }
     .account-content { padding: 25px; }
     
-    /* === CUPÓN MÓVIL (BOTTOM SHEET) === */
+    /* CUPÓN MÓVIL (Corrección Visual) */
     .bet-slip { 
-        display: none; /* Oculto por defecto */
-        position: fixed; 
-        bottom: 0; 
-        left: 0; 
-        width: 100%; 
-        height: 85vh; 
-        background-color: var(--color-surface-1); 
-        z-index: var(--z-betslip-mobile); /* Z-INDEX ALTO */
+        display: none; 
+        position: fixed; bottom: 0; left: 0; width: 100%; height: 80vh; 
+        background-color: #1A1D24 !important; /* Fondo sólido */
+        z-index: var(--z-betslip-mobile); /* Encima de todo */
         border-radius: 20px 20px 0 0; 
         box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
-        border: 1px solid var(--color-primary);
-        top: auto; 
-        padding-top: 50px;
-        max-height: none;
+        border-top: 2px solid var(--color-primary);
+        top: auto; padding-top: 50px; max-height: none;
+        opacity: 1 !important;
     }
     .bet-slip.active { 
-        display: flex; 
+        display: flex !important; 
         animation: slideUpPanel 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    .mobile-only { display: block !important; }
+    /* Ocultar barra verde cuando el cupón está abierto */
+    body.modal-open #mobile-bet-notification { display: none !important; }
+    
+    /* Subir el botón de ayuda en móvil */
+    .help-trigger-btn {
+        bottom: 15px !important; right: 10px !important;
+        z-index: 4900 !important; /* Debajo del cupón, encima del contenido */
+    }
 }
 
 @media (max-width: 768px) {
@@ -628,7 +734,6 @@ body.user-logged-in .logged-out-only { display: none !important; }
 
 @media (max-width: 480px) {
     .help-widget { bottom: 0; right: 0; width: 100%; max-width: 100%; height: 80vh; border-radius: 12px 12px 0 0; }
-    .help-trigger-btn { bottom: 15px; right: 15px; }
 }
 
 /* --- ANIMACIONES & NOTIFICACIÓN MÓVIL --- */
@@ -637,54 +742,13 @@ body.user-logged-in .logged-out-only { display: none !important; }
     background: var(--color-surface-1); border-top: 2px solid var(--color-primary);
     padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
     z-index: var(--z-toast); 
-    transform: translateY(100%); /* Oculto por defecto */
+    transform: translateY(100%); 
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
 }
 #mobile-bet-notification.active { transform: translateY(0); }
 
-@keyframes slideUpPanel {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-}
+@keyframes slideUpPanel { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes highlight-fade { 0% { background-color: rgba(46, 204, 113, 0.3); } 100% { background-color: transparent; } }
 .highlight { animation: highlight-fade 0.7s ease-out; }
 .mobile-only { display: none; }
-/* ==========================================================================
-   PARCHE DE EMERGENCIA: ARREGLO VISUAL MÓVIL
-   Pega esto al final de tu archivo style.css
-   ========================================================================== */
-
-@media (max-width: 1024px) {
-    /* 1. ARREGLAR EL PUNTO BLANCO */
-    /* Subimos el botón de ayuda para que no lo tape la barra verde */
-    .help-trigger-btn {
-        bottom: 85px !important; /* Lo subimos para que flote sobre la barra */
-        z-index: 4900 !important; /* Debajo del cupón pero encima del contenido */
-    }
-
-    /* 2. ARREGLAR EL CUPÓN BORROSO/INVISIBLE */
-    /* Forzamos que el cupón esté POR ENCIMA de todo y tenga color */
-    .bet-slip {
-        z-index: 99999 !important; /* Número exageradamente alto para asegurar que se vea */
-        background-color: #1A1D24 !important; /* Asegurar que tenga fondo sólido, no transparente */
-        opacity: 1 !important;
-        display: none; /* Oculto por defecto */
-    }
-
-    /* Cuando se activa con JS */
-    .bet-slip.active {
-        display: flex !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        position: fixed !important;
-        height: 80vh !important; /* 80% de la pantalla */
-        width: 100% !important;
-        border-top: 2px solid #2ECC71 !important; /* Borde verde arriba para resaltar */
-    }
-    
-    /* Ocultar la barra verde pequeña cuando el cupón grande está abierto */
-    body.modal-open #mobile-bet-notification {
-        display: none !important;
-    }
-}

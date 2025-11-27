@@ -133,21 +133,7 @@ export function initModals() {
             closeModal(event.target);
         }
 
-        // 5. Lógica para Acordeón de Ayuda (Preguntas Frecuentes dentro del Modal)
-        const faqBtn = event.target.closest('.faq-question');
-        if (faqBtn) {
-            event.preventDefault();
-            faqBtn.classList.toggle('active');
-            const answer = faqBtn.nextElementSibling;
-            
-            if (faqBtn.classList.contains('active')) {
-                answer.style.maxHeight = answer.scrollHeight + 'px';
-                answer.style.paddingBottom = '15px'; // Espacio visual extra
-            } else {
-                answer.style.maxHeight = null;
-                answer.style.paddingBottom = '0';
-            }
-        }
+
     });
 
     // 6. Cerrar con tecla Escape
