@@ -69,15 +69,40 @@ app.get('/api/sports', sportsApiLimiter, async (req, res) => {
 app.get('/api/events/:sportKey', sportsApiLimiter, async (req, res) => {
     try {
         const { sportKey } = req.params;
+        
+        // 1. Revisar Caché
         const cachedEvents = eventsCache.get(sportKey);
         if (cachedEvents) { return res.json(cachedEvents); }
+
+        // 2. Determinar mercados según el deporte
+        // Por defecto pedimos h2h (ganador) y totals (altas/bajas)
+        let markets = 'h2h,totals';
+        
+        // Si es un deporte "Outright" (ganador de torneo futuro, como World Series), solo pedimos 'outrights'
+        if (sportKey.includes('winner') || sportKey.includes('championship') || sportKey.includes('outright')) {
+            markets = 'outrights';
+        }
+
+        console.log(`Pidiendo deporte: ${sportKey} con mercados: ${markets}`);
+
+        // 3. Petición a la API con los mercados correctos
         const response = await axios.get(`https://api.the-odds-api.com/v4/sports/${sportKey}/odds`, {
-            params: { apiKey: API_KEY, regions: 'us,eu,uk', markets: 'h2h,totals', oddsFormat: 'decimal' }
+            params: { 
+                apiKey: API_KEY, 
+                regions: 'us,eu,uk', 
+                markets: markets, // Usamos la variable dinámica
+                oddsFormat: 'decimal' 
+            }
         });
+
+        // 4. Guardar en caché y responder
         eventsCache.set(sportKey, response.data);
         res.json(response.data);
-    } catch (error) { handleApiError(error, res); }
-});
+
+    } catch (error) { 
+        handleApiError(error, res); 
+    }
+}); 
 
 // CORRECCIÓN IMPORTANTE EN ESTA RUTA:
 app.get('/api/event/:sportKey/:eventId', sportsApiLimiter, async (req, res) => {
