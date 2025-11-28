@@ -55,6 +55,14 @@ export async function loadUserData() {
             element.textContent = `Bs. ${userData.balance.toFixed(2)}`;
         });
 
+        if (userData.role === 'admin') {
+            // Buscamos el enlace del sidebar de escritorio
+            const desktopAdminLink = document.querySelector('.account-menu #admin-panel-link');
+            if (desktopAdminLink) {
+                desktopAdminLink.style.display = 'block'; // Lo hacemos visible
+            }
+        }
+
         const dashboardBalance = document.getElementById('dashboard-balance');
         if(dashboardBalance) dashboardBalance.textContent = `Bs. ${userData.balance.toFixed(2)}`;
         

@@ -379,6 +379,11 @@ a:hover { color: var(--color-primary-light); }
 
 /* ARREGLO MENÚ MÓVIL (SIN PUNTO BLANCO) */
 div.mobile-menu-auth-fixed.logged-in-only {
+    display: none !important;
+}
+
+/* Estado cuando hay sesión: MOSTRAR FLEX */
+body.user-logged-in div.mobile-menu-auth-fixed.logged-in-only {
     display: flex !important;       
     list-style: none !important;    
     flex-direction: column;         
@@ -520,7 +525,7 @@ body.modal-open .help-trigger-btn {
    11. MI CUENTA (DASHBOARD & TABLAS)
    ========================================================================== */
 .account-dashboard-grid { display: grid; grid-template-columns: 280px 1fr; gap: 30px; align-items: start; }
-.account-sidebar { position: sticky; top: calc(var(--header-height) + var(--top-bar-height) + 25px); }
+
 
 .user-info-card { background-color: var(--color-surface-1); border: 1px solid var(--color-border); border-radius: var(--border-radius-md); padding: 25px; text-align: center; margin-bottom: 20px; }
 .user-info-card .user-avatar { font-size: 4rem; margin-bottom: 15px; color: var(--color-text-secondary); }
@@ -688,7 +693,9 @@ body.user-logged-in .logged-out-only { display: none !important; }
     .account-dashboard-grid { grid-template-columns: 1fr; }
     .account-sidebar { position: static; margin-bottom: 30px; }
     .account-content { padding: 25px; }
-    
+        .account-menu #admin-panel-link {
+        display: none !important;
+    }
     /* CUPÓN MÓVIL (Corrección Visual) */
     .bet-slip { 
         display: none; 
@@ -752,3 +759,146 @@ body.user-logged-in .logged-out-only { display: none !important; }
 @keyframes highlight-fade { 0% { background-color: rgba(46, 204, 113, 0.3); } 100% { background-color: transparent; } }
 .highlight { animation: highlight-fade 0.7s ease-out; }
 .mobile-only { display: none; }
+/* ==========================================================================
+   ARREGLO VISUAL: DISEÑO DE CUPÓN PRO Y CORRECCIÓN DE BARRA VERDE
+   ========================================================================== */
+
+/* 1. OCULTAR BARRA MÓVIL EN PC (Soluciona el error de la foto 2) */
+@media (min-width: 1201px) {
+    #mobile-bet-notification {
+        display: none !important; /* Fuerza a que desaparezca en pantallas grandes */
+    }
+}
+
+/* 2. DISEÑO DEL CUPÓN "PRO" (Mejora la foto 1) */
+.bet-slip {
+    background-color: #15191E; /* Fondo más oscuro */
+    border: 1px solid #2A2E35;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* Sombra elegante */
+}
+
+.bet-slip h3 {
+    background-color: var(--color-surface-2);
+    margin: -24px -24px 20px -24px; /* Pegar al borde */
+    padding: 20px;
+    border-bottom: 2px solid var(--color-primary);
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #fff;
+}
+
+/* Estilo de cada apuesta en el cupón */
+.bet-item {
+    background: linear-gradient(145deg, #1A1D24, #15171c);
+    border: 1px solid #2A2E35;
+    border-left: 4px solid var(--color-primary); /* Línea verde a la izquierda */
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    position: relative;
+    transition: transform 0.2s ease;
+}
+
+.bet-item:hover {
+    transform: translateX(5px); /* Efecto de movimiento al pasar el mouse */
+    border-color: #444;
+}
+
+.bet-item-info span:first-child {
+    font-size: 0.9rem;
+    color: #fff;
+    margin-bottom: 5px;
+    line-height: 1.4;
+    padding-right: 25px; /* Espacio para que el texto no toque la X */
+}
+
+.bet-item-odds {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: var(--color-primary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+/* Botón de eliminar (X) */
+.remove-bet-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #666;
+    background: rgba(255,255,255,0.05);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.remove-bet-btn:hover {
+    color: #fff;
+    background: var(--color-loss);
+    transform: rotate(90deg);
+}
+
+/* Resumen de totales */
+.bet-summary {
+    background-color: #1A1D24;
+    border: 1px solid #2A2E35;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.summary-row {
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+    color: var(--color-text-secondary);
+}
+
+.summary-row span:last-child {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Input de apuesta */
+.stake-input {
+    background-color: #0d0f12;
+    border: 1px solid #333;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 10px;
+    width: 120px;
+}
+
+.stake-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.2);
+}
+
+/* Ganancia potencial destacada */
+#potential-winnings {
+    color: var(--color-primary) !important;
+    font-size: 1.3rem;
+    text-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
+}
+
+/* Botón Apostar */
+#place-bet-btn {
+    margin-top: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 800;
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+}
+
+#place-bet-btn:hover {
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.6);
+    transform: translateY(-2px);
+}
