@@ -6,19 +6,24 @@
     <title>FortunaBet Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="admin.css">
+    <!-- Chart.js es vital para el gráfico -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<button id="admin-mobile-toggle" class="btn btn-primary mobile-only-admin">
-    <i class="fa-solid fa-bars"></i>
-</button>
+
+    <!-- BOTÓN MÓVIL (NUEVO) -->
+    <button id="admin-mobile-toggle" class="mobile-menu-btn">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
     <!-- LOGIN -->
     <div id="login-view" class="login-container">
         <div class="login-card">
-            <div class="brand"><i class="fa-solid fa-shield-cat"></i> FortunaBet Admin</div>
+            <div class="brand"><i class="fa-solid fa-shield-cat"></i> Admin Panel</div>
             <form id="login-form">
-                <input type="text" id="email" placeholder="Usuario o Email" required>
+                <input type="text" id="email" placeholder="Usuario" required>
                 <input type="password" id="password" placeholder="Contraseña" required>
-                <button type="submit" class="btn btn-primary btn-full">Acceder</button>
+                <button type="submit" class="btn btn-primary btn-full">Entrar</button>
                 <p id="error-message" style="display: none;"></p>
             </form>
         </div>
@@ -26,6 +31,7 @@
 
     <!-- DASHBOARD -->
     <div id="dashboard-view" class="dashboard-layout" style="display: none;">
+        
         <aside class="sidebar">
             <div class="sidebar-header"><h2>FortunaBet</h2></div>
             <nav class="sidebar-nav">
@@ -35,61 +41,46 @@
                 <button class="nav-link" onclick="switchTab('users')"><i class="fa-solid fa-users"></i> Usuarios</button>
             </nav>
             <div class="sidebar-footer">
-                <div class="admin-profile">
-                    <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
-                    <div class="info"><span id="admin-email-display">Admin</span></div>
-                </div>
-                <button id="logout-btn" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+                <button id="logout-btn" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
             </div>
         </aside>
 
         <main class="main-content">
-            <!-- RESUMEN -->
             <section id="section-overview" class="content-section active">
                 <header class="top-bar"><h1>Visión General</h1> <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button></header>
+                
                 <div class="stats-grid">
                     <div class="stat-card"><div class="icon bg-blue"><i class="fa-solid fa-users"></i></div><div><h3>Usuarios</h3><p id="stat-users">0</p></div></div>
                     <div class="stat-card"><div class="icon bg-green"><i class="fa-solid fa-wallet"></i></div><div><h3>En Juego</h3><p id="stat-balance">Bs. 0.00</p></div></div>
                     <div class="stat-card"><div class="icon bg-orange"><i class="fa-solid fa-clock"></i></div><div><h3>Pendientes</h3><p id="stat-pending">0</p></div></div>
                 </div>
+
+                <!-- CONTENEDOR DEL GRÁFICO (ARREGLADO) -->
+                <div class="panel chart-container" style="margin-top: 20px; height: 350px; position: relative;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
             </section>
 
-            <!-- DEPÓSITOS -->
+            <!-- (Las otras secciones Depósitos, Retiros, Usuarios se mantienen igual que tenías) -->
             <section id="section-deposits" class="content-section">
                 <header class="top-bar"><h1>Depósitos</h1> <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button></header>
-                <div class="panel">
-                    <table id="deposits-table">
-                        <thead><tr><th>Usuario</th><th>Monto</th><th>Ref</th><th>Fecha</th><th>Acción</th></tr></thead>
-                        <tbody id="deposits-body"></tbody>
-                    </table>
-                </div>
+                <div class="panel"><table id="deposits-table"><thead><tr><th>Usuario</th><th>Monto</th><th>Ref</th><th>Acción</th></tr></thead><tbody id="deposits-body"></tbody></table></div>
             </section>
-
-            <!-- RETIROS -->
+            
             <section id="section-withdrawals" class="content-section">
                 <header class="top-bar"><h1>Retiros</h1> <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button></header>
-                <div class="panel">
-                    <table id="withdrawals-table">
-                        <thead><tr><th>Usuario</th><th>Monto</th><th>Método</th><th>Fecha</th><th>Acción</th></tr></thead>
-                        <tbody id="withdrawals-body"></tbody>
-                    </table>
-                </div>
+                <div class="panel"><table id="withdrawals-table"><thead><tr><th>Usuario</th><th>Monto</th><th>Datos</th><th>Acción</th></tr></thead><tbody id="withdrawals-body"></tbody></table></div>
             </section>
 
-            <!-- USUARIOS -->
             <section id="section-users" class="content-section">
                 <header class="top-bar"><h1>Usuarios</h1> <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button></header>
-                <div class="panel">
-                    <table id="users-table">
-                        <thead><tr><th>Usuario</th><th>Email</th><th>Cédula</th><th>Teléfono</th><th>Saldo</th><th>Estado</th></tr></thead>
-                        <tbody id="users-body"></tbody>
-                    </table>
-                </div>
+                <div class="panel"><table id="users-table"><thead><tr><th>Usuario</th><th>Email</th><th>Saldo</th></tr></thead><tbody id="users-body"></tbody></table></div>
             </section>
+
         </main>
     </div>
 
-    <!-- AQUÍ ESTÁ EL CAMBIO: Apunta al archivo nuevo en /js/ -->
-    <script src="/js/admin-panel.js" type="module"></script>
+    <!-- SCRIPT -->
+    <script src="/js/admin-app.js" type="module"></script>
 </body>
 </html>

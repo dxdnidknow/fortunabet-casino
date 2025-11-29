@@ -90,9 +90,17 @@ async function loadRevenueChart() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { color: '#ecf0f1' } }
-                },
+plugins: {
+    legend: { 
+        labels: { 
+            color: '#ecf0f1',
+            usePointStyle: true,  // <--- ESTO CONVIERTE EL CUADRADO EN CÍRCULO
+            pointStyle: 'circle', // O 'rectRounded' si prefieres cuadrado redondeado
+            boxWidth: 8,          // Tamaño del círculo
+            padding: 20           // Espacio extra
+        } 
+    }
+},
                 scales: {
                     y: { 
                         beginAtZero: true, 
@@ -369,5 +377,46 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.addEventListener('click', () => {
         sidebar.classList.remove('open');
         overlay.classList.remove('active');
+    });
+});
+// ... (resto del código anterior) ...
+
+// --- FUNCIÓN SWITCH TAB MEJORADA (Cierra menú en móvil) ---
+window.switchTab = (tabId) => {
+    document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+    document.getElementById(`section-${tabId}`).classList.add('active');
+    
+    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+    if(event && event.currentTarget) event.currentTarget.classList.add('active');
+
+    // CERRAR MENÚ AUTOMÁTICAMENTE EN MÓVIL
+    const sidebar = document.querySelector('.sidebar');
+    if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+    }
+};
+
+// --- AL FINAL DEL DOMContentLoaded ---
+document.addEventListener('DOMContentLoaded', () => {
+    // ... (lógica de login existente) ...
+
+    // LÓGICA BOTÓN HAMBURGUESA
+    const toggleBtn = document.getElementById('admin-mobile-toggle');
+    const sidebar = document.querySelector('.sidebar');
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+    }
+
+    // Cerrar al tocar fuera (opcional pero recomendado)
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && 
+            sidebar.classList.contains('open') && 
+            !sidebar.contains(e.target) && 
+            !toggleBtn.contains(e.target)) {
+            sidebar.classList.remove('open');
+        }
     });
 });

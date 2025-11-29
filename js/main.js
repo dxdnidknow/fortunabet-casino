@@ -559,7 +559,64 @@ function initContactForm() {
         }, 1500);
     });
 }
+// --- FUNCIÓN PARA LA HOME: ACCIÓN DEL DÍA ---
+async function loadHomeFeaturedEvents() {
+    const container = document.getElementById('featured-events-container');
+    const loader = document.getElementById('loader-featured');
+    
+    // Si no estamos en el home, salir
+    if (!container) return;
 
+    try {
+        // Pedimos una liga popular para mostrar en el home (Ej: Premier League o La Liga)
+        // Usamos una específica para asegurar que haya datos y no gastar cuota buscando en todo
+        const events = await fetchLiveEvents('soccer_spain_la_liga'); 
+        
+        if (loader) loader.style.display = 'none';
+
+        if (!events || events.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#777; width:100%;">No hay eventos destacados en este momento.</p>';
+            return;
+        }
+
+        // Tomamos solo los primeros 3 o 4 eventos
+        const featured = events.slice(0, 4);
+
+        container.innerHTML = featured.map(event => {
+            const teamNames = event.teams.split(' vs ');
+            const home = teamNames[0];
+            const away = teamNames[1] || '';
+            const date = new Date(event.commence_time).toLocaleDateString('es-ES', {weekday:'short', day:'numeric'});
+
+            return `
+            <div class="game-card" style="aspect-ratio: auto; padding: 20px; height: auto;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:0.85rem; color:var(--color-primary);">
+                    <span><i class="fa-regular fa-calendar"></i> ${date}</span>
+                    <span>${event.is_live ? '• EN VIVO' : ''}</span>
+                </div>
+                
+                <div style="margin-bottom:20px;">
+                    <h3 style="margin:0 0 5px 0; font-size:1.1rem; color:#fff;">${home}</h3>
+                    <div style="color:var(--color-text-secondary); font-size:0.9rem;">vs</div>
+                    <h3 style="margin:5px 0 0 0; font-size:1.1rem; color:#fff;">${away}</h3>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:15px;">
+                    <button class="odds-button" data-team="${home}" data-odds="${event.odds.home}">1<br><span>${event.odds.home}</span></button>
+                    <button class="odds-button" data-team="Empate" data-odds="${event.odds.draw}">X<br><span>${event.odds.draw}</span></button>
+                    <button class="odds-button" data-team="${away}" data-odds="${event.odds.away}">2<br><span>${event.odds.away}</span></button>
+                </div>
+
+                <a href="/deportes.html" class="btn btn-secondary btn-sm" style="width:100%; justify-content:center;">Ver más cuotas</a>
+            </div>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error("Error home events:", error);
+        if(loader) loader.style.display = 'none';
+    }
+}
 // --- MAIN ---
 async function main() {
     document.body.classList.remove('modal-open', 'panel-open');
@@ -574,7 +631,7 @@ async function main() {
     initHelpWidget();
     initPaymentModals();    
     initContactForm(); // <-- AHORA SÍ ESTÁ DEFINIDA
-    
+    loadHomeFeaturedEvents(); 
     await initSportsNav();
     setupEventListeners();
     subscribe(updateSelectedOddsUI);

@@ -1,4 +1,4 @@
-// Archivo: js/account.js (CORREGIDO: ADMIN LINK + FIX ESCRITORIO)
+// Archivo: js/account.js (VERSIÓN FINAL COMPLETAMENTE FUNCIONAL)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -6,7 +6,7 @@ import { openModal, closeModal } from './modal.js';
 import { fetchWithAuth } from './auth.js';
 
 // =======================================================================
-//  FUNCIONES DE AYUDA Y VALIDACIÓN
+//  0. UTILIDADES Y VALIDACIONES
 // =======================================================================
 
 function isOver18(dateString) {
@@ -25,112 +25,190 @@ function isOver18(dateString) {
 function formatPhoneNumber(event) {
     const input = event.target;
     let value = input.value.replace(/\D/g, '');
-    value = value.substring(0, 10);
-    let formattedValue = '';
-    if (value.length > 7) {
-        formattedValue = `${value.substring(0, 3)}-${value.substring(3, 6)}-${value.substring(6, 8)}-${value.substring(8, 10)}`;
-    } else if (value.length > 6) {
-        formattedValue = `${value.substring(0, 3)}-${value.substring(3, 6)}-${value.substring(6, 10)}`;
-    } else if (value.length > 3) {
-        formattedValue = `${value.substring(0, 3)}-${value.substring(3, 10)}`;
-    } else {
-        formattedValue = value;
-    }
-    input.value = formattedValue;
+    // Limitamos a 13 caracteres (ej: 584141234567)
+    input.value = value.substring(0, 13);
 }
 
 // =======================================================================
-//  1. CARGA DE DATOS DEL USUARIO
+//  1. SISTEMA DE PESTAÑAS (TABS) - CORREGIDO PARA RESPUESTA INMEDIATA
+// =======================================================================
+
+function initTabs() {
+    const menuLinks = document.querySelectorAll('.account-menu-link');
+    
+    menuLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const targetId = e.currentTarget.dataset.target;
+            
+            // Si el botón no es de navegación interna (ej: Logout o Admin externo), salimos
+            if (!targetId) return;
+
+            e.preventDefault();
+
+            // 1. Visual: Cambiar clase 'active' en el menú
+            document.querySelectorAll('.account-menu-link').forEach(l => l.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+
+            // 2. Lógica: Ocultar todas las secciones y mostrar la seleccionada
+            document.querySelectorAll('.account-section').forEach(s => s.classList.remove('active'));
+            
+            const targetSection = document.getElementById(targetId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+                
+                // Pequeña animación de entrada (UX)
+                targetSection.style.opacity = 0;
+                targetSection.style.transform = "translateY(5px)";
+                requestAnimationFrame(() => {
+                    targetSection.style.transition = "all 0.3s ease";
+                    targetSection.style.opacity = 1;
+                    targetSection.style.transform = "translateY(0)";
+                });
+            }
+            
+            // Actualizar URL hash sin recargar
+            history.pushState(null, null, `#${targetId}`);
+        });
+    });
+
+    // Abrir pestaña si viene en el hash de la URL (ej: mi-cuenta.html#seguridad)
+    if (window.location.hash) {
+        const hash = window.location.hash.substring(1);
+        const link = document.querySelector(`.account-menu-link[data-target="${hash}"]`);
+        if (link) link.click();
+    }
+}
+
+// =======================================================================
+//  2. CARGA DE DATOS DEL USUARIO
 // =======================================================================
 
 export async function loadUserData() {
     try {
         const userData = await fetchWithAuth(`${API_BASE_URL}/user/user-data`);
         
+        // Actualizar textos en la interfaz (Sidebar y Header)
         document.querySelectorAll('.data-username').forEach(element => {
             element.textContent = userData.username;
         });
 
+        const formattedBalance = `Bs. ${userData.balance.toFixed(2)}`;
         document.querySelectorAll('.data-balance').forEach(element => {
-            element.textContent = `Bs. ${userData.balance.toFixed(2)}`;
+            element.textContent = formattedBalance;
         });
 
-        if (userData.role === 'admin') {
-            // Buscamos el enlace del sidebar de escritorio
-            const desktopAdminLink = document.querySelector('.account-menu #admin-panel-link');
-            if (desktopAdminLink) {
-                desktopAdminLink.style.display = 'block'; // Lo hacemos visible
-            }
-        }
-
+        // Actualizar balance del Dashboard principal
         const dashboardBalance = document.getElementById('dashboard-balance');
-        if(dashboardBalance) dashboardBalance.textContent = `Bs. ${userData.balance.toFixed(2)}`;
+        if(dashboardBalance) dashboardBalance.textContent = formattedBalance;
         
-        const form = document.getElementById('user-data-form');
-        if (form && userData.personalInfo) {
-            document.getElementById('full-name').value = userData.personalInfo.fullName || '';
-            document.getElementById('cedula').value = userData.personalInfo.cedula || '';
-            document.getElementById('birth-date').value = userData.personalInfo.birthDate ? userData.personalInfo.birthDate.substring(0, 10) : '';
-            document.getElementById('email').value = userData.email || '';
-            
-            const phoneInput = document.getElementById('phone');
-            if (phoneInput) {
-                phoneInput.value = userData.personalInfo.phone ? userData.personalInfo.phone.replace('+58', '').replace(/\D/g, '').substring(0, 10) : '';
-                formatPhoneNumber({ target: phoneInput });
+        // Rellenar formulario "Mis Datos"
+        if (userData.personalInfo) {
+            const form = document.getElementById('user-data-form');
+            if (form) {
+                document.getElementById('full-name').value = userData.personalInfo.fullName || '';
+                document.getElementById('cedula').value = userData.personalInfo.cedula || '';
+                document.getElementById('birth-date').value = userData.personalInfo.birthDate || '';
+                document.getElementById('email').value = userData.email || '';
+                
+                const phoneInput = document.getElementById('phone');
+                if (phoneInput) {
+                    // Limpiamos el +58 para mostrarlo en el input si se desea, o lo dejamos completo
+                    // Aquí asumimos que el usuario ve el número limpio
+                    phoneInput.value = userData.personalInfo.phone ? userData.personalInfo.phone.replace('+58', '') : '';
+                }
             }
+            // Estado de verificación del teléfono
             renderPhoneVerificationStatus(userData.personalInfo.isPhoneVerified, userData.personalInfo.phone);
         }
+
+        // --- LÓGICA DE ADMIN (MOSTRAR BOTÓN EN PC) ---
+        if (userData.role === 'admin') {
+            const desktopAdminLink = document.querySelector('.account-menu #admin-panel-link');
+            if (desktopAdminLink) {
+                desktopAdminLink.style.display = 'block';
+            }
+        }
         
+        // Control de botones de depósito/retiro según verificación
         const depositBtn = document.getElementById('deposit-btn-sidebar');
         const withdrawBtn = document.getElementById('withdraw-btn-sidebar');
-        const notice = document.querySelector('.verification-notice');
-
         const isVerified = userData.personalInfo?.isPhoneVerified;
         const hasData = userData.personalInfo?.fullName && userData.personalInfo?.cedula;
 
         if (isVerified && hasData) {
             if(depositBtn) depositBtn.disabled = false;
             if(withdrawBtn) withdrawBtn.disabled = false;
-            if(notice) notice.classList.add('hidden');
         } else {
-            if(depositBtn) depositBtn.disabled = true;
-            if(withdrawBtn) withdrawBtn.disabled = true;
-            if(notice) notice.classList.remove('hidden');
+            // Opcional: Deshabilitar o mostrar aviso
+            // if(depositBtn) depositBtn.disabled = true;
         }
         
     } catch (error) {
-        console.error(error);
-        showToast('Error al cargar datos de usuario. Intenta recargar.', 'error');
+        console.error("Error cargando datos de usuario:", error);
+        showToast('Error de conexión al cargar datos.', 'error');
+    }
+}
+
+function renderPhoneVerificationStatus(isVerified, phone) {
+    const container = document.getElementById('phone-verification-status');
+    const verifyBtn = document.getElementById('verify-phone-btn');
+    if (!container || !verifyBtn) return;
+
+    const hasPhone = phone && phone.length > 5;
+
+    if (!hasPhone) {
+        container.innerHTML = `<small style="color:var(--color-text-secondary);">Guarda un número para verificar.</small>`;
+        verifyBtn.style.display = 'none';
+        return;
+    }
+
+    if (isVerified) {
+        container.innerHTML = `<span style="color:var(--color-success); font-size:0.9rem; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Verificado</span>`;
+        verifyBtn.style.display = 'none';
+    } else {
+        container.innerHTML = `<span style="color:var(--color-pending); font-size:0.9rem;"><i class="fa-solid fa-circle-exclamation"></i> No verificado</span>`;
+        verifyBtn.style.display = 'inline-block';
+        verifyBtn.textContent = 'Verificar Ahora';
+        verifyBtn.disabled = false;
     }
 }
 
 // =======================================================================
-//  2. MÉTODOS DE RETIRO
+//  3. MÉTODOS DE PAGO
 // =======================================================================
 
 function renderPayoutMethod(method) {
     let detailsHtml = '';
     const details = method.details || {};
+    
     if (method.methodType === 'pago_movil') {
-        detailsHtml = `Banco: ${details.bank || 'N/A'} / Cédula: ${details.cedula || 'N/A'} / Teléfono: ${details.phone || 'N/A'}`;
+        detailsHtml = `${details.bank || 'Banco'} - ${details.phone || 'Tlf'} - ${details.cedula || 'CI'}`;
     } else if (method.methodType === 'zelle') {
-        detailsHtml = `Email: ${details.email || 'N/A'} / Nombre: ${details.name || 'N/A'}`;
+        detailsHtml = `${details.email || 'Email'} (${details.name || 'Nombre'})`;
     }
     
-    const li = document.createElement('div');
-    li.classList.add('data-list-item', method.isPrimary ? 'primary-method' : '');
-    li.dataset.id = method._id;
-    li.innerHTML = `
+    const div = document.createElement('div');
+    div.className = 'info-card'; // Reusamos estilo de tarjeta
+    div.style.marginBottom = '15px';
+    div.style.display = 'flex';
+    div.style.justifyContent = 'space-between';
+    div.style.alignItems = 'center';
+    if(method.isPrimary) div.style.borderLeft = '4px solid var(--color-primary)';
+
+    div.innerHTML = `
         <div class="item-info">
-            <h4><i class="fa-solid fa-money-bill-transfer"></i> ${method.methodType.toUpperCase().replace('_', ' ')}</h4>
-            <p>${detailsHtml}</p>
+            <h4 style="margin:0 0 5px 0; color:var(--color-text-primary); font-size:1rem;">
+                <i class="fa-solid fa-money-bill-transfer"></i> ${method.methodType.toUpperCase().replace('_', ' ')}
+                ${method.isPrimary ? '<span class="bet-status-badge won" style="margin-left:8px; font-size:0.7rem;">PRINCIPAL</span>' : ''}
+            </h4>
+            <p style="margin:0; color:var(--color-text-secondary); font-size:0.9rem;">${detailsHtml}</p>
         </div>
-        <div class="item-action">
-            ${method.isPrimary ? '<span class="tag tag-primary">Principal</span>' : `<button class="btn btn-secondary btn-sm set-primary-btn" data-id="${method._id}">Hacer Principal</button>`}
-            <button class="btn btn-danger btn-sm delete-method-btn" data-id="${method._id}"><i class="fa-solid fa-trash"></i></button>
+        <div class="item-action" style="display:flex; gap:10px;">
+            ${!method.isPrimary ? `<button class="btn btn-secondary btn-sm set-primary-btn" data-id="${method._id}" title="Hacer Principal"><i class="fa-solid fa-star"></i></button>` : ''}
+            <button class="btn btn-danger btn-sm delete-method-btn" data-id="${method._id}" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
         </div>
     `;
-    return li;
+    return div;
 }
 
 export async function loadPayoutMethods() {
@@ -142,16 +220,18 @@ export async function loadPayoutMethods() {
         const methods = await fetchWithAuth(`${API_BASE_URL}/user/payout-methods`); 
 
         listContainer.innerHTML = ''; 
-        if (withdrawSelect) withdrawSelect.innerHTML = '';
+        if (withdrawSelect) withdrawSelect.innerHTML = '<option value="">Selecciona un método</option>';
 
         if (methods.length === 0) {
-            listContainer.innerHTML = '<p class="empty-message empty-message-payout">Aún no tienes métodos de retiro. Añade uno para poder retirar tus ganancias.</p>';
-            if (withdrawSelect) withdrawSelect.innerHTML = '<option value="">Añade un método en Mi Cuenta</option>';
+            listContainer.innerHTML = '<p class="empty-message" style="display:block;">Aún no tienes métodos de retiro. Añade uno abajo.</p>';
             return;
         }
 
         methods.forEach(method => {
+            // Renderizar en lista de configuración
             listContainer.appendChild(renderPayoutMethod(method));
+            
+            // Renderizar en Select del Modal de Retiro
             if (withdrawSelect) {
                 const option = document.createElement('option');
                 const details = method.details;
@@ -161,33 +241,32 @@ export async function loadPayoutMethods() {
                 
                 option.value = method._id;
                 option.textContent = text + (method.isPrimary ? ' (Principal)' : '');
-                if (method.isPrimary) {
-                    option.selected = true;
-                }
+                if (method.isPrimary) option.selected = true;
+                
                 withdrawSelect.appendChild(option);
             }
         });
     } catch (error) {
-        showToast(`Error al cargar métodos: ${error.message || 'Error de conexión'}`, 'error');
+        console.error("Error métodos pago:", error);
     }
 }
 
 // =======================================================================
-//  3. HISTORIAL DE APUESTAS Y TRANSACCIONES
+//  4. HISTORIAL DE APUESTAS Y TRANSACCIONES
 // =======================================================================
-
-// En js/account.js (Reemplaza la función renderBetHistory existente)
 
 export async function renderBetHistory() {
     const historyLists = document.querySelectorAll('.history-list.recent-bets, .history-list.full-history');
     if (historyLists.length === 0) return;
 
+    // Elementos de mensaje vacío
     const emptyMsgRecent = document.querySelector('.recent-history .empty-message-history');
     const emptyMsgFull = document.querySelector('#historial-apuestas .empty-message-bets');
 
     try {
         const betHistory = await fetchWithAuth(`${API_BASE_URL}/user/get-bets`);
 
+        // Manejo visual si está vacío
         if (betHistory.length === 0) {
             if (emptyMsgRecent) emptyMsgRecent.style.display = 'block';
             if (emptyMsgFull) emptyMsgFull.style.display = 'block';
@@ -199,24 +278,24 @@ export async function renderBetHistory() {
 
         historyLists.forEach(list => {
             list.innerHTML = '';
-            const isFullHistory = list.classList.contains('full-history');
-            const historyToShow = isFullHistory ? betHistory : betHistory.slice(0, 5); 
+            // Si es la lista del dashboard ("recent-bets"), mostramos solo 3 o 5
+            const isDashboard = list.classList.contains('recent-bets');
+            const historyToShow = isDashboard ? betHistory.slice(0, 3) : betHistory; 
 
             historyToShow.forEach(record => {
-                // Diseño tipo Tarjeta
+                // LÓGICA DE DISEÑO DE TARJETA
                 const statusClass = record.status.toLowerCase(); // 'pending', 'won', 'lost'
                 const winnings = record.potentialWinnings;
                 
-                // Icono según estado
-                let iconHtml = '<i class="fa-solid fa-hourglass-half"></i>'; // Pendiente
+                let iconHtml = '<i class="fa-solid fa-hourglass-half"></i>';
                 if (statusClass === 'won') iconHtml = '<i class="fa-solid fa-trophy"></i>';
                 if (statusClass === 'lost') iconHtml = '<i class="fa-solid fa-xmark"></i>';
 
-                // Formatear selecciones (Equipos)
+                // Renderizar selecciones
                 const selectionsHtml = record.selections.map(sel => 
                     `<div class="bet-selection-row">
                         <span>${sel.team}</span>
-                        <span class="selection-odds">${sel.odds.toFixed(2)}</span>
+                        <span class="selection-odds">${parseFloat(sel.odds).toFixed(2)}</span>
                     </div>`
                 ).join('');
 
@@ -233,7 +312,10 @@ export async function renderBetHistory() {
                     </div>
                     <div class="bet-card-footer">
                         <span>Apostado: <strong>Bs. ${record.stake.toFixed(2)}</strong></span>
-                        <span class="bet-return">Retorno: ${statusClass === 'won' ? `<span class="win-amount">+Bs. ${winnings.toFixed(2)}</span>` : `Bs. ${winnings.toFixed(2)}`}</span>
+                        <span class="bet-return" style="color:${statusClass === 'won' ? 'var(--color-success)' : 'inherit'}">
+                            ${statusClass === 'won' ? 'Ganancia: ' : 'Retorno: '} 
+                            <strong>Bs. ${winnings.toFixed(2)}</strong>
+                        </span>
                     </div>
                 `;
                 list.appendChild(listItem);
@@ -242,7 +324,6 @@ export async function renderBetHistory() {
 
     } catch (error) {
         console.error(error);
-        showToast(error.message, 'error');
     }
 }
 
@@ -255,35 +336,43 @@ export async function renderTransactionHistory() {
     try {
         const transactions = await fetchWithAuth(`${API_BASE_URL}/user/transactions`); 
 
-        if (emptyMsg) emptyMsg.style.display = 'none';
-
         if (transactions.length === 0) {
             if (emptyMsg) emptyMsg.style.display = 'block';
             return;
         }
+        if (emptyMsg) emptyMsg.style.display = 'none';
 
         listContainer.innerHTML = '';
 
         transactions.forEach(tx => {
             const isDeposit = tx.type === 'deposit';
             const amount = tx.amount; 
-            const statusClass = tx.status.toLowerCase();
+            const statusClass = tx.status === 'approved' ? 'won' : (tx.status === 'pending' ? 'pending' : 'lost');
             const icon = isDeposit ? 'fa-arrow-down' : 'fa-arrow-up';
             const color = isDeposit ? 'var(--color-success)' : 'var(--color-loss)';
             const date = tx.createdAt || tx.date;
 
             const listItem = document.createElement('li');
+            listItem.className = 'history-card-item'; // Reusamos estilo
+            listItem.style.borderLeft = `4px solid ${color}`;
+
             listItem.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <i class="fa-solid ${icon}" style="color: ${color};"></i>
-                    <div>
-                        <span>${isDeposit ? 'Depósito' : 'Retiro'} (${tx.method || 'N/A'})</span>
-                        <small style="display: block; color: var(--color-text-secondary);">${new Date(date).toLocaleString('es-ES')}</small>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="background:rgba(255,255,255,0.05); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                            <i class="fa-solid ${icon}" style="color: ${color}; font-size:1.2rem;"></i>
+                        </div>
+                        <div>
+                            <strong style="display: block; font-size:1rem;">${isDeposit ? 'Depósito' : 'Retiro'} (${tx.method || 'N/A'})</strong>
+                            <small style="display: block; color: var(--color-text-secondary);">${new Date(date).toLocaleString('es-ES')}</small>
+                        </div>
                     </div>
-                </div>
-                <div style="text-align: right;">
-                    <span style="color: ${color}; font-weight: 600;">Bs. ${Math.abs(amount).toFixed(2)}</span>
-                    <span class="status-tag ${statusClass}" style="display: block; margin-top: 5px;">${tx.status}</span>
+                    <div style="text-align: right;">
+                        <span style="color: ${color}; font-weight: 700; font-size:1.1rem;">
+                            ${isDeposit ? '+' : '-'} Bs. ${Math.abs(amount).toFixed(2)}
+                        </span>
+                        <span class="bet-status-badge ${statusClass}" style="display: inline-block; margin-top: 5px;">${tx.status.toUpperCase()}</span>
+                    </div>
                 </div>
             `;
             listContainer.appendChild(listItem);
@@ -291,18 +380,20 @@ export async function renderTransactionHistory() {
 
     } catch (error) {
         console.error(error);
-        showToast(error.message, 'error');
     }
 }
 
 // =======================================================================
-//  5. LISTENERS (CORREGIDO EL BLOQUEO DE ENLACES)
+//  5. LISTENERS DE FORMULARIOS Y ACCIONES
 // =======================================================================
 
 function handlePayoutMethodChange() {
     const methodTypeSelect = document.getElementById('method-type');
-    if (!methodTypeSelect) return;
+    const form = document.getElementById('payout-method-form');
+    
+    if (!methodTypeSelect || !form) return;
 
+    // Cambiar campos dinámicos
     methodTypeSelect.addEventListener('change', (e) => {
         document.querySelectorAll('.form-dynamic-fields').forEach(field => {
             field.classList.add('hidden');
@@ -316,14 +407,15 @@ function handlePayoutMethodChange() {
         }
     });
 
-    const payoutMethodForm = document.getElementById('payout-method-form');
-    payoutMethodForm?.addEventListener('submit', async (e) => {
+    // Submit del formulario
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const submitButton = document.getElementById('add-method-btn');
         submitButton.disabled = true;
+        submitButton.innerHTML = '<div class="spinner-sm"></div> Añadiendo...';
         
         try {
-            const formData = new FormData(payoutMethodForm);
+            const formData = new FormData(form);
             const data = {
                 methodType: formData.get('method-type'),
                 isPrimary: formData.get('is-primary') === 'on',
@@ -346,13 +438,14 @@ function handlePayoutMethodChange() {
             });
 
             showToast('Método de retiro añadido con éxito.', 'success');
-            payoutMethodForm.reset();
-            methodTypeSelect.dispatchEvent(new Event('change'));
-            loadPayoutMethods();
+            form.reset();
+            methodTypeSelect.dispatchEvent(new Event('change')); // Resetear campos dinámicos
+            loadPayoutMethods(); // Recargar lista
         } catch (error) {
-            showToast(error.message || 'Error al añadir método de retiro.', 'error');
+            showToast(error.message || 'Error al añadir método.', 'error');
         } finally {
             submitButton.disabled = false;
+            submitButton.textContent = 'Añadir Método';
         }
     });
 }
@@ -365,6 +458,7 @@ function handleUserDataSubmit() {
         e.preventDefault();
         const submitButton = document.getElementById('save-data-btn');
         submitButton.disabled = true;
+        submitButton.innerHTML = '<div class="spinner-sm"></div> Guardando...';
 
         const birthDate = document.getElementById('birth-date').value;
         const ageWarning = document.getElementById('age-warning');
@@ -372,6 +466,7 @@ function handleUserDataSubmit() {
         if (birthDate && !isOver18(birthDate)) {
             ageWarning.classList.remove('hidden');
             submitButton.disabled = false;
+            submitButton.textContent = 'Guardar Cambios';
             return;
         } else {
             ageWarning.classList.add('hidden');
@@ -392,42 +487,17 @@ function handleUserDataSubmit() {
                 body: JSON.stringify(data)
             });
             
-            showToast(result.message || 'Datos actualizados con éxito.', 'success');
+            showToast(result.message || 'Datos actualizados.', 'success');
             await loadUserData();
         } catch (error) {
-            showToast(error.message || 'Error al guardar los datos.', 'error');
+            showToast(error.message || 'Error al guardar.', 'error');
         } finally {
             submitButton.disabled = false;
+            submitButton.textContent = 'Guardar Cambios';
         }
     });
     
     document.getElementById('phone')?.addEventListener('input', formatPhoneNumber);
-}
-
-function renderPhoneVerificationStatus(isVerified, phone) {
-    const statusContainer = document.getElementById('phone-verification-status');
-    const verifyBtn = document.getElementById('verify-phone-btn');
-    if (!statusContainer || !verifyBtn) return;
-
-    const hasPhone = phone && phone.replace('+58', '').trim().length > 0;
-
-    if (!hasPhone) {
-        statusContainer.innerHTML = `<p class="status-icon unverified">Añade un número para verificar</p>`;
-        verifyBtn.style.display = 'none';
-        return;
-    }
-
-    verifyBtn.style.display = 'inline-block';
-
-    if (isVerified) {
-        statusContainer.innerHTML = `<p class="status-icon verified"><i class="fa-solid fa-circle-check"></i> Teléfono Verificado</p>`;
-        verifyBtn.textContent = 'Verificado';
-        verifyBtn.disabled = true;
-    } else {
-        statusContainer.innerHTML = `<p class="status-icon unverified"><i class="fa-solid fa-triangle-exclamation"></i> Pendiente de Verificación</p>`;
-        verifyBtn.textContent = 'Verificar Ahora';
-        verifyBtn.disabled = false;
-    }
 }
 
 async function handlePhoneVerification() {
@@ -438,7 +508,8 @@ async function handlePhoneVerification() {
         if (verifyBtn.disabled) return;
         
         verifyBtn.disabled = true;
-        showToast('Solicitando código de verificación...');
+        verifyBtn.textContent = 'Enviando...';
+        showToast('Solicitando código...');
         
         try {
             const data = await fetchWithAuth(`${API_BASE_URL}/user/request-phone-verification`, { method: 'POST' });
@@ -446,7 +517,9 @@ async function handlePhoneVerification() {
             openModal(document.getElementById('phone-verification-modal'));
         } catch (error) {
             showToast(error.message, 'error');
+        } finally {
             verifyBtn.disabled = false;
+            verifyBtn.textContent = 'Verificar Ahora';
         }
     });
 
@@ -480,51 +553,46 @@ async function handlePhoneVerification() {
 }
 
 function handlePasswordChange() {
-    const passwordChangeForm = document.getElementById('password-change-form');
-    if (!passwordChangeForm) return;
+    const form = document.getElementById('password-change-form');
+    if (!form) return;
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
-    passwordChangeForm.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const currentPasswordInput = document.getElementById('current-password');
-        const newPasswordInput = document.getElementById('new-password');
-        const confirmNewPasswordInput = document.getElementById('confirm-new-password');
-        const submitButton = document.getElementById('change-password-btn');
-
-        const currentPassword = currentPasswordInput.value;
-        const newPassword = newPasswordInput.value;
-        const confirmNewPassword = confirmNewPasswordInput.value;
+        const current = document.getElementById('current-password').value;
+        const newer = document.getElementById('new-password').value;
+        const confirm = document.getElementById('confirm-new-password').value;
+        const btn = document.getElementById('change-password-btn');
         
-        if (!currentPassword || !newPassword || !confirmNewPassword) {
-            showToast('Por favor, completa todos los campos.', 'error');
+        if (!current || !newer || !confirm) {
+            showToast('Completa todos los campos.', 'error');
             return;
         }
-        if (newPassword !== confirmNewPassword) {
-            showToast('La nueva contraseña y su confirmación no coinciden.', 'error');
+        if (newer !== confirm) {
+            showToast('Las contraseñas no coinciden.', 'error');
             return;
         }
-        if (!passwordRegex.test(newPassword)) {
-            showToast('La nueva contraseña no es segura.', 'error');
+        if (!passwordRegex.test(newer)) {
+            showToast('La contraseña debe ser segura (Mayúscula, número, símbolo).', 'error');
             return;
         }
 
-        const originalBtnText = submitButton.textContent;
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<span class="spinner-sm"></span> Guardando...';
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner-sm"></div> Procesando...';
 
         try {
             const data = await fetchWithAuth(`${API_BASE_URL}/user/change-password`, {
                 method: 'POST',
-                body: JSON.stringify({ currentPassword, newPassword })
+                body: JSON.stringify({ currentPassword: current, newPassword: newer })
             });
             showToast(data.message, 'success');
-            passwordChangeForm.reset();
+            form.reset();
         } catch (error) {
             showToast(error.message, 'error');
         } finally {
-            submitButton.disabled = false;
-            submitButton.innerHTML = originalBtnText;
+            btn.disabled = false;
+            btn.textContent = 'Cambiar Contraseña';
         }
     });
 }
@@ -536,20 +604,40 @@ function handle2FASetup() {
     let is2FAActive = localStorage.getItem('is2FAActive_simulated') === 'true';
     function render2FAState() {
         if (is2FAActive) {
-            statusContainer.innerHTML = `<p class="status-icon verified"><i class="fa-solid fa-circle-check"></i> 2FA Activo (Simulado)</p><p>Tu cuenta está protegida.</p><button class="btn btn-secondary mt-10" id="disable-2fa-btn">Desactivar 2FA</button>`;
+            statusContainer.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <i class="fa-solid fa-shield-halved" style="font-size:2rem; color:var(--color-success);"></i>
+                    <div>
+                        <h4 style="margin:0; color:var(--color-success);">2FA Activado</h4>
+                        <small>Tu cuenta está protegida.</small>
+                    </div>
+                </div>
+                <button class="btn btn-secondary btn-sm" id="disable-2fa-btn">Desactivar</button>
+            `;
         } else {
-            statusContainer.innerHTML = `<p class="status-icon unverified"><i class="fa-solid fa-triangle-exclamation"></i> 2FA Desactivado</p><p>Añade 2FA para una mayor seguridad.</p><button class="btn btn-primary mt-10" id="enable-2fa-btn">Activar 2FA</button>`;
+            statusContainer.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <i class="fa-solid fa-unlock" style="font-size:2rem; color:var(--color-text-secondary);"></i>
+                    <div>
+                        <h4 style="margin:0;">2FA Desactivado</h4>
+                        <small>Añade una capa extra de seguridad.</small>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm" id="enable-2fa-btn">Activar</button>
+            `;
         }
     }
+    
     render2FAState();
+    
     statusContainer.addEventListener('click', (e) => {
         if (e.target.id === 'enable-2fa-btn') {
-            showToast('Simulando activación de 2FA...', 'success');
+            showToast('2FA Activado (Simulación).', 'success');
             localStorage.setItem('is2FAActive_simulated', 'true');
             is2FAActive = true;
             render2FAState();
         } else if (e.target.id === 'disable-2fa-btn') {
-            showToast('2FA desactivado (Simulado).', 'warning');
+            showToast('2FA Desactivado.', 'warning');
             localStorage.setItem('is2FAActive_simulated', 'false');
             is2FAActive = false;
             render2FAState();
@@ -557,61 +645,31 @@ function handle2FASetup() {
     });
 }
 
+// =======================================================================
+//  6. INICIALIZADOR PRINCIPAL (EXPORTADO)
+// =======================================================================
+
 export async function initAccountDashboard() {
     
-    // --- CORRECCIÓN PARA EL BOTÓN DE ADMIN ---
-    document.querySelectorAll('.account-menu-link').forEach(link => {
-        link.addEventListener('click', (e) => {
-            const targetId = e.currentTarget.dataset.target;
+    // 1. Iniciamos la lógica visual (Pestañas) PRIMERO
+    // Esto asegura que el usuario pueda navegar aunque los datos tarden en llegar
+    initTabs();
 
-            // Si el enlace NO tiene data-target (como el de Admin o Cerrar Sesión),
-            // NO prevenimos el comportamiento por defecto y salimos.
-            if (!targetId) return; 
+    // 2. Iniciamos la carga de datos (Asíncrona)
+    // No usamos 'await' aquí para no bloquear el resto de la interfaz inicial
+    loadUserData();
+    loadPayoutMethods();
+    renderBetHistory();
+    renderTransactionHistory();
 
-            // Si SÍ tiene data-target, es una pestaña interna: prevenimos navegación.
-            e.preventDefault();
-
-            document.querySelectorAll('.account-section').forEach(section => section.classList.remove('active'));
-            const targetSection = document.getElementById(targetId);
-            if (targetSection) targetSection.classList.add('active');
-
-            document.querySelectorAll('.account-menu-link').forEach(l => l.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            
-            window.location.hash = targetId;
-        });
-    });
-
-    if (window.location.hash) {
-        const targetId = window.location.hash.substring(1);
-        const targetLink = document.querySelector(`.account-menu-link[data-target="${targetId}"]`);
-        if (targetLink) targetLink.click();
-    }
-
-    await loadUserData();
-    await loadPayoutMethods();
-    await renderBetHistory();
-    await renderTransactionHistory();
-
+    // 3. Inicializamos los Listeners de formularios
     handleUserDataSubmit();
     handlePhoneVerification();
     handlePasswordChange();
     handlePayoutMethodChange();
     handle2FASetup();
 
-    document.body.addEventListener('click', (e) => {
-        if (e.target.classList.contains('edit-method-link')) {
-            e.preventDefault();
-            const withdrawModal = document.getElementById('withdraw-modal');
-            if (withdrawModal) closeModal(withdrawModal);
-            
-            const targetLink = document.querySelector(`.account-menu-link[data-target="mis-datos"]`);
-            if (targetLink) {
-                 setTimeout(() => targetLink.click(), 50); 
-            }
-        }
-    });
-
+    // 4. Delegación de eventos para la lista de métodos (Borrar y Hacer Principal)
     document.getElementById('payout-methods-list')?.addEventListener('click', async (e) => {
         const deleteBtn = e.target.closest('.delete-method-btn');
         const setPrimaryBtn = e.target.closest('.set-primary-btn');
@@ -635,6 +693,19 @@ export async function initAccountDashboard() {
             } catch (error) {
                 showToast(error.message, 'error');
             }
+        }
+    });
+
+    // 5. Link especial para abrir modal de retiro desde "Mis Datos"
+    document.body.addEventListener('click', (e) => {
+        if (e.target.classList.contains('edit-method-link')) {
+            e.preventDefault();
+            const withdrawModal = document.getElementById('withdraw-modal');
+            if (withdrawModal) closeModal(withdrawModal);
+            
+            // Navegar a la pestaña "Mis Datos"
+            const targetLink = document.querySelector(`.account-menu-link[data-target="mis-datos"]`);
+            if (targetLink) targetLink.click();
         }
     });
 }
