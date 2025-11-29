@@ -44,23 +44,34 @@ router.get('/stats', async (req, res) => {
 });
 
 // Gráfica de Ingresos
+// GET /api/admin/analytics/revenue
 router.get('/analytics/revenue', async (req, res) => {
     try {
         const db = getDb();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
         const revenueData = await db.collection('transactions').aggregate([
-            { $match: { type: 'deposit', status: 'approved' } },
+            { 
+                $match: { 
+                    type: 'deposit', 
+                    status: 'approved',
+                    createdAt: { $gte: thirtyDaysAgo } // Solo últimos 30 días
+                } 
+            },
             {
                 $group: {
+                    // Agrupamos por día (YYYY-MM-DD)
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
                     total: { $sum: "$amount" }
                 }
             },
-            { $sort: { _id: 1 } },
-            { $limit: 30 }
+            { $sort: { _id: 1 } } // Ordenar por fecha ascendente
         ]).toArray();
 
         res.status(200).json(revenueData);
     } catch (e) {
+        console.error(e);
         res.status(500).json({ message: 'Error calculando ingresos.' });
     }
 });
