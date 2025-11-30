@@ -1,4 +1,4 @@
-// Archivo: backend/routes/user.js (VERSIÓN FINAL COMPLETA)
+// Archivo: backend/routes/user.js (VERSIÓN FINAL BLINDADA)
 
 const express = require('express');
 const { ObjectId } = require('mongodb');
@@ -16,8 +16,10 @@ const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 // Middleware de autenticación global para este router
 router.use(authenticateToken);
 
-// Configuración de Twilio (puede fallar si no están las variables, se maneja en la ruta)
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+// Configuración de Twilio (Manejo de errores si no hay keys)
+const twilioClient = (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) 
+    ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN) 
+    : null;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
@@ -28,13 +30,24 @@ const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{
 
 router.get('/user-data', async (req, res) => {
     try {
+        // req.user viene del middleware. Si el token es viejo, el ID podría no existir en la BD.
         const userId = req.user.id;
+        
+        if (!ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: 'ID de usuario inválido.' });
+        }
+
         const db = req.db;
         const user = await db.collection('users').findOne(
             { _id: new ObjectId(userId) },
             { projection: { password: 0, otp: 0, otpExpires: 0 } }
         );
-        if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
+
+        if (!user) {
+            // Si el token es válido pero el usuario no está en la BD (ej: BD borrada)
+            return res.status(404).json({ message: 'Usuario no encontrado en la base de datos.' });
+        }
+
         res.status(200).json(user);
     } catch (error) {
         console.error('[ERROR] en user-data:', error);
@@ -71,12 +84,14 @@ router.put('/user-data', authLimiter, async (req, res) => {
              
              // Buscamos al usuario actual para ver si cambió el número
              const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
-             const currentPhone = (user && user.personalInfo) ? user.personalInfo.phone : null;
              
-             // Si el número es diferente, reseteamos la verificación
-             if (currentPhone !== phone) {
-                 updateData['personalInfo.isPhoneVerified'] = false;
-                 updateData['personalInfo.phoneOtp'] = "";
+             if (user) {
+                 const currentPhone = (user.personalInfo) ? user.personalInfo.phone : null;
+                 // Si el número es diferente, reseteamos la verificación
+                 if (currentPhone !== phone) {
+                     updateData['personalInfo.isPhoneVerified'] = false;
+                     updateData['personalInfo.phoneOtp'] = "";
+                 }
              }
         }
 
@@ -139,9 +154,9 @@ router.post('/request-phone-verification', authLimiter, async (req, res) => {
     const userId = new ObjectId(req.user.id);
     const db = req.db;
 
-    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !twilioPhoneNumber) {
-        console.error("❌ Error: Faltan las variables de entorno de Twilio.");
-        return res.status(500).json({ message: "El servicio de verificación no está configurado." });
+    if (!twilioClient || !twilioPhoneNumber) {
+        console.error("❌ Error: Twilio no está configurado en .env");
+        return res.status(500).json({ message: "El servicio de verificación no está disponible." });
     }
 
     try {
@@ -405,7 +420,7 @@ router.post('/withdraw', authLimiter, async (req, res) => {
 });
 
 // =======================================================================
-//  6. APUESTAS (¡MEJORADO!)
+//  6. APUESTAS
 // =======================================================================
 
 router.post('/place-bet', authLimiter, async (req, res) => {
@@ -441,7 +456,6 @@ router.post('/place-bet', authLimiter, async (req, res) => {
         let totalOdds = 1;
         for (const bet of bets) {
             const odd = parseFloat(bet.odds);
-            // Si la cuota no es un número o es menor/igual a 1, hay un error
             if (isNaN(odd) || odd <= 1.0) {
                 await session.abortTransaction();
                 return res.status(400).json({ message: 'Error en los datos de la apuesta (cuota inválida).' });
