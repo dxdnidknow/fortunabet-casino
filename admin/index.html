@@ -7,20 +7,26 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="admin.css">
     <!-- Chart.js es vital para el gráfico -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/chart.min.js"></script>
 </head>
 <body>
 
-    <!-- BOTÓN MÓVIL (NUEVO) -->
-    <button id="admin-mobile-toggle" class="mobile-menu-btn">
-        <i class="fa-solid fa-bars"></i>
-    </button>
+    <!-- BARRA MÓVIL (SOLO VISIBLE EN CELULAR) -->
+    <div class="mobile-nav-bar">
+        <button id="admin-mobile-toggle"><i class="fa-solid fa-bars"></i></button>
+        <div class="mobile-brand">Fortuna<span>Bet</span> Admin</div>
+        <div style="width: 24px;"></div> <!-- Espaciador para centrar -->
+    </div>
 
     <!-- LOGIN -->
     <div id="login-view" class="login-container">
-        <div class="login-card">
-            <div class="brand"><i class="fa-solid fa-shield-cat"></i> Admin Panel</div>
-            <form id="login-form">
+<div class="login-card">
+    <!-- Reemplaza el div .brand por esto -->
+    <div style="display:flex; justify-content:center; margin-bottom:30px;">
+        <img src="/images/logo-fortuna.png" alt="FortunaBet" class="login-logo" style="height:70px;">
+    </div>
+    
+    <form id="login-form">
                 <input type="text" id="email" placeholder="Usuario" required>
                 <input type="password" id="password" placeholder="Contraseña" required>
                 <button type="submit" class="btn btn-primary btn-full">Entrar</button>
@@ -32,22 +38,46 @@
     <!-- DASHBOARD -->
     <div id="dashboard-view" class="dashboard-layout" style="display: none;">
         
-        <aside class="sidebar">
-            <div class="sidebar-header"><h2>FortunaBet</h2></div>
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <!-- Solo el logo, centrado y limpio -->
+        <img src="/images/logo-fortuna.png" alt="FortunaBet" class="logo-img" style="height: 50px;">
+    </div>
             <nav class="sidebar-nav">
                 <button class="nav-link active" onclick="switchTab('overview')"><i class="fa-solid fa-chart-pie"></i> Resumen</button>
-                <button class="nav-link" onclick="switchTab('deposits')"><i class="fa-solid fa-money-bill-trend-up"></i> Depósitos</button>
-                <button class="nav-link" onclick="switchTab('withdrawals')"><i class="fa-solid fa-money-bill-transfer"></i> Retiros</button>
+                <button class="nav-link" onclick="switchTab('deposits')">
+                    <i class="fa-solid fa-money-bill-trend-up"></i> Depósitos
+                    <span id="badge-deposits" class="nav-badge hidden">0</span>
+                </button>
+                <button class="nav-link" onclick="switchTab('withdrawals')">
+                    <i class="fa-solid fa-money-bill-transfer"></i> Retiros
+                    <span id="badge-withdrawals" class="nav-badge hidden">0</span>
+                </button>
                 <button class="nav-link" onclick="switchTab('users')"><i class="fa-solid fa-users"></i> Usuarios</button>
             </nav>
-            <div class="sidebar-footer">
-                <button id="logout-btn" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
-            </div>
-        </aside>
+<div class="sidebar-footer">
+    <div class="user-card">
+        <div class="user-avatar-mini">
+            <i class="fa-solid fa-crown"></i>
+        </div>
+        <div class="user-info-mini">
+            <span class="role-text">Admin</span>
+            <span class="status-text">En línea <span class="dot-online"></span></span>
+        </div>
+        <button id="logout-btn" class="btn-mini-logout" title="Cerrar Sesión">
+            <i class="fa-solid fa-power-off"></i>
+        </button>
+    </div>
+</div>
+</aside>
 
         <main class="main-content">
+            <!-- SECCIÓN: RESUMEN -->
             <section id="section-overview" class="content-section active">
-                <header class="top-bar"><h1>Visión General</h1> <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button></header>
+                <header class="top-bar">
+                    <h1>Visión General</h1> 
+                    <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button>
+                </header>
                 
                 <div class="stats-grid">
                     <div class="stat-card"><div class="icon bg-blue"><i class="fa-solid fa-users"></i></div><div><h3>Usuarios</h3><p id="stat-users">0</p></div></div>
@@ -55,26 +85,38 @@
                     <div class="stat-card"><div class="icon bg-orange"><i class="fa-solid fa-clock"></i></div><div><h3>Pendientes</h3><p id="stat-pending">0</p></div></div>
                 </div>
 
-                <!-- CONTENEDOR DEL GRÁFICO (ARREGLADO) -->
-                <div class="panel chart-container" style="margin-top: 20px; height: 350px; position: relative;">
-                    <canvas id="revenueChart"></canvas>
+                <!-- GRÁFICO DE INGRESOS (CON FILTRO DE AÑO) -->
+                <div class="panel chart-container" style="height: auto; background: var(--bg-panel);">
+                    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h2><i class="fa-solid fa-chart-line"></i> Ingresos Mensuales</h2>
+                        <select id="revenue-year-filter" style="background: #111; color: white; border: 1px solid #333; padding: 5px 10px; border-radius: 5px; cursor:pointer;">
+                            <option value="2025" selected>2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                        </select>
+                    </div>
+                    <div style="height: 350px; padding: 15px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
                 </div>
             </section>
 
-            <!-- (Las otras secciones Depósitos, Retiros, Usuarios se mantienen igual que tenías) -->
+            <!-- SECCIÓN: DEPÓSITOS -->
             <section id="section-deposits" class="content-section">
                 <header class="top-bar"><h1>Depósitos</h1> <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button></header>
-                <div class="panel"><table id="deposits-table"><thead><tr><th>Usuario</th><th>Monto</th><th>Ref</th><th>Acción</th></tr></thead><tbody id="deposits-body"></tbody></table></div>
+                <div class="panel"><table id="deposits-table"><thead><tr><th>Usuario</th><th>Monto</th><th>Ref</th><th>Fecha</th><th>Acción</th></tr></thead><tbody id="deposits-body"></tbody></table></div>
             </section>
             
+            <!-- SECCIÓN: RETIROS -->
             <section id="section-withdrawals" class="content-section">
                 <header class="top-bar"><h1>Retiros</h1> <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button></header>
-                <div class="panel"><table id="withdrawals-table"><thead><tr><th>Usuario</th><th>Monto</th><th>Datos</th><th>Acción</th></tr></thead><tbody id="withdrawals-body"></tbody></table></div>
+                <div class="panel"><table id="withdrawals-table"><thead><tr><th>Usuario</th><th>Monto</th><th>Datos</th><th>Fecha</th><th>Acción</th></tr></thead><tbody id="withdrawals-body"></tbody></table></div>
             </section>
 
+            <!-- SECCIÓN: USUARIOS -->
             <section id="section-users" class="content-section">
                 <header class="top-bar"><h1>Usuarios</h1> <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button></header>
-                <div class="panel"><table id="users-table"><thead><tr><th>Usuario</th><th>Email</th><th>Saldo</th></tr></thead><tbody id="users-body"></tbody></table></div>
+                <div class="panel"><table id="users-table"><thead><tr><th>Usuario</th><th>Email</th><th>Saldo</th><th>Estado</th></tr></thead><tbody id="users-body"></tbody></table></div>
             </section>
 
         </main>

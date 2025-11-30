@@ -43,33 +43,45 @@ router.get('/stats', async (req, res) => {
     }
 });
 
-// Gráfica de Ingresos
-// GET /api/admin/analytics/revenue
+// GET /api/admin/analytics/revenue (SOLUCIÓN DEFINITIVA ZONA HORARIA)
 router.get('/analytics/revenue', async (req, res) => {
     try {
         const db = getDb();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        // Forzamos que el año sea un número entero válido
+        const year = parseInt(req.query.year);
+        
+        // Si no envían año o es inválido, usamos el actual
+        const targetYear = !isNaN(year) ? year : new Date().getFullYear();
+        
+        console.log(`[DEBUG] Consultando ingresos para el año: ${targetYear}`);
 
         const revenueData = await db.collection('transactions').aggregate([
             { 
                 $match: { 
                     type: 'deposit', 
                     status: 'approved',
-                    createdAt: { $gte: thirtyDaysAgo } // Solo últimos 30 días
+                    // Usamos $expr para extraer el año directamente de la fecha en la BD
+                    // Esto es más seguro que comparar rangos de fechas ISODate
+                    $expr: { $eq: [{ $year: "$createdAt" }, targetYear] }
                 } 
             },
             {
                 $group: {
-                    // Agrupamos por día (YYYY-MM-DD)
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    _id: { $month: "$createdAt" }, // 1 a 12
                     total: { $sum: "$amount" }
                 }
             },
-            { $sort: { _id: 1 } } // Ordenar por fecha ascendente
+            { $sort: { _id: 1 } }
         ]).toArray();
 
-        res.status(200).json(revenueData);
+        // Rellenar meses vacíos
+        const fullYearData = [];
+        for (let i = 1; i <= 12; i++) {
+            const found = revenueData.find(d => d._id === i);
+            fullYearData.push({ month: i, total: found ? found.total : 0 });
+        }
+
+        res.status(200).json(fullYearData);
     } catch (e) {
         console.error(e);
         res.status(500).json({ message: 'Error calculando ingresos.' });

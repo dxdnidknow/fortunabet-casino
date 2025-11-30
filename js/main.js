@@ -189,6 +189,8 @@ function handleActiveNav() {
     });
 }
 
+// En js/main.js
+
 async function initSportsNav() {
     const sportsNavDesktop = document.querySelector('.main-container .sports-nav');
     const sportsPanelNav = document.querySelector('.sports-panel__nav');
@@ -200,29 +202,101 @@ async function initSportsNav() {
         if (!response.ok) throw new Error('Error de red');
         const sports = await response.json();
         
+        // 1. MAPA DE ICONOS POR DEPORTE (Categorías)
+        const categoryIcons = {
+            'Soccer': 'fa-futbol',
+            'Basketball': 'fa-basketball',
+            'Baseball': 'fa-baseball-bat-ball',
+            'American Football': 'fa-football',
+            'Tennis': 'fa-table-tennis-paddle-ball',
+            'Boxing': 'fa-mitten',
+            'MMA': 'fa-hand-fist',
+            'Ice Hockey': 'fa-hockey-puck',
+            'Cricket': 'fa-bowling-ball',
+            'Rugby': 'fa-rugby-ball',
+            'Golf': 'fa-golf-ball-tee'
+        };
+
+        // 2. MAPA DE LOGOS ESPECÍFICOS POR LIGA (Aquí agregas tus imágenes)
+        // La 'key' debe ser parte del nombre de la liga en inglés que viene de la API
+        const leagueLogos = {
+            'NBA': '/images/logos/nba.png',
+            'MLB': '/images/logos/mlb.png',
+            'NFL': '/images/logos/nfl.png',
+            'La Liga': '/images/logos/laliga.png',
+            'EPL': '/images/logos/premier.png', // Premier League
+            'UEFA Champions': '/images/logos/ucl.png',
+            'Serie A': '/images/logos/seriea.png',
+            'Bundesliga': '/images/logos/bundesliga.png'
+        };
+
+        // Agrupar deportes
         const sportsGrouped = sports.reduce((acc, sport) => {
             if (!acc[sport.group]) acc[sport.group] = [];
             acc[sport.group].push(sport);
             return acc;
         }, {});
-
-        const icons = { 'Soccer': 'fa-futbol', 'Basketball': 'fa-basketball', 'Tennis': 'fa-tennis-ball', 'Baseball': 'fa-baseball-bat-ball', 'American Football': 'fa-football' };
         
         let navHtml = Object.entries(sportsGrouped).map(([groupName, leagues]) => {
             const translatedGroupName = sportTranslations[groupName] || groupName;
-            const iconClass = icons[groupName] || 'fa-trophy';
+            
+            // Icono de la categoría
+            let catIconClass = 'fa-trophy';
+            for (const key in categoryIcons) {
+                if (groupName.includes(key)) {
+                    catIconClass = categoryIcons[key];
+                    break;
+                }
+            }
+            
             const leaguesHtml = leagues.map(sport => {
                 const translatedTitle = sportTranslations[sport.title] || sport.title;
-                return `<li><a href="#" class="sport-link" data-sport-key="${sport.key}">${translatedTitle}</a></li>`;
+                
+                // Buscamos si hay un logo específico para esta liga
+                let leagueIconHtml = ''; // Por defecto nada
+                let foundLogo = false;
+
+                // Intentar encontrar imagen
+                for (const [key, path] of Object.entries(leagueLogos)) {
+                    if (sport.title.includes(key)) {
+                        // Si existe la imagen, la ponemos
+                        leagueIconHtml = `<img src="${path}" class="league-mini-icon" alt="${key}" onerror="this.style.display='none'">`;
+                        foundLogo = true;
+                        break;
+                    }
+                }
+
+                // Si no hay imagen, ponemos un puntito de color o icono genérico pequeño
+                if (!foundLogo) {
+                    leagueIconHtml = `<i class="fa-solid fa-angle-right" style="font-size:0.8rem; opacity:0.5;"></i>`;
+                }
+
+                return `
+                <li>
+                    <a href="#" class="sport-link" data-sport-key="${sport.key}">
+                        <span style="display:flex; align-items:center; gap:10px;">
+                            ${leagueIconHtml} ${translatedTitle}
+                        </span>
+                    </a>
+                </li>`;
             }).join('');
-            return `<div class="nav-category">
-                        <div class="category-title accordion"><i class="fa-solid ${iconClass}"></i> ${translatedGroupName}</div>
-                        <ul class="submenu">${leaguesHtml}</ul>
-                    </div>`;
+
+            return `
+            <div class="nav-category">
+                <div class="category-title accordion">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <i class="fa-solid ${catIconClass}" style="width:20px; text-align:center; color:var(--color-primary);"></i> 
+                        ${translatedGroupName}
+                    </div>
+                    <i class="fa-solid fa-chevron-down" style="font-size:0.8rem;"></i>
+                </div>
+                <ul class="submenu">${leaguesHtml}</ul>
+            </div>`;
         }).join('');
 
         const content = `<div class="nav-container">${navHtml}</div>`;
-
+        
+        // Inyectar en el DOM
         if (sportsNavDesktop) {
             const searchHtml = `<div class="search-container"><i class="fa-solid fa-search"></i><input type="text" class="sport-search-input" placeholder="Buscar liga..."></div>`;
             sportsNavDesktop.innerHTML = searchHtml + content; 
@@ -231,11 +305,7 @@ async function initSportsNav() {
             sportsPanelNav.innerHTML = content;
         }
 
-    } catch (error) {
-        console.error("Error al inicializar menú deportes:", error);
-        const errorHtml = `<div style="padding:20px; text-align:center; color:#E74C3C;">No se pudo cargar el menú.</div>`;
-        if (sportsNavDesktop) sportsNavDesktop.innerHTML = errorHtml;
-    }
+    } catch (error) { console.error(error); }
 }
 
 function handleSearch(searchTerm) {
@@ -560,17 +630,17 @@ function initContactForm() {
     });
 }
 // --- FUNCIÓN PARA LA HOME: ACCIÓN DEL DÍA ---
+// En js/main.js
+
 async function loadHomeFeaturedEvents() {
     const container = document.getElementById('featured-events-container');
     const loader = document.getElementById('loader-featured');
     
-    // Si no estamos en el home, salir
     if (!container) return;
 
     try {
-        // Pedimos una liga popular para mostrar en el home (Ej: Premier League o La Liga)
-        // Usamos una específica para asegurar que haya datos y no gastar cuota buscando en todo
-        const events = await fetchLiveEvents('soccer_spain_la_liga'); 
+        // Pedimos una liga popular
+        const events = await fetchLiveEvents('soccer_uefa_champs_league'); // O 'soccer_spain_la_liga'
         
         if (loader) loader.style.display = 'none';
 
@@ -579,35 +649,59 @@ async function loadHomeFeaturedEvents() {
             return;
         }
 
-        // Tomamos solo los primeros 3 o 4 eventos
-        const featured = events.slice(0, 4);
+        // Función para obtener iniciales (Ej: "Real Madrid" -> "RM")
+        const getInitials = (name) => {
+            return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        };
 
-        container.innerHTML = featured.map(event => {
+        // Generar colores aleatorios fijos para avatares (opcional)
+        const colors = ['#e74c3c', '#3498db', '#9b59b6', '#f1c40f', '#2ecc71', '#e67e22'];
+        
+        const featured = events.slice(0, 3); // Solo 3 tarjetas
+
+        container.innerHTML = featured.map((event, index) => {
             const teamNames = event.teams.split(' vs ');
             const home = teamNames[0];
             const away = teamNames[1] || '';
-            const date = new Date(event.commence_time).toLocaleDateString('es-ES', {weekday:'short', day:'numeric'});
+            const date = new Date(event.commence_time).toLocaleDateString('es-ES', {weekday:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+            
+            // Color aleatorio basado en el nombre
+            const color1 = colors[home.length % colors.length];
+            const color2 = colors[away.length % colors.length];
 
             return `
-            <div class="game-card" style="aspect-ratio: auto; padding: 20px; height: auto;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:0.85rem; color:var(--color-primary);">
-                    <span><i class="fa-regular fa-calendar"></i> ${date}</span>
-                    <span>${event.is_live ? '• EN VIVO' : ''}</span>
-                </div>
-                
-                <div style="margin-bottom:20px;">
-                    <h3 style="margin:0 0 5px 0; font-size:1.1rem; color:#fff;">${home}</h3>
-                    <div style="color:var(--color-text-secondary); font-size:0.9rem;">vs</div>
-                    <h3 style="margin:5px 0 0 0; font-size:1.1rem; color:#fff;">${away}</h3>
+            <div class="match-card">
+                <div class="match-header">
+                    <span><i class="fa-solid fa-futbol"></i> Champions League</span>
+                    ${event.is_live ? '<span class="live-badge">● EN VIVO</span>' : `<span>${date}</span>`}
                 </div>
 
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:15px;">
-                    <button class="odds-button" data-team="${home}" data-odds="${event.odds.home}">1<br><span>${event.odds.home}</span></button>
-                    <button class="odds-button" data-team="Empate" data-odds="${event.odds.draw}">X<br><span>${event.odds.draw}</span></button>
-                    <button class="odds-button" data-team="${away}" data-odds="${event.odds.away}">2<br><span>${event.odds.away}</span></button>
+                <div class="match-teams">
+                    <div class="team">
+                        <div class="team-avatar" style="background: linear-gradient(135deg, ${color1}, #222);">${getInitials(home)}</div>
+                        <span class="team-name">${home}</span>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="team">
+                        <div class="team-avatar" style="background: linear-gradient(135deg, ${color2}, #222);">${getInitials(away)}</div>
+                        <span class="team-name">${away}</span>
+                    </div>
                 </div>
 
-                <a href="/deportes.html" class="btn btn-secondary btn-sm" style="width:100%; justify-content:center;">Ver más cuotas</a>
+                <div class="match-odds">
+                    <div class="odd-btn odds-button" data-team="${home}" data-odds="${event.odds.home}">
+                        <span class="odd-label">1</span>
+                        <span class="odd-value">${event.odds.home}</span>
+                    </div>
+                    <div class="odd-btn odds-button" data-team="Empate" data-odds="${event.odds.draw}">
+                        <span class="odd-label">X</span>
+                        <span class="odd-value">${event.odds.draw}</span>
+                    </div>
+                    <div class="odd-btn odds-button" data-team="${away}" data-odds="${event.odds.away}">
+                        <span class="odd-label">2</span>
+                        <span class="odd-value">${event.odds.away}</span>
+                    </div>
+                </div>
             </div>
             `;
         }).join('');
