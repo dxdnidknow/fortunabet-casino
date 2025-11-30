@@ -750,7 +750,7 @@ async function main() {
             }
             document.getElementById('upcoming-events-container').innerHTML = '';
         }
-    } else if (window.location.pathname.includes('mi-cuenta.html')) {
+    } else if (window.location.pathname.includes('mi-cuenta')) {
         if (!localStorage.getItem('fortunaToken')) {
             window.location.href = '/index.html';
         } else {
