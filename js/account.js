@@ -145,7 +145,7 @@ export async function loadUserData() {
         
     } catch (error) {
         console.error("Error cargando datos de usuario:", error);
-        showToast('Error de conexión al cargar datos.', 'error');
+        // showToast('Error de conexión al cargar datos.', 'error'); // Opcional: comentar para no molestar
     }
 }
 
