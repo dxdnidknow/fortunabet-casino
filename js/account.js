@@ -1,4 +1,4 @@
-// Archivo: js/account.js (VERSIÓN FINAL COMPLETAMENTE FUNCIONAL)
+// Archivo: js/account.js (VERSIÓN FINAL PRODUCTION READY)
 
 import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
@@ -113,7 +113,6 @@ export async function loadUserData() {
                 const phoneInput = document.getElementById('phone');
                 if (phoneInput) {
                     // Limpiamos el +58 para mostrarlo en el input si se desea, o lo dejamos completo
-                    // Aquí asumimos que el usuario ve el número limpio
                     phoneInput.value = userData.personalInfo.phone ? userData.personalInfo.phone.replace('+58', '') : '';
                 }
             }
@@ -121,11 +120,24 @@ export async function loadUserData() {
             renderPhoneVerificationStatus(userData.personalInfo.isPhoneVerified, userData.personalInfo.phone);
         }
 
-        // --- LÓGICA DE ADMIN (MOSTRAR BOTÓN EN PC) ---
+        // --- LÓGICA DE ADMIN (MOSTRAR BOTÓN EN PC CON LOGOUT) ---
         if (userData.role === 'admin') {
-            const desktopAdminLink = document.querySelector('.account-menu #admin-panel-link');
+            const desktopAdminLink = document.querySelector('#admin-panel-link');
             if (desktopAdminLink) {
                 desktopAdminLink.style.display = 'block';
+                
+                // Interceptar click para hacer logout antes de ir
+                const link = desktopAdminLink.querySelector('a');
+                if(link) {
+                    link.onclick = (e) => {
+                        e.preventDefault();
+                        if(confirm("Serás desconectado de tu cuenta para acceder al Panel Admin. ¿Continuar?")) {
+                            localStorage.removeItem('fortunaToken');
+                            localStorage.removeItem('fortunaUser');
+                            window.location.href = '/admin/index.html';
+                        }
+                    };
+                }
             }
         }
         
@@ -138,14 +150,11 @@ export async function loadUserData() {
         if (isVerified && hasData) {
             if(depositBtn) depositBtn.disabled = false;
             if(withdrawBtn) withdrawBtn.disabled = false;
-        } else {
-            // Opcional: Deshabilitar o mostrar aviso
-            // if(depositBtn) depositBtn.disabled = true;
-        }
+        } 
         
     } catch (error) {
         console.error("Error cargando datos de usuario:", error);
-        // showToast('Error de conexión al cargar datos.', 'error'); // Opcional: comentar para no molestar
+        // showToast('Error de conexión al cargar datos.', 'error'); 
     }
 }
 
@@ -327,6 +336,8 @@ export async function renderBetHistory() {
     }
 }
 
+// En js/account.js
+
 export async function renderTransactionHistory() {
     const listContainer = document.querySelector('#historial-transacciones .history-list');
     if (!listContainer) return;
@@ -347,14 +358,30 @@ export async function renderTransactionHistory() {
         transactions.forEach(tx => {
             const isDeposit = tx.type === 'deposit';
             const amount = tx.amount; 
-            const statusClass = tx.status === 'approved' ? 'won' : (tx.status === 'pending' ? 'pending' : 'lost');
+            let statusClass = 'pending';
+            if (tx.status === 'approved') statusClass = 'won';
+            if (tx.status === 'rejected') statusClass = 'lost';
+
             const icon = isDeposit ? 'fa-arrow-down' : 'fa-arrow-up';
             const color = isDeposit ? 'var(--color-success)' : 'var(--color-loss)';
             const date = tx.createdAt || tx.date;
 
+            // LÓGICA DEL MOTIVO (Nuevo diseño)
+            let reasonHtml = '';
+            if (tx.status === 'rejected' && tx.rejectionReason) {
+                reasonHtml = `
+                    <div style="margin-top: 12px; padding: 10px; background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; border-radius: 4px; font-size: 0.9rem; color: #ff8a80;">
+                        <i class="fa-solid fa-circle-exclamation" style="margin-right: 5px;"></i>
+                        <strong>Motivo:</strong> ${tx.rejectionReason}
+                    </div>
+                `;
+            }
+
             const listItem = document.createElement('li');
-            listItem.className = 'history-card-item'; // Reusamos estilo
+            listItem.className = 'history-card-item'; 
             listItem.style.borderLeft = `4px solid ${color}`;
+            // Añadimos padding extra si hay motivo
+            listItem.style.paddingBottom = reasonHtml ? '15px' : '12px';
 
             listItem.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -374,6 +401,7 @@ export async function renderTransactionHistory() {
                         <span class="bet-status-badge ${statusClass}" style="display: inline-block; margin-top: 5px;">${tx.status.toUpperCase()}</span>
                     </div>
                 </div>
+                ${reasonHtml} <!-- AQUÍ SE MUESTRA EL MOTIVO -->
             `;
             listContainer.appendChild(listItem);
         });
@@ -652,11 +680,9 @@ function handle2FASetup() {
 export async function initAccountDashboard() {
     
     // 1. Iniciamos la lógica visual (Pestañas) PRIMERO
-    // Esto asegura que el usuario pueda navegar aunque los datos tarden en llegar
     initTabs();
 
     // 2. Iniciamos la carga de datos (Asíncrona)
-    // No usamos 'await' aquí para no bloquear el resto de la interfaz inicial
     loadUserData();
     loadPayoutMethods();
     renderBetHistory();
@@ -669,7 +695,7 @@ export async function initAccountDashboard() {
     handlePayoutMethodChange();
     handle2FASetup();
 
-    // 4. Delegación de eventos para la lista de métodos (Borrar y Hacer Principal)
+    // 4. Delegación de eventos para la lista de métodos
     document.getElementById('payout-methods-list')?.addEventListener('click', async (e) => {
         const deleteBtn = e.target.closest('.delete-method-btn');
         const setPrimaryBtn = e.target.closest('.set-primary-btn');
@@ -703,7 +729,6 @@ export async function initAccountDashboard() {
             const withdrawModal = document.getElementById('withdraw-modal');
             if (withdrawModal) closeModal(withdrawModal);
             
-            // Navegar a la pestaña "Mis Datos"
             const targetLink = document.querySelector(`.account-menu-link[data-target="mis-datos"]`);
             if (targetLink) targetLink.click();
         }

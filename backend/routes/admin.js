@@ -212,17 +212,25 @@ router.post('/withdrawals/approve/:reqId', async (req, res) => {
             return res.status(404).json({ message: 'Solicitud no válida.' });
         }
 
-        await db.collection('withdrawalRequests').updateOne(
-            { _id: request._id },
-            { $set: { status: 'completed', processedBy: req.user.username, processedAt: new Date() }},
-            { session }
-        );
+await db.collection('withdrawalRequests').updateOne(
+    { _id: request._id },
+    { $set: { 
+        status: 'rejected', 
+        rejectionReason: reason || 'Sin motivo especificado', // <--- ESTO ES CLAVE
+        processedBy: req.user.username, 
+        processedAt: new Date() 
+    }},
+    { session }
+);
         
-        await db.collection('transactions').updateOne(
-            { _id: request.transactionId },
-            { $set: { status: 'approved' } },
-            { session }
-        );
+await db.collection('transactions').updateOne(
+    { _id: request.transactionId },
+    { $set: { 
+        status: 'rejected',
+        rejectionReason: reason || 'Sin motivo especificado' // <--- AGREGAR ESTA LÍNEA SI FALTA
+    }},
+    { session }
+);
 
         await session.commitTransaction();
         res.status(200).json({ message: 'Retiro completado.' });
@@ -248,11 +256,16 @@ router.post('/withdrawals/reject/:reqId', async (req, res) => {
             return res.status(404).json({ message: 'Solicitud no válida.' });
         }
 
-        await db.collection('withdrawalRequests').updateOne(
-            { _id: request._id },
-            { $set: { status: 'rejected', processedBy: req.user.username, processedAt: new Date(), rejectionReason: reason || 'N/A' }},
-            { session }
-        );
+await db.collection('withdrawalRequests').updateOne(
+    { _id: request._id },
+    { $set: { 
+        status: 'rejected', 
+        rejectionReason: reason || 'Sin motivo especificado', // <--- ESTO ES CLAVE
+        processedBy: req.user.username, 
+        processedAt: new Date() 
+    }},
+    { session }
+);
 
         await db.collection('users').updateOne(
             { _id: new ObjectId(request.userId) },
@@ -260,11 +273,14 @@ router.post('/withdrawals/reject/:reqId', async (req, res) => {
             { session }
         );
         
-        await db.collection('transactions').updateOne(
-            { _id: request.transactionId },
-            { $set: { status: 'rejected' } },
-            { session }
-        );
+await db.collection('transactions').updateOne(
+    { _id: request.transactionId },
+    { $set: { 
+        status: 'rejected',
+        rejectionReason: reason || 'Sin motivo especificado' // <--- AGREGAR ESTA LÍNEA SI FALTA
+    }},
+    { session }
+);
 
         await session.commitTransaction();
         res.status(200).json({ message: 'Retiro rechazado.' });

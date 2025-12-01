@@ -4,125 +4,200 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FortunaBet Admin</title>
+    
+    <!-- FUENTES & ICONOS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- ESTILOS -->
     <link rel="stylesheet" href="admin.css">
-    <!-- Chart.js es vital para el gráfico -->
-    <script src="/js/chart.min.js"></script>
+    
+    <!-- CHART.JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-    <!-- BARRA MÓVIL (SOLO VISIBLE EN CELULAR) -->
-    <div class="mobile-nav-bar">
+    <!-- BARRA MÓVIL -->
+    <div class="mobile-nav-bar" style="display: none;">
         <button id="admin-mobile-toggle"><i class="fa-solid fa-bars"></i></button>
         <div class="mobile-brand">Fortuna<span>Bet</span> Admin</div>
-        <div style="width: 24px;"></div> <!-- Espaciador para centrar -->
+        <div style="width: 24px;"></div>
     </div>
 
-    <!-- LOGIN -->
+    <!-- VISTA LOGIN (VISIBLE POR DEFECTO) -->
     <div id="login-view" class="login-container">
-<div class="login-card">
-    <!-- Reemplaza el div .brand por esto -->
-    <div style="display:flex; justify-content:center; margin-bottom:30px;">
-        <img src="/images/logo-fortuna.png" alt="FortunaBet" class="login-logo" style="height:70px;">
-    </div>
-    
-    <form id="login-form">
-                <input type="text" id="email" placeholder="Usuario" required>
+        <div class="login-card">
+            <div class="login-header">
+                <img src="/images/logo-fortuna.png" alt="FortunaBet" class="login-logo">
+            </div>
+            <form id="login-form">
+                <input type="text" id="email" placeholder="Correo / Usuario" autocomplete="off" required>
                 <input type="password" id="password" placeholder="Contraseña" required>
-                <button type="submit" class="btn btn-primary btn-full">Entrar</button>
-                <p id="error-message" style="display: none;"></p>
+                <button type="submit" class="btn btn-primary btn-full">ENTRAR AL SISTEMA</button>
+                <p id="error-message" style="display: none; color: #e74c3c; margin-top: 10px;"></p>
             </form>
         </div>
     </div>
 
-    <!-- DASHBOARD -->
+    <!-- VISTA DASHBOARD (OCULTA POR DEFECTO) -->
     <div id="dashboard-view" class="dashboard-layout" style="display: none;">
         
-<aside class="sidebar">
-    <div class="sidebar-header">
-        <!-- Solo el logo, centrado y limpio -->
-        <img src="/images/logo-fortuna.png" alt="FortunaBet" class="logo-img" style="height: 50px;">
-    </div>
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="/images/logo-fortuna.png" alt="FortunaBet" class="logo-img">
+            </div>
+
             <nav class="sidebar-nav">
-                <button class="nav-link active" onclick="switchTab('overview')"><i class="fa-solid fa-chart-pie"></i> Resumen</button>
+                <button class="nav-link active" onclick="switchTab('overview')">
+                    <i class="fa-solid fa-chart-pie"></i> Resumen
+                </button>
                 <button class="nav-link" onclick="switchTab('deposits')">
-                    <i class="fa-solid fa-money-bill-trend-up"></i> Depósitos
-                    <span id="badge-deposits" class="nav-badge hidden">0</span>
+                    <i class="fa-solid fa-wallet"></i> Depósitos
+                    <span id="badge-deposits" class="nav-badge" style="display: none;">0</span>
                 </button>
                 <button class="nav-link" onclick="switchTab('withdrawals')">
                     <i class="fa-solid fa-money-bill-transfer"></i> Retiros
-                    <span id="badge-withdrawals" class="nav-badge hidden">0</span>
+                    <span id="badge-withdrawals" class="nav-badge" style="display: none;">0</span>
                 </button>
-                <button class="nav-link" onclick="switchTab('users')"><i class="fa-solid fa-users"></i> Usuarios</button>
+                <button class="nav-link" onclick="switchTab('users')">
+                    <i class="fa-solid fa-users"></i> Usuarios
+                </button>
+                <a href="/" target="_blank" class="nav-link external-link">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Ir a la Web
+                </a>
             </nav>
-<div class="sidebar-footer">
-    <div class="user-card">
-        <div class="user-avatar-mini">
-            <i class="fa-solid fa-crown"></i>
-        </div>
-        <div class="user-info-mini">
-            <span class="role-text">Admin</span>
-            <span class="status-text">En línea <span class="dot-online"></span></span>
-        </div>
-        <button id="logout-btn" class="btn-mini-logout" title="Cerrar Sesión">
-            <i class="fa-solid fa-power-off"></i>
-        </button>
-    </div>
-</div>
-</aside>
 
+            <!-- TARJETA DE PERFIL -->
+            <div class="sidebar-footer">
+                <div class="user-card">
+                    <div class="user-avatar-mini">
+                        <i class="fa-solid fa-crown"></i>
+                    </div>
+                    <div class="user-info-mini">
+                        <span class="role-text">Administrador</span>
+                        <span class="status-text">En línea <span class="dot-online"></span></span>
+                    </div>
+                    <button id="logout-btn" class="btn-mini-logout" title="Cerrar Sesión">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CONTENIDO -->
         <main class="main-content">
-            <!-- SECCIÓN: RESUMEN -->
+            
+            <!-- 1. RESUMEN -->
             <section id="section-overview" class="content-section active">
                 <header class="top-bar">
                     <h1>Visión General</h1> 
-                    <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button>
+                    <div class="action-group">
+                        <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+                    </div>
                 </header>
                 
                 <div class="stats-grid">
-                    <div class="stat-card"><div class="icon bg-blue"><i class="fa-solid fa-users"></i></div><div><h3>Usuarios</h3><p id="stat-users">0</p></div></div>
-                    <div class="stat-card"><div class="icon bg-green"><i class="fa-solid fa-wallet"></i></div><div><h3>En Juego</h3><p id="stat-balance">Bs. 0.00</p></div></div>
-                    <div class="stat-card"><div class="icon bg-orange"><i class="fa-solid fa-clock"></i></div><div><h3>Pendientes</h3><p id="stat-pending">0</p></div></div>
+                    <div class="stat-card">
+                        <div class="icon bg-blue"><i class="fa-solid fa-users"></i></div>
+                        <div><h3>Total Usuarios</h3><p id="stat-users">0</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon bg-green"><i class="fa-solid fa-vault"></i></div>
+                        <div><h3>Dinero en Juego</h3><p id="stat-balance">Bs. 0.00</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon bg-orange"><i class="fa-solid fa-clock"></i></div>
+                        <div><h3>Pendientes</h3><p id="stat-pending">0</p></div>
+                    </div>
                 </div>
 
-                <!-- GRÁFICO DE INGRESOS (CON FILTRO DE AÑO) -->
-                <div class="panel chart-container" style="height: auto; background: var(--bg-panel);">
-                    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
-                        <h2><i class="fa-solid fa-chart-line"></i> Ingresos Mensuales</h2>
-                        <select id="revenue-year-filter" style="background: #111; color: white; border: 1px solid #333; padding: 5px 10px; border-radius: 5px; cursor:pointer;">
+                <!-- GRÁFICO -->
+                <div class="panel chart-container">
+                    <div class="panel-header">
+                        <h2>Ingresos Mensuales</h2>
+                        <select id="revenue-year-filter" class="chart-select">
                             <option value="2025" selected>2025</option>
                             <option value="2024">2024</option>
-                            <option value="2023">2023</option>
                         </select>
                     </div>
-                    <div style="height: 350px; padding: 15px;">
+                    <div style="height: 320px; width: 100%; position: relative;">
                         <canvas id="revenueChart"></canvas>
                     </div>
                 </div>
             </section>
 
-            <!-- SECCIÓN: DEPÓSITOS -->
-            <section id="section-deposits" class="content-section">
-                <header class="top-bar"><h1>Depósitos</h1> <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button></header>
-                <div class="panel"><table id="deposits-table"><thead><tr><th>Usuario</th><th>Monto</th><th>Ref</th><th>Fecha</th><th>Acción</th></tr></thead><tbody id="deposits-body"></tbody></table></div>
+            <!-- 2. DEPÓSITOS -->
+            <section id="section-deposits" class="content-section" style="display: none;">
+                <header class="top-bar">
+                    <h1>Depósitos</h1> 
+                    <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button>
+                </header>
+                <div class="panel">
+                    <table id="deposits-table">
+                        <thead><tr><th>Usuario</th><th>Monto</th><th>Ref</th><th>Fecha</th><th>Acción</th></tr></thead>
+                        <tbody id="deposits-body"></tbody>
+                    </table>
+                </div>
             </section>
             
-            <!-- SECCIÓN: RETIROS -->
-            <section id="section-withdrawals" class="content-section">
-                <header class="top-bar"><h1>Retiros</h1> <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button></header>
-                <div class="panel"><table id="withdrawals-table"><thead><tr><th>Usuario</th><th>Monto</th><th>Datos</th><th>Fecha</th><th>Acción</th></tr></thead><tbody id="withdrawals-body"></tbody></table></div>
+            <!-- 3. RETIROS -->
+            <section id="section-withdrawals" class="content-section" style="display: none;">
+                <header class="top-bar">
+                    <h1>Retiros</h1> 
+                    <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button>
+                </header>
+                <div class="panel">
+                    <table id="withdrawals-table">
+                        <thead><tr><th>Usuario</th><th>Monto</th><th>Datos</th><th>Fecha</th><th>Acción</th></tr></thead>
+                        <tbody id="withdrawals-body"></tbody>
+                    </table>
+                </div>
             </section>
 
-            <!-- SECCIÓN: USUARIOS -->
-            <section id="section-users" class="content-section">
-                <header class="top-bar"><h1>Usuarios</h1> <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button></header>
-                <div class="panel"><table id="users-table"><thead><tr><th>Usuario</th><th>Email</th><th>Saldo</th><th>Estado</th></tr></thead><tbody id="users-body"></tbody></table></div>
+            <!-- 4. USUARIOS -->
+            <section id="section-users" class="content-section" style="display: none;">
+                <header class="top-bar">
+                    <h1>Usuarios</h1> 
+                    <div class="action-group">
+                        <div class="search-box">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" placeholder="Buscar usuario...">
+                        </div>
+                        <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button>
+                    </div>
+                </header>
+                <div class="panel">
+                    <table id="users-table">
+                        <thead><tr><th>Usuario</th><th>Email</th><th>Cédula / Tlf</th><th>Saldo</th><th>Estado</th></tr></thead>
+                        <tbody id="users-body"></tbody>
+                    </table>
+                </div>
             </section>
 
         </main>
     </div>
 
-    <!-- SCRIPT -->
+    <!-- MODAL DE CONFIRMACIÓN -->
+    <div id="custom-confirm-modal" class="admin-overlay" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="confirm-title">Confirmar Acción</h3>
+                <p id="confirm-message">¿Estás seguro?</p>
+            </div>
+            
+            <textarea id="confirm-input" class="modal-input" style="display: none;" placeholder="Escribe el motivo..."></textarea>
+            
+            <div class="modal-actions">
+                <button id="btn-cancel-action" class="btn btn-secondary">Cancelar</button>
+                <button id="btn-confirm-action" class="btn btn-primary">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LÓGICA JS -->
     <script src="/js/admin-app.js" type="module"></script>
 </body>
 </html>
