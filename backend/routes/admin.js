@@ -141,10 +141,10 @@ router.get('/users/:userId/history', async (req, res) => {
         
         // Obtener apuestas
         const bets = await db.collection('bets')
-            .find({ oddserId: userObjectId })
-            .sort({ placedAt: -1 })
-            .limit(50)
-            .toArray();
+            .find({ userId: userObjectId })   // <--- CORRECCIÓN: debe ser 'userId'
+    .sort({ createdAt: -1 })          // <--- CORRECCIÓN: usar 'createdAt' para consistencia
+    .limit(50)
+    .toArray();
         
         res.status(200).json({
             user: {

@@ -401,8 +401,11 @@ body.login-mode .mobile-nav-bar { display: none !important; }
 
     /* Contenido principal */
     .main-content { 
-        padding: 70px 15px 25px 15px; width: 100%; max-width: 100vw;
-        min-height: calc(100vh - 56px); overflow-x: hidden;
+        padding: 70px 15px 25px 15px; 
+        width: 100vw;          /* Forzar ancho de ventana */
+        max-width: 100%; 
+        overflow-x: hidden;
+        margin: 0;
     }
     
     /* Top bar */
@@ -413,14 +416,26 @@ body.login-mode .mobile-nav-bar { display: none !important; }
     .search-box input { width: 100%; padding: 10px 10px 10px 38px; font-size: 0.9rem; }
     
     /* Stats grid */
-    .stats-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; width: 100%; }
-    .stat-card { padding: 14px 16px; flex-direction: row; text-align: left; gap: 15px; width: 100%; }
+    .stats-grid { 
+        grid-template-columns: 1fr; 
+        gap: 10px; 
+        margin-bottom: 20px; 
+        width: 100%; }
+
+      .stat-card { 
+        width: 100%;           /* Ocupar el 100% del padre */
+        box-sizing: border-box;
+        margin: 0;
+    }
     .stat-card h3 { font-size: 0.7rem; }
     .stat-card p { font-size: 1.25rem; }
     .stat-card .icon { width: 45px; height: 45px; font-size: 1.1rem; margin: 0; flex-shrink: 0; }
     
     /* Tablas */
-    .panel { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .panel { 
+        width: 100%; 
+        overflow-x: auto; 
+    }
     .panel-header { padding: 15px; }
     .panel-header h2 { font-size: 1rem; }
     table { min-width: 550px; }
