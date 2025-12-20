@@ -257,15 +257,33 @@ async function loadUserHistory(userId) {
         } else {
             betsBody.innerHTML = data.bets.map(bet => {
                 const statusColor = bet.status === 'won' ? '#10B981' : bet.status === 'pending' ? '#F59E0B' : '#EF4444';
-                return `
-                <tr>
-                    <td style="max-width:150px; overflow:hidden; text-overflow:ellipsis;">${bet.eventName || bet.selection || 'Evento'}</td>
-                    <td>${bet.selectionName || bet.outcome || '-'}</td>
-                    <td style="color:#10B981; font-weight:600;">${bet.odds?.toFixed(2) || '-'}</td>
-                    <td style="font-weight:600;">Bs. ${bet.stake?.toFixed(2) || bet.amount?.toFixed(2) || '0.00'}</td>
-                    <td><span style="background:${statusColor}20; color:${statusColor}; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">${(bet.status || 'pending').toUpperCase()}</span></td>
-                    <td>${new Date(bet.placedAt || bet.createdAt).toLocaleString('es-VE')}</td>
-                </tr>`;
+                let eventDisplay = '';
+    let selectionDisplay = '';
+    
+    if (bet.selections && bet.selections.length > 1) {
+        eventDisplay = `<span style="color:#A0AEC0">Parley (${bet.selections.length})</span>`;
+        selectionDisplay = 'Múltiple';
+    } else if (bet.selections && bet.selections.length === 1) {
+        // Apuesta simple
+        const sel = bet.selections[0];
+        // Intentamos limpiar el nombre (ej: "Real Madrid vs Barca - 1")
+        const parts = sel.team.split(' - ');
+        eventDisplay = parts[0] || sel.team;
+        selectionDisplay = parts[1] || 'Ganador';
+    } else {
+        eventDisplay = 'Desconocido';
+    }
+                    return `
+    <tr>
+        <td style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            ${eventDisplay}
+        </td>
+        <td>${selectionDisplay}</td>
+        <td style="color:#10B981; font-weight:600;">${bet.totalOdds?.toFixed(2) || '-'}</td>
+        <td style="font-weight:600;">Bs. ${bet.stake?.toFixed(2) || '0.00'}</td>
+        <td><span style="background:${statusColor}20; color:${statusColor}; padding:4px 8px; border-radius:20px; font-size:0.7rem; font-weight:700;">${(bet.status || 'pending').toUpperCase()}</span></td>
+        <td style="font-size:0.75rem; color:#9CA3AF;">${new Date(bet.createdAt).toLocaleDateString()}</td>
+    </tr>`;
             }).join('');
         }
         
