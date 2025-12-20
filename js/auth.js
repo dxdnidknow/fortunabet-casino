@@ -389,7 +389,7 @@ export async function fetchWithAuth(url, options = {}) {
         let responseData;
 if (contentType && contentType.indexOf("application/json") !== -1) {
             responseData = await response.json();
-        } else {
+        } else {    
          const text = await response.text();
             responseData = { message: text || `Error ${response.status}` };
         }
