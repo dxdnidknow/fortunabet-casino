@@ -402,7 +402,7 @@ body.login-mode .mobile-nav-bar { display: none !important; }
     /* Contenido principal */
     .main-content { 
         padding: 70px 15px 25px 15px; 
-        width: 100vw;          /* Forzar ancho de ventana */
+               /* Forzar ancho de ventana */
         max-width: 100%; 
         overflow-x: hidden;
         margin: 0;
