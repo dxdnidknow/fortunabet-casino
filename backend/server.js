@@ -32,7 +32,7 @@ app.use(helmet({
 // CORS - Configuración segura para producción
 const allowedOrigins = [
     process.env.FRONTEND_URL,
-    'https://fortunabet.netlify.app',
+    'https://fortunabetve.netlify.app',
     'http://localhost:5500',
     'http://127.0.0.1:5500',
     // Permitir entorno local con Live Server en 5501
