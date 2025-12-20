@@ -401,6 +401,10 @@ export async function fetchWithAuth(url, options = {}) {
 
     } catch (error) {
         console.error('Error en fetchWithAuth:', error);
+        // Si el error es de parseo JSON (404 HTML), mostrar mensaje más claro
+        if (error.message.includes('Unexpected token')) {
+            throw new Error('La API no está disponible o la ruta no existe');
+        }
         throw error;
     }
 }

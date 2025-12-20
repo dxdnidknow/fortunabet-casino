@@ -103,6 +103,69 @@ router.get('/users', async (req, res) => {
     }
 });
 
+// Historial de un usuario específico (transacciones y apuestas)
+router.get('/users/:userId/history', async (req, res) => {
+    const { userId } = req.params;
+    
+    if (!ObjectId.isValid(userId)) {
+        return res.status(400).json({ message: 'ID de usuario inválido.' });
+    }
+    
+    try {
+        const db = getDb();
+        const userObjectId = new ObjectId(userId);
+        
+        // Obtener datos del usuario
+        const user = await db.collection('users').findOne(
+            { _id: userObjectId },
+            { projection: { password: 0, otp: 0, otpExpires: 0 } }
+        );
+        
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+        
+        // Obtener transacciones (depósitos y retiros)
+        const transactions = await db.collection('transactions')
+            .find({ userId: userObjectId })
+            .sort({ createdAt: -1 })
+            .limit(50)
+            .toArray();
+        
+        // Obtener solicitudes de retiro
+        const withdrawalRequests = await db.collection('withdrawalRequests')
+            .find({ userId: userObjectId })
+            .sort({ requestedAt: -1 })
+            .limit(50)
+            .toArray();
+        
+        // Obtener apuestas
+        const bets = await db.collection('bets')
+            .find({ oddserId: userObjectId })
+            .sort({ placedAt: -1 })
+            .limit(50)
+            .toArray();
+        
+        res.status(200).json({
+            user: {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                balance: user.balance,
+                personalInfo: user.personalInfo,
+                isVerified: user.isVerified,
+                createdAt: user.createdAt
+            },
+            transactions,
+            withdrawalRequests,
+            bets
+        });
+    } catch (e) {
+        console.error('[ERROR] en users/:userId/history:', e);
+        res.status(500).json({ message: 'Error obteniendo historial del usuario.' });
+    }
+});
+
 // =======================================================================
 //  2. DEPÓSITOS
 // =======================================================================
@@ -212,30 +275,27 @@ router.post('/withdrawals/approve/:reqId', async (req, res) => {
             return res.status(404).json({ message: 'Solicitud no válida.' });
         }
 
-await db.collection('withdrawalRequests').updateOne(
-    { _id: request._id },
-    { $set: { 
-        status: 'rejected', 
-        rejectionReason: reason || 'Sin motivo especificado', // <--- ESTO ES CLAVE
-        processedBy: req.user.username, 
-        processedAt: new Date() 
-    }},
-    { session }
-);
+        await db.collection('withdrawalRequests').updateOne(
+            { _id: request._id },
+            { $set: { 
+                status: 'approved',
+                processedBy: req.user.username, 
+                processedAt: new Date() 
+            }},
+            { session }
+        );
         
-await db.collection('transactions').updateOne(
-    { _id: request.transactionId },
-    { $set: { 
-        status: 'rejected',
-        rejectionReason: reason || 'Sin motivo especificado' // <--- AGREGAR ESTA LÍNEA SI FALTA
-    }},
-    { session }
-);
+        await db.collection('transactions').updateOne(
+            { _id: request.transactionId },
+            { $set: { status: 'approved' }},
+            { session }
+        );
 
         await session.commitTransaction();
-        res.status(200).json({ message: 'Retiro completado.' });
+        res.status(200).json({ message: 'Retiro aprobado correctamente.' });
     } catch (e) {
         if (session.inTransaction()) await session.abortTransaction();
+        console.error('[ERROR] en withdrawals/approve:', e);
         res.status(500).json({ message: 'Error interno.' });
     } finally {
         await session.endSession();

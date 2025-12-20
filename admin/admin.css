@@ -30,8 +30,11 @@ body {
     background-color: var(--bg-body);
     color: var(--text-main);
     height: 100vh; width: 100vw;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     font-size: 0.95rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* Scrollbar */
@@ -44,61 +47,138 @@ body {
 .hidden { display: none !important; }
 
 /* ==========================================================================
-   LOGIN (ESTILO CASINO DARK)
+   LOGIN PREMIUM - DISEÑO MODERNO
    ========================================================================== */
 .login-container {
-    height: 100vh; width: 100vw;
-    display: flex; justify-content: center; align-items: center;
+    display: none;
+    flex-direction: column; justify-content: center; align-items: center;
+    min-height: 100vh; padding: 20px;
     background: #050505;
-    background-image: radial-gradient(circle at 50% 0%, #1a2e22 0%, transparent 70%);
-    padding: 20px;
+    background-image: 
+        radial-gradient(circle at 20% 20%, rgba(46, 204, 113, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(46, 204, 113, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, #0a0f0d 0%, #050505 100%);
+    position: relative; overflow: hidden;
 }
+
+/* Partículas decorativas */
+.login-container::before {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='1' fill='%2310B981' opacity='0.3'/%3E%3C/svg%3E");
+    background-size: 50px 50px;
+    animation: floatParticles 60s linear infinite;
+    pointer-events: none; opacity: 0.5;
+}
+@keyframes floatParticles { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 .login-card {
-    background: rgba(20, 20, 20, 0.9);
-    padding: 50px 40px;
-    width: 100%; max-width: 420px;
-    border-radius: 24px;
-    border: 1px solid rgba(46, 204, 113, 0.2);
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-    animation: fadeIn 0.6s var(--ease-out);
+    background: linear-gradient(145deg, rgba(20, 25, 30, 0.95) 0%, rgba(10, 12, 15, 0.98) 100%);
+    padding: 50px 40px; width: 100%; max-width: 440px;
+    border-radius: 28px; border: 1px solid rgba(46, 204, 113, 0.15);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 80px rgba(46, 204, 113, 0.08);
+    text-align: center; position: relative; overflow: hidden;
+    animation: cardAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(20px);
 }
+@keyframes cardAppear { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
+/* Borde superior brillante */
 .login-card::before {
-    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+    background: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%);
+}
+/* Efecto de brillo */
+.login-card::after {
+    content: ''; position: absolute; top: -100%; left: -100%;
+    width: 300%; height: 300%;
+    background: radial-gradient(circle, rgba(46,204,113,0.03) 0%, transparent 50%);
+    animation: rotateGlow 15s linear infinite;
+    pointer-events: none;
+}
+@keyframes rotateGlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Header con logo */
+.login-header { 
+    display: flex; flex-direction: column; align-items: center; 
+    margin-bottom: 35px; position: relative; z-index: 1;
+}
+.login-logo { 
+    height: 70px; object-fit: contain; 
+    filter: drop-shadow(0 0 20px rgba(46, 204, 113, 0.5)); 
+    transition: all 0.4s ease; margin-bottom: 20px;
+}
+.login-logo:hover { transform: scale(1.08); filter: drop-shadow(0 0 30px rgba(46, 204, 113, 0.7)); }
+
+.login-header h2 {
+    font-size: 1.5rem; color: #fff; font-weight: 700; margin: 0;
+    background: linear-gradient(135deg, #fff 0%, #a0aec0 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.login-header p {
+    color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;
 }
 
-.login-header { display: flex; justify-content: center; margin-bottom: 40px; }
-.login-logo { height: 80px; object-fit: contain; filter: drop-shadow(0 0 15px rgba(46, 204, 113, 0.4)); transition: transform 0.3s ease; }
-.login-logo:hover { transform: scale(1.05); }
-
+/* Inputs estilizados */
+.login-form { position: relative; z-index: 1; }
+.input-group { position: relative; margin-bottom: 20px; }
+.input-group i {
+    position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+    color: var(--text-muted); font-size: 1rem; transition: color 0.3s;
+}
 .login-card input {
-    width: 100%; padding: 16px 20px; margin-bottom: 20px;
-    background: #0a0a0a; border: 1px solid #333;
-    color: #fff; border-radius: 12px; font-size: 1rem;
+    width: 100%; padding: 16px 20px 16px 50px;
+    background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.08);
+    color: #fff; border-radius: 14px; font-size: 1rem;
     transition: all 0.3s ease;
 }
-.login-card input:focus { outline: none; border-color: var(--primary); background: #111; box-shadow: 0 0 0 4px var(--primary-soft); }
+.login-card input::placeholder { color: rgba(255,255,255,0.3); }
+.login-card input:focus { 
+    outline: none; border-color: var(--primary); 
+    background: rgba(0, 0, 0, 0.6); 
+    box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.15), 0 0 20px rgba(46, 204, 113, 0.1); 
+}
+.login-card input:focus + i, .input-group:focus-within i { color: var(--primary); }
 
-/* BOTÓN LOGIN MODERNO */
+/* Botón login premium */
 .login-card .btn-primary {
-    width: 100%; padding: 14px; font-size: 1rem; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 1px; color: #000;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
-    border: none; border-radius: 50px; /* Redondo */
-    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+    width: 100%; padding: 16px 24px; font-size: 1rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px; color: #000;
+    background: linear-gradient(135deg, var(--primary) 0%, #27ae60 100%);
+    border: none; border-radius: 14px;
+    box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
     cursor: pointer; transition: all 0.3s ease; margin-top: 10px;
+    position: relative; overflow: hidden;
 }
+.login-card .btn-primary::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s ease;
+}
+.login-card .btn-primary:hover::before { left: 100%; }
 .login-card .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(46, 204, 113, 0.6);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(46, 204, 113, 0.5);
 }
+.login-card .btn-primary:active { transform: translateY(-1px); }
 
-#error-message { color: var(--danger); background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; margin-top: 20px; font-size: 0.9rem; }
+/* Mensaje de error */
+#error-message { 
+    color: #ff6b6b; background: rgba(239, 68, 68, 0.1); 
+    padding: 14px 18px; border-radius: 12px; margin-top: 20px; 
+    font-size: 0.9rem; border: 1px solid rgba(239, 68, 68, 0.2);
+    display: flex; align-items: center; gap: 10px;
+}
+#error-message::before { content: '⚠'; font-size: 1.1rem; }
+
+/* Decoración inferior */
+.login-footer {
+    margin-top: 30px; padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    color: var(--text-muted); font-size: 0.8rem;
+}
+.login-footer a { color: var(--primary); text-decoration: none; }
+.login-footer a:hover { text-decoration: underline; }
 
 /* ==========================================================================
    2. LAYOUT PRINCIPAL
@@ -266,52 +346,141 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 15px; }
 
 /* ==========================================================================
-   5. DISEÑO MÓVIL (CORREGIDO Y BLINDADO)
+   5. DISEÑO MÓVIL (COMPACTO Y LEGIBLE)
    ========================================================================== */
-#admin-mobile-toggle, .mobile-nav-bar { display: none !important; }
-
-/* Ocultar menú en Login */
+#admin-mobile-toggle, .mobile-nav-bar { display: none; }
 body.login-mode .mobile-nav-bar { display: none !important; }
 
+/* === TABLET (768px) === */
 @media (max-width: 768px) {
-    /* Layout y Scroll */
-    .dashboard-layout { display: block !important; width: 100vw !important; overflow-x: hidden; }
+    html, body { overflow-x: hidden; }
     
-    /* Barra Superior Fija */
+    .dashboard-layout { display: block; width: 100%; max-width: 100vw; overflow-x: hidden; }
+    
+    /* Barra móvil superior */
     .mobile-nav-bar {
         display: flex !important; align-items: center; justify-content: space-between;
-        position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+        position: fixed; top: 0; left: 0; width: 100%; height: 56px;
         background: #111418; border-bottom: 1px solid var(--border-light);
-        z-index: 4000; padding: 0 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        z-index: 4000; padding: 0 15px;
     }
-    .mobile-brand { font-weight: 700; font-size: 1.1rem; }
+    .mobile-brand { font-weight: 700; font-size: 1rem; }
     .mobile-brand span { color: var(--primary); }
     
-    /* Botón Hamburguesa */
     #admin-mobile-toggle {
-        display: flex !important; background: transparent; border: none;
-        color: var(--text-main); font-size: 1.5rem; cursor: pointer; padding: 5px;
+        display: flex !important; align-items: center; justify-content: center;
+        background: var(--primary-soft); border: 1px solid rgba(16,185,129,0.3);
+        border-radius: 8px; color: var(--primary); font-size: 1.2rem;
+        cursor: pointer; padding: 8px 10px;
     }
 
-    /* Sidebar Deslizante (Z-Index Extremo) */
+    /* Sidebar móvil */
     .sidebar {
-        position: fixed; top: 60px; left: 0; height: calc(100vh - 60px); width: 260px;
-        background: #111418 !important; z-index: 9999 !important; /* Encima del overlay */
-        transform: translateX(-100%); transition: transform 0.3s ease;
-        padding-top: 20px; border-right: 1px solid var(--border-light);
-        display: flex !important;
+        position: fixed; top: 56px; left: 0; height: calc(100vh - 56px); width: 260px;
+        background: #111418; z-index: 9999; transform: translateX(-100%);
+        transition: transform 0.3s ease; display: flex; flex-direction: column;
+        box-shadow: 4px 0 25px rgba(0,0,0,0.6); overflow-y: auto;
     }
-    .sidebar.open { transform: translateX(0) !important; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar::before, .sidebar::after { display: none; }
+    
+    .sidebar-header { padding: 15px; border-bottom: 1px solid var(--border-light); }
+    .sidebar-header .logo-img { height: 38px; }
+    .sidebar-nav { padding: 10px; flex: 1; }
+    .nav-link { padding: 12px 15px; margin-bottom: 5px; border-radius: 8px; font-size: 0.95rem; }
+    .nav-link i { font-size: 1rem; margin-right: 10px; }
+    .sidebar-footer { padding: 15px; border-top: 1px solid var(--border-light); }
+    .user-card { padding: 10px; }
 
-    /* Overlay Especial Móvil (Debajo del sidebar) */
-    .admin-overlay { z-index: 8888 !important; }
+    /* Overlay */
+    .admin-overlay.menu-overlay { 
+        position: fixed; top: 56px; left: 0; width: 100%; height: calc(100vh - 56px);
+        z-index: 8888; background: rgba(0,0,0,0.7); display: none;
+    }
+    .admin-overlay.menu-overlay.active { display: block; }
 
-    /* Contenido Ajustado */
-    .main-content { padding: 80px 15px 40px 15px !important; width: 100vw !important; margin: 0 !important; }
-    .top-bar { flex-direction: column; align-items: flex-start; gap: 15px; }
-    .top-bar h1 { margin: 0; font-size: 1.6rem; }
-    .stats-grid { grid-template-columns: 1fr !important; }
-    .panel { overflow-x: auto; }
+    /* Contenido principal */
+    .main-content { 
+        padding: 70px 15px 25px 15px; width: 100%; max-width: 100vw;
+        min-height: calc(100vh - 56px); overflow-x: hidden;
+    }
+    
+    /* Top bar */
+    .top-bar { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 20px; }
+    .top-bar h1 { font-size: 1.3rem; }
+    .action-group { width: 100%; display: flex; gap: 10px; }
+    .search-box { flex: 1; }
+    .search-box input { width: 100%; padding: 10px 10px 10px 38px; font-size: 0.9rem; }
+    
+    /* Stats grid */
+    .stats-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; width: 100%; }
+    .stat-card { padding: 14px 16px; flex-direction: row; text-align: left; gap: 15px; width: 100%; }
+    .stat-card h3 { font-size: 0.7rem; }
+    .stat-card p { font-size: 1.25rem; }
+    .stat-card .icon { width: 45px; height: 45px; font-size: 1.1rem; margin: 0; flex-shrink: 0; }
+    
+    /* Tablas */
+    .panel { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .panel-header { padding: 15px; }
+    .panel-header h2 { font-size: 1rem; }
+    table { min-width: 550px; }
+    th, td { padding: 10px 8px; font-size: 0.85rem; white-space: nowrap; }
+    th { font-size: 0.75rem; }
+    
+    /* Botones */
+    .btn { padding: 10px 16px; font-size: 0.85rem; }
+    .btn-sm { padding: 8px 12px; font-size: 0.8rem; }
+    
+    /* Modal */
+    .admin-overlay:not(.menu-overlay) { padding: 15px; align-items: center; }
+    .modal-card { width: 100%; max-width: 400px; padding: 20px; border-radius: 14px; }
+    .modal-header h3 { font-size: 1.1rem; }
+    .modal-header p { font-size: 0.9rem; }
+    .modal-input { font-size: 0.9rem; min-height: 90px; padding: 12px; }
+    .modal-actions { flex-direction: column; gap: 10px; }
+    .modal-actions .btn { width: 100%; }
+    
+    /* Historial */
+    .history-tabs { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .history-tab-btn { flex: 1; min-width: 120px; padding: 10px; font-size: 0.85rem; }
+    .chart-container { padding: 15px 10px; }
+    .chart-select { padding: 8px 12px; font-size: 0.85rem; }
+}
+
+/* === MÓVIL (480px) === */
+@media (max-width: 480px) {
+    .mobile-nav-bar { height: 52px; padding: 0 12px; }
+    .mobile-brand { font-size: 0.95rem; }
+    
+    .sidebar { top: 52px; height: calc(100vh - 52px); width: 240px; }
+    .admin-overlay.menu-overlay { top: 52px; height: calc(100vh - 52px); }
+    
+    .main-content { padding: 62px 12px 20px 12px; }
+    .top-bar h1 { font-size: 1.15rem; }
+    
+    /* Stats 1 columna */
+    .stats-grid { grid-template-columns: 1fr; gap: 10px; }
+    .stat-card { flex-direction: row; text-align: left; gap: 12px; padding: 12px 15px; }
+    .stat-card .icon { margin: 0; width: 38px; height: 38px; }
+    .stat-card p { font-size: 1.2rem; }
+    .stat-card h3 { font-size: 0.7rem; }
+    
+    /* Login */
+    .login-container { padding: 15px; }
+    .login-card { padding: 25px 18px; width: 100%; max-width: none; }
+    .login-header h2 { font-size: 1.3rem; }
+    .login-header p { font-size: 0.9rem; }
+    .login-logo { height: 55px; margin-bottom: 20px; }
+    .login-card input { padding: 14px 14px 14px 45px; font-size: 16px; }
+    .input-group i { left: 15px; font-size: 1rem; }
+    .login-card .btn { padding: 14px; font-size: 0.9rem; }
+    .login-footer { font-size: 0.8rem; }
+    
+    /* Tablas */
+    table { min-width: 480px; }
+    th, td { padding: 8px 6px; font-size: 0.8rem; }
+    th { font-size: 0.7rem; }
+    .history-tab-btn { font-size: 0.8rem; padding: 8px 10px; }
 }
 
 /* Animaciones Keyframes */
@@ -320,3 +489,303 @@ body.login-mode .mobile-nav-bar { display: none !important; }
 @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes glow { 0%, 100% { box-shadow: 0 0 5px var(--primary); } 50% { box-shadow: 0 0 20px var(--primary), 0 0 30px var(--primary); } }
+@keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+
+/* ==========================================================================
+   6. MEJORAS PREMIUM - EFECTOS Y DETALLES
+   ========================================================================== */
+
+/* Efecto Glassmorphism para paneles */
+.panel-glass {
+    background: rgba(26, 31, 41, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradiente animado para bordes */
+.gradient-border {
+    position: relative;
+    background: var(--bg-panel);
+    border-radius: 16px;
+}
+.gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(45deg, var(--primary), #3B82F6, var(--primary), #8B5CF6);
+    background-size: 400% 400%;
+    border-radius: 18px;
+    z-index: -1;
+    animation: shimmer 3s ease infinite;
+}
+
+/* Stat Cards Mejoradas */
+.stat-card {
+    position: relative;
+    overflow: hidden;
+}
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+    pointer-events: none;
+}
+.stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.stat-card:hover::after {
+    opacity: 1;
+}
+
+/* Iconos con animación */
+.stat-card .icon {
+    transition: all 0.3s var(--ease-out);
+}
+.stat-card:hover .icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Tabla mejorada con filas alternas y hover */
+tbody tr {
+    transition: all 0.2s ease;
+}
+tbody tr:nth-child(even) {
+    background: rgba(0, 0, 0, 0.15);
+}
+tbody tr:hover {
+    background: rgba(16, 185, 129, 0.08) !important;
+    transform: scale(1.005);
+}
+
+/* Botones con efecto ripple */
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+}
+.btn:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* Badges animados */
+.nav-badge {
+    animation: pulse 2s infinite;
+}
+.nav-badge:not(.hidden) {
+    box-shadow: 0 0 10px var(--danger);
+}
+
+/* Sidebar mejorado */
+.sidebar {
+    background: linear-gradient(180deg, var(--bg-sidebar) 0%, #0a0d12 100%);
+}
+.sidebar-header {
+    position: relative;
+}
+.sidebar-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+}
+
+/* Logo con glow */
+.logo-img {
+    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.3));
+    transition: filter 0.3s ease;
+}
+.logo-img:hover {
+    filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.6));
+}
+
+/* Panel header con gradiente sutil */
+.panel-header {
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.05), transparent);
+    border-left: 3px solid var(--primary);
+}
+
+/* Chart container mejorado */
+.chart-container {
+    position: relative;
+    padding: 20px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 100%);
+    border-radius: 12px;
+}
+
+/* Gráfica con glow */
+#revenueChart {
+    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.2));
+}
+
+/* Números grandes con gradiente */
+.stat-card p {
+    background: linear-gradient(135deg, #fff 0%, #a0aec0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Hover en nav-links mejorado */
+.nav-link {
+    position: relative;
+    overflow: hidden;
+}
+.nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--primary-soft), transparent);
+    transition: width 0.3s ease;
+    z-index: -1;
+}
+.nav-link:hover::before {
+    width: 100%;
+}
+.nav-link.active::before {
+    width: 100%;
+}
+
+/* Tooltips elegantes */
+[data-tooltip] {
+    position: relative;
+}
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-5px);
+    background: #000;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-10px);
+}
+
+/* Estado de carga skeleton */
+.skeleton {
+    background: linear-gradient(90deg, var(--bg-panel) 25%, #252b36 50%, var(--bg-panel) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+}
+
+/* Toast notifications mejoradas */
+.toast-notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 16px 24px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10000;
+    animation: slideIn 0.3s var(--ease-out);
+}
+.toast-notification.success { border-left-color: var(--primary); }
+.toast-notification.error { border-left-color: var(--danger); }
+.toast-notification.warning { border-left-color: var(--warning); }
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Scrollbar con gradiente */
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #374151, #1f2937);
+}
+
+/* User card mejorada */
+.user-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+.user-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Main content con patrón sutil */
+.main-content {
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+        var(--bg-body);
+}
+
+/* Efecto de entrada para secciones */
+.content-section.active {
+    animation: fadeInScale 0.4s var(--ease-out);
+}
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Loading state para botones */
+.btn.loading {
+    pointer-events: none;
+    position: relative;
+    color: transparent !important;
+}
+.btn.loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}

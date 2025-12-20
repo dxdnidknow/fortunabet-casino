@@ -1,20 +1,119 @@
-# Dependencias de Node en la RAÍZ
-/node_modules
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║                    FORTUNABET - CONFIGURACIÓN DE GIT                         ║
+# ╠══════════════════════════════════════════════════════════════════════════════╣
+# ║  ✅ SE SUBE A GITHUB:                                                        ║
+# ║     • Todo el código fuente (HTML, CSS, JS)                                  ║
+# ║     • Imágenes y assets (images/, assets/)                                   ║
+# ║     • package.json y package-lock.json                                       ║
+# ║     • .env.example (plantilla SIN credenciales)                              ║
+# ║     • README.md y documentación                                              ║
+# ║     • Archivos de configuración (netlify.toml, etc.)                         ║
+# ║                                                                              ║
+# ║  ❌ NO SE SUBE A GITHUB (ignorado):                                          ║
+# ║     • .env (credenciales reales)                                             ║
+# ║     • node_modules/ (se instalan con npm install)                            ║
+# ║     • Logs y archivos temporales                                             ║
+# ║     • Archivos del sistema operativo                                         ║
+# ║     • Configuración del IDE personal                                         ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
 
-# Dependencias de Node en el BACKEND
-/backend/node_modules
+# ══════════════════════════════════════════════════════════════════════════════
+# 1. DEPENDENCIAS (NO SUBIR - se instalan con: npm install)
+# ══════════════════════════════════════════════════════════════════════════════
+node_modules/
+*/node_modules/
 
-# Archivos de entorno y secretos
+# ══════════════════════════════════════════════════════════════════════════════
+# 2. CREDENCIALES Y SECRETOS (NUNCA SUBIR - CRÍTICO DE SEGURIDAD)
+# ══════════════════════════════════════════════════════════════════════════════
+# El archivo .env contiene claves secretas (JWT, MongoDB, SendGrid, Twilio)
+# Usa .env.example como plantilla y crea tu propio .env localmente
 .env
+.env.local
+.env.development
+.env.production
+.env.*.local
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 3. SISTEMA OPERATIVO (archivos basura del SO)
+# ══════════════════════════════════════════════════════════════════════════════
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
 
-# Logs y Bases de datos
+# Windows
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 4. LOGS Y ERRORES (generados automáticamente)
+# ══════════════════════════════════════════════════════════════════════════════
 npm-debug.log*
+yarn-debug.log*
 yarn-error.log*
-*.sqlite
-/data
-/log
-/temp
+lerna-debug.log*
+logs/
+*.log
 
-# Configuración del Editor (Recomendado)
-/.vscode
+# ══════════════════════════════════════════════════════════════════════════════
+# 5. IDE Y EDITORES (configuración personal de cada desarrollador)
+# ══════════════════════════════════════════════════════════════════════════════
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*.swn
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 6. BUILD Y CACHE (archivos generados, se recrean automáticamente)
+# ══════════════════════════════════════════════════════════════════════════════
+dist/
+build/
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 7. TESTING Y COVERAGE
+# ══════════════════════════════════════════════════════════════════════════════
+coverage/
+.nyc_output/
+*.lcov
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 8. ARCHIVOS TEMPORALES
+# ══════════════════════════════════════════════════════════════════════════════
+*.tmp
+*.temp
+.tmp/
+temp/
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 9. BASES DE DATOS LOCALES (solo para desarrollo)
+# ══════════════════════════════════════════════════════════════════════════════
+*.sqlite
+*.sqlite3
+*.db
+data/
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 10. ESPECÍFICOS DEL PROYECTO FORTUNABET
+# ══════════════════════════════════════════════════════════════════════════════
+# Uploads de usuarios (si se implementa)
+backend/uploads/*
+!backend/uploads/.gitkeep

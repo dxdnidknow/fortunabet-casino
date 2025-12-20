@@ -1,9 +1,11 @@
-// Archivo: backend/server.js (CORREGIDO)
+// Archivo: backend/server.js (VERSIÓN SEGURA)
 
 require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
 const axios = require('axios');
 const NodeCache = require('node-cache');
 const { connectDB, getDb } = require('./db');
@@ -17,14 +19,47 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 const port = process.env.PORT || 3001; 
 
-// Middlewares
+// ==========================================
+//  MIDDLEWARES DE SEGURIDAD
+// ==========================================
+
+// Helmet - Headers de seguridad HTTP
+app.use(helmet({
+    contentSecurityPolicy: false, // Deshabilitado para permitir iframes de juegos
+    crossOriginEmbedderPolicy: false
+}));
+
+// CORS - Configuración segura para producción
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'https://fortunabet.netlify.app',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500'
+].filter(Boolean);
+
 const corsOptions = {
-    origin: '*', 
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type, Authorization',
+    origin: function (origin, callback) {
+        // Permitir requests sin origin (como apps móviles o Postman en desarrollo)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.warn(`[CORS] Origen bloqueado: ${origin}`);
+            callback(new Error('No permitido por CORS'));
+        }
+    },
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 };
 app.use(cors(corsOptions));
-app.use(express.json());
+
+// Parser JSON con límite de tamaño
+app.use(express.json({ limit: '10kb' }));
+
+// Sanitización contra NoSQL Injection
+app.use(mongoSanitize());
+
+// Trust proxy para rate limiting correcto en Render/Heroku
 app.set('trust proxy', 1);
 
 // Inicializar Caché

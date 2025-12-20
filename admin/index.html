@@ -20,10 +20,10 @@
 <body>
 
     <!-- BARRA MÓVIL -->
-    <div class="mobile-nav-bar" style="display: none;">
+    <div class="mobile-nav-bar">
         <button id="admin-mobile-toggle"><i class="fa-solid fa-bars"></i></button>
         <div class="mobile-brand">Fortuna<span>Bet</span> Admin</div>
-        <div style="width: 24px;"></div>
+        <div style="width: 40px;"></div>
     </div>
 
     <!-- VISTA LOGIN (VISIBLE POR DEFECTO) -->
@@ -31,13 +31,26 @@
         <div class="login-card">
             <div class="login-header">
                 <img src="/images/logo-fortuna.png" alt="FortunaBet" class="login-logo">
+                <h2>Panel de Administración</h2>
+                <p>Acceso exclusivo para administradores</p>
             </div>
-            <form id="login-form">
-                <input type="text" id="email" placeholder="Correo / Usuario" autocomplete="off" required>
-                <input type="password" id="password" placeholder="Contraseña" required>
-                <button type="submit" class="btn btn-primary btn-full">ENTRAR AL SISTEMA</button>
-                <p id="error-message" style="display: none; color: #e74c3c; margin-top: 10px;"></p>
+            <form id="login-form" class="login-form">
+                <div class="input-group">
+                    <input type="text" id="email" placeholder="Correo electrónico" autocomplete="off" required>
+                    <i class="fa-solid fa-envelope"></i>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Contraseña" required>
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
+                </button>
+                <p id="error-message" style="display: none;"></p>
             </form>
+            <div class="login-footer">
+                <p>© 2024 FortunaBet · <a href="/">Volver al sitio</a></p>
+            </div>
         </div>
     </div>
 
@@ -65,9 +78,6 @@
                 <button class="nav-link" onclick="switchTab('users')">
                     <i class="fa-solid fa-users"></i> Usuarios
                 </button>
-                <a href="/" target="_blank" class="nav-link external-link">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Ir a la Web
-                </a>
             </nav>
 
             <!-- TARJETA DE PERFIL -->
@@ -164,15 +174,80 @@
                     <div class="action-group">
                         <div class="search-box">
                             <i class="fa-solid fa-search"></i>
-                            <input type="text" placeholder="Buscar usuario...">
+                            <input type="text" id="user-search-input" placeholder="Buscar usuario...">
                         </div>
                         <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button>
                     </div>
                 </header>
                 <div class="panel">
                     <table id="users-table">
-                        <thead><tr><th>Usuario</th><th>Email</th><th>Cédula / Tlf</th><th>Saldo</th><th>Estado</th></tr></thead>
+                        <thead><tr><th>Usuario</th><th>Email</th><th>Cédula / Tlf</th><th>Saldo</th><th>Estado</th><th>Acciones</th></tr></thead>
                         <tbody id="users-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 5. HISTORIAL DE USUARIO (MODAL PANEL) -->
+            <section id="section-user-history" class="content-section" style="display: none;">
+                <header class="top-bar">
+                    <h1><i class="fa-solid fa-arrow-left" style="cursor:pointer; margin-right:15px;" onclick="window.switchTab('users')"></i> Historial de Usuario</h1>
+                    <button class="btn btn-secondary" onclick="window.switchTab('users')"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+                </header>
+
+                <!-- Info del usuario -->
+                <div class="stats-grid" style="margin-bottom: 25px;">
+                    <div class="stat-card">
+                        <div class="icon bg-blue"><i class="fa-solid fa-user"></i></div>
+                        <div>
+                            <h3>Usuario</h3>
+                            <p id="history-username" style="font-size: 1.2rem;">-</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon bg-green"><i class="fa-solid fa-wallet"></i></div>
+                        <div>
+                            <h3>Saldo Actual</h3>
+                            <p id="history-balance">Bs. 0.00</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon bg-orange"><i class="fa-solid fa-calendar"></i></div>
+                        <div>
+                            <h3>Registro</h3>
+                            <p id="history-created" style="font-size: 1rem;">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs de historial -->
+                <div class="history-tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn btn-primary history-tab-btn active" data-tab="transactions">
+                        <i class="fa-solid fa-money-bill-transfer"></i> Transacciones
+                    </button>
+                    <button class="btn btn-secondary history-tab-btn" data-tab="bets">
+                        <i class="fa-solid fa-dice"></i> Apuestas
+                    </button>
+                </div>
+
+                <!-- Panel de Transacciones -->
+                <div id="history-transactions" class="panel history-panel">
+                    <div class="panel-header">
+                        <h2><i class="fa-solid fa-receipt"></i> Transacciones</h2>
+                    </div>
+                    <table>
+                        <thead><tr><th>Tipo</th><th>Monto</th><th>Estado</th><th>Método</th><th>Fecha</th></tr></thead>
+                        <tbody id="history-transactions-body"></tbody>
+                    </table>
+                </div>
+
+                <!-- Panel de Apuestas -->
+                <div id="history-bets" class="panel history-panel" style="display: none;">
+                    <div class="panel-header">
+                        <h2><i class="fa-solid fa-ticket"></i> Apuestas</h2>
+                    </div>
+                    <table>
+                        <thead><tr><th>Evento</th><th>Selección</th><th>Cuota</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead>
+                        <tbody id="history-bets-body"></tbody>
                     </table>
                 </div>
             </section>

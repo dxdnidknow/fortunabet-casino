@@ -476,12 +476,25 @@ body.home-page .main-footer { display: block; }
    10. WIDGET DE AYUDA Y NOTIFICACIONES
    ========================================================================== */
 .help-trigger-btn { 
-    position: fixed; bottom: 20px !important; right: 15px !important; 
-    width: 55px; height: 55px; border-radius: 50%; 
-    background: var(--color-primary); color: #000; border: none; font-size: 1.8rem; 
-    display: flex; justify-content: center; align-items: center; cursor: pointer; 
-    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.5); z-index: var(--z-help-btn); 
-    transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease, visibility 0.3s ease; 
+    position: fixed !important; 
+    bottom: 20px !important; 
+    right: 15px !important; 
+    left: auto !important;
+    width: 55px; 
+    height: 55px; 
+    border-radius: 50%; 
+    background: var(--color-primary); 
+    color: #000; 
+    border: none; 
+    font-size: 1.8rem; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.5); 
+    z-index: 5000; 
+    transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+    overflow: hidden;
 }
 .help-trigger-btn:hover { transform: scale(1.1) rotate(10deg); background: var(--color-primary-light); box-shadow: 0 6px 20px rgba(46, 204, 113, 0.8); }
 
@@ -519,6 +532,74 @@ body.modal-open .help-trigger-btn {
 
 /* TOAST */
 .toast-notification { position: fixed; bottom: 80px; left: 50%; transform: translate(-50%, 100px); background-color: var(--color-primary); color: #000; padding: 15px 25px; border-radius: var(--border-radius-sm); z-index: var(--z-toast); font-weight: 600; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease; opacity: 0; width: 90%; max-width: 400px; text-align: center; }
+
+/* ==========================================================================
+   MODAL DE CONFIRMACIÓN ADMIN (DISEÑO PREMIUM)
+   ========================================================================== */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    z-index: 9999; display: flex; align-items: center; justify-content: center;
+    padding: 20px; animation: fadeInModal 0.3s ease;
+}
+@keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-content.admin-modal {
+    background: linear-gradient(145deg, #1a1f2e 0%, #12151c 100%);
+    border: 1px solid rgba(46, 204, 113, 0.2);
+    border-radius: 20px; padding: 40px 35px; max-width: 420px; width: 100%;
+    text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 40px rgba(46,204,113,0.1);
+    animation: scaleInModal 0.3s ease;
+}
+@keyframes scaleInModal { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.admin-modal .modal-icon {
+    width: 80px; height: 80px; margin: 0 auto 25px;
+    background: linear-gradient(135deg, rgba(46,204,113,0.2), rgba(46,204,113,0.05));
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    border: 2px solid rgba(46,204,113,0.3);
+}
+.admin-modal .modal-icon i {
+    font-size: 2.5rem; color: var(--color-primary);
+    animation: pulseIcon 2s infinite;
+}
+@keyframes pulseIcon { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+.admin-modal h3 {
+    font-size: 1.4rem; color: #fff; margin-bottom: 15px; font-weight: 700;
+}
+.admin-modal > p {
+    color: var(--color-text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;
+}
+.admin-modal .modal-info {
+    background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.2);
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 25px;
+    display: flex; align-items: center; gap: 10px; text-align: left;
+}
+.admin-modal .modal-info i { color: var(--color-primary); font-size: 1.1rem; }
+.admin-modal .modal-info span { color: var(--color-text-secondary); font-size: 0.85rem; }
+
+.admin-modal .modal-actions {
+    display: flex; gap: 12px; justify-content: center;
+}
+.admin-modal .modal-actions .btn {
+    flex: 1; padding: 14px 20px; font-weight: 600; border-radius: 10px; transition: all 0.2s;
+}
+.admin-modal .modal-actions .btn-secondary {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;
+}
+.admin-modal .modal-actions .btn-secondary:hover {
+    background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);
+}
+.admin-modal .modal-actions .btn-primary {
+    background: var(--color-primary); color: #000; border: none;
+    box-shadow: 0 4px 15px rgba(46,204,113,0.4);
+}
+.admin-modal .modal-actions .btn-primary:hover {
+    background: var(--color-primary-light); transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(46,204,113,0.5);
+}
+.admin-modal .modal-actions .btn-primary i { margin-right: 8px; }
 .toast-notification.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* ==========================================================================
@@ -666,81 +747,305 @@ body.user-logged-in .logged-out-only { display: none !important; }
 .win-amount { color: var(--color-success); font-weight: 700; }
 
 /* ==========================================================================
-   15. RESPONSIVIDAD Y MEDIA QUERIES
+   15. RESPONSIVIDAD Y MEDIA QUERIES (COMPACTO Y LEGIBLE)
    ========================================================================== */
+
+/* === TABLET GRANDE (1200px) === */
 @media (max-width: 1200px) {
-    .main-container { grid-template-columns: 280px 1fr; }
+    .main-container { grid-template-columns: 260px 1fr; }
     .bet-slip { display: none; } 
     #mobile-bet-notification { display: flex; } 
 }
 
+/* === TABLET (1024px) === */
 @media (max-width: 1024px) {
+    html, body { overflow-x: hidden; }
+    
+    /* Header móvil */
     .main-nav, .header-content .auth-wrapper { display: none; }
-    .mobile-header-buttons { display: flex; }
-    .mobile-menu-toggle { display: flex; }
-    .main-header { justify-content: space-between; align-items: center; }
-    .header-content { width: auto; }
-    .header-left { flex-grow: 0; }
-    .main-container { grid-template-columns: 1fr; min-height: 0; padding-bottom: 100px; }
+    .mobile-header-buttons, .mobile-menu-toggle { display: flex; }
+    .main-header { justify-content: space-between; align-items: center; padding: 0 15px; }
+    .header-content { width: 100%; }
+    
+    /* Layout */
+    .main-container { grid-template-columns: 1fr; padding: 15px; padding-bottom: 80px; }
+    .body-container, .page-container { width: 100%; padding: 0 10px; }
     .sports-nav:not(.sports-panel__nav) { display: none; }
-    .mobile-sports-trigger-container { display: block !important; margin-bottom: 20px; }
+    .mobile-sports-trigger-container { display: block !important; margin-bottom: 15px; }
     
-    .event-card { flex-direction: column; align-items: flex-start; }
-    .event-card__actions { width: 100%; display: flex; justify-content: space-between; margin-top: 5px; }
-    .event-card__odds { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-    .odds-button { width: 100%; min-width: auto; }
+    /* Event cards */
+    .event-card { flex-direction: column; align-items: stretch; }
+    .event-card__actions { width: 100%; display: flex; justify-content: space-between; margin-top: 8px; }
+    .event-card__odds { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+    .odds-button { width: 100%; padding: 10px 6px; }
     
-    .account-dashboard-grid { grid-template-columns: 1fr; }
-    .account-sidebar { position: static; margin-bottom: 30px; }
-    .account-content { padding: 25px; }
-        .account-menu #admin-panel-link {
-        display: none !important;
-    }
-    /* CUPÓN MÓVIL (Corrección Visual) */
+    /* Cuenta */
+    .account-dashboard-grid { grid-template-columns: 1fr; gap: 15px; }
+    .account-sidebar { position: static; margin-bottom: 10px; width: 100%; }
+    .user-info-card { padding: 15px; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; }
+    .user-info-card .user-avatar { font-size: 3rem; margin-bottom: 8px; }
+    .user-info-card h3 { font-size: 1.1rem; }
+    .user-info-card .user-balance { margin-bottom: 10px; }
+    .account-content { padding: 18px 15px; min-height: auto; }
+    .account-menu #admin-panel-link { display: none !important; }
+    .account-menu ul { flex-direction: row; overflow-x: auto; gap: 5px; padding: 8px; background: var(--color-surface-2); border-radius: 8px; -webkit-overflow-scrolling: touch; }
+    .account-menu ul::-webkit-scrollbar { display: none; }
+    .account-menu ul li { flex-shrink: 0; }
+    .account-menu ul a, .account-menu ul button { padding: 10px 14px; font-size: 0.85rem; white-space: nowrap; border-radius: 6px; gap: 8px; }
+    .account-menu ul i { display: none; }
+    
+    /* Cupón móvil */
     .bet-slip { 
-        display: none; 
-        position: fixed; bottom: 0; left: 0; width: 100%; height: 80vh; 
-        background-color: #1A1D24 !important; /* Fondo sólido */
-        z-index: var(--z-betslip-mobile); /* Encima de todo */
-        border-radius: 20px 20px 0 0; 
-        box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
-        border-top: 2px solid var(--color-primary);
-        top: auto; padding-top: 50px; max-height: none;
-        opacity: 1 !important;
+        display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 75vh; 
+        background: #1A1D24; z-index: var(--z-betslip-mobile);
+        border-radius: 16px 16px 0 0; box-shadow: 0 -8px 30px rgba(0,0,0,0.6);
+        border-top: 2px solid var(--color-primary); padding-top: 40px;
     }
-    .bet-slip.active { 
-        display: flex !important; 
-        animation: slideUpPanel 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    /* Ocultar barra verde cuando el cupón está abierto */
+    .bet-slip.active { display: flex !important; animation: slideUpPanel 0.3s ease-out; }
     body.modal-open #mobile-bet-notification { display: none !important; }
     
-    /* Subir el botón de ayuda en móvil */
-    .help-trigger-btn {
-        bottom: 15px !important; right: 10px !important;
-        z-index: 4900 !important; /* Debajo del cupón, encima del contenido */
-    }
+    .help-trigger-btn { bottom: 75px; right: 15px; width: 50px; height: 50px; font-size: 1.4rem; z-index: 4900; }
 }
 
+/* === MÓVIL (768px) === */
 @media (max-width: 768px) {
-    body { font-size: 15px; }
-    .game-slider-container { height: 350px; }
-    .slide-content { max-width: 80%; }
-    .slide-content h3 { font-size: 1.8rem; }
-    .slide-content p { font-size: 1rem; }
-    .main-container { padding: calc(var(--spacing-unit) * 2) 15px; }
-    .page-title { font-size: 2rem; }
+    body { font-size: 15px; overflow-x: hidden; }
     
-    .main-footer { padding: 40px 0 80px; }
-    .footer-links-grid { grid-template-columns: 1fr; text-align: center; gap: 30px; }
-    .footer-bottom-bar { padding-right: 0; padding-bottom: 80px; }
+    /* Slider */
+    .game-slider-container { height: 260px; min-height: 240px; }
+    .slide-content { max-width: 90%; padding: 20px; }
+    .slide-content h3 { font-size: 1.4rem; }
+    .slide-content p { font-size: 0.9rem; margin: 8px 0 15px 0; }
+    .slide-content .btn { padding: 10px 20px; font-size: 0.9rem; }
+    .slider-btn { width: 38px; height: 38px; font-size: 1.1rem; }
     
+    /* Layout */
+    .main-container { padding: 12px; }
+    .page-title { font-size: 1.5rem; margin-bottom: 20px; }
+    .main-header { padding: 0 12px; height: 58px; }
+    .logo img { height: 38px; }
+    
+    /* Event cards */
+    .event-card { padding: 12px; gap: 10px; }
+    .event-card__teams { font-size: 0.95rem; }
+    .league-header { padding: 10px 12px; }
+    .league-header h4 { font-size: 0.95rem; }
+    .odds-button { padding: 10px 8px; }
+    .odds-button span { font-size: 1rem; }
+    
+    /* Forms */
+    .auth-container { padding: 25px 18px; }
+    .form-group input, .form-group textarea, .form-group select { padding: 14px 12px; font-size: 16px; }
+    .btn { padding: 12px 18px; font-size: 0.95rem; }
+    .btn-cta { padding: 14px; font-size: 1rem; }
+    
+    /* Mi cuenta */
+    .account-content { padding: 18px 15px; min-height: auto; }
+    .account-section h2 { font-size: 1.3rem; margin-bottom: 18px; }
+    .quick-info-grid { gap: 15px; grid-template-columns: 1fr; }
+    .info-card { padding: 18px; }
+    .balance-amount { font-size: 1.8rem; }
+    .card-actions { flex-direction: column; gap: 10px; }
+    .card-actions .btn { width: 100%; }
+    .history-card-item { padding: 12px; }
+    .card { padding: 15px; }
+    
+    /* Footer */
+    .main-footer { padding: 30px 15px 90px; }
+    .footer-links-grid { grid-template-columns: 1fr; text-align: center; gap: 25px; }
+    .footer-bottom-bar { padding-bottom: 90px; }
     .form-grid { grid-template-columns: 1fr; }
+    
+    /* Casino */
+    .game-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .game-card { border-radius: 10px; }
+    .game-filters { gap: 8px; flex-wrap: wrap; }
+    .filter-btn { padding: 8px 14px; font-size: 0.85rem; }
+    
+    /* Match cards */
+    .featured-grid { grid-template-columns: 1fr; gap: 12px; }
+    .match-card { padding: 14px; }
+    .team-avatar { width: 42px; height: 42px; font-size: 1rem; }
+    .team-name { font-size: 0.85rem; }
+    .match-odds { gap: 8px; }
+    .odd-btn { padding: 8px 6px; }
+    .odd-value { font-size: 1rem; }
+    
+    /* Bonos y Juego Responsable */
+    .bonuses-grid { grid-template-columns: 1fr; gap: 15px; }
+    .bonus-card { padding: 20px 18px; }
+    .bonus-value { font-size: 1.5rem; }
+    .responsible-card { padding: 18px; }
+    .limits-form { gap: 15px; }
+    .limit-row { flex-wrap: wrap; gap: 10px; }
+    .limit-row label { font-size: 0.95rem; min-width: 90px; }
+    .limit-row input, .limit-row select { padding: 10px 12px; font-size: 0.95rem; flex: 1; max-width: 180px; }
+    .exclusion-options { gap: 10px; flex-wrap: wrap; }
+    .exclusion-options .btn { padding: 10px 14px; font-size: 0.85rem; }
+    
+    /* Mi cuenta 768px */
+    .account-content { padding: 20px 15px; }
+    .account-section h2 { font-size: 1.25rem; margin-bottom: 20px; }
+    .info-card { padding: 18px 15px; }
+    .balance-amount { font-size: 1.7rem; }
+    .form-grid { gap: 15px; }
+    
+    /* Modal */
+    .modal-overlay { padding: 20px; }
+    .modal-content.admin-modal { padding: 30px 22px; max-width: 100%; }
+    .admin-modal h3 { font-size: 1.3rem; }
+    .admin-modal .modal-icon { width: 70px; height: 70px; }
+    .admin-modal .modal-actions { flex-direction: column; }
+    .admin-modal .modal-actions .btn { width: 100%; }
 }
 
+/* === MÓVIL PEQUEÑO (480px) === */
 @media (max-width: 480px) {
-    .help-widget { bottom: 0; right: 0; width: 100%; max-width: 100%; height: 80vh; border-radius: 12px 12px 0 0; }
+    body { font-size: 14px; }
+    
+    .help-widget { bottom: 0; right: 0; left: 0; width: 100%; height: 80vh; border-radius: 14px 14px 0 0; }
+    
+    /* Slider */
+    .game-slider-container { height: 220px; min-height: 200px; }
+    .slide-content h3 { font-size: 1.2rem; }
+    .slide-content p { font-size: 0.85rem; }
+    .slide-content .btn { padding: 8px 16px; font-size: 0.85rem; }
+    
+    /* Header */
+    .main-header { height: 54px; padding: 0 10px; }
+    .logo img { height: 34px; }
+    .header-icon-btn { padding: 8px; font-size: 1.1rem; }
+    
+    /* Event cards */
+    .event-card { padding: 10px; }
+    .event-card__odds { gap: 6px; }
+    .odds-button { padding: 8px 5px; }
+    .odds-button span { font-size: 0.9rem; }
+    
+    /* Forms */
+    .auth-container { padding: 20px 15px; border-radius: 12px; }
+    .auth-header h2 { font-size: 1.4rem; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { font-size: 0.9rem; }
+    .form-group input { font-size: 16px; padding: 12px 10px; }
+    
+    /* Casino */
+    .game-grid { gap: 8px; }
+    .game-card-info { padding: 10px; }
+    .game-card-info h4 { font-size: 0.85rem; }
+    .game-card-info p { font-size: 0.75rem; }
+    
+    /* Mi cuenta - OPTIMIZADO */
+    .account-sidebar { margin-bottom: 12px; }
+    .user-info-card { padding: 15px 12px; margin-bottom: 12px; }
+    .user-info-card .user-avatar { font-size: 2.5rem; margin-bottom: 10px; }
+    .user-info-card h3 { font-size: 1rem; margin-bottom: 3px; }
+    .user-info-card .user-balance { font-size: 0.85rem; margin-bottom: 0; }
+    .account-content { padding: 15px 12px; }
+    .account-section h2 { font-size: 1.15rem; margin-bottom: 15px; padding-bottom: 10px; }
+    .account-section h2 i { font-size: 1rem; }
+    .account-section h3 { font-size: 1rem; }
+    .balance-amount { font-size: 1.5rem; }
+    .quick-info-grid { gap: 12px; }
+    .info-card { padding: 15px 12px; }
+    .info-card h3 { font-size: 0.9rem; margin-bottom: 10px; }
+    .info-card ul { gap: 12px; }
+    .link-action { font-size: 0.9rem; }
+    .card { padding: 15px 12px; }
+    .mt-40 { margin-top: 25px !important; }
+    .mt-30 { margin-top: 20px !important; }
+    .mt-20 { margin-top: 15px !important; }
+    
+    /* Menú cuenta scroll horizontal */
+    .account-menu ul { 
+        flex-direction: row; overflow-x: auto; 
+        gap: 4px; padding: 6px; -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; background: var(--color-surface-2); border-radius: 8px;
+    }
+    .account-menu ul::-webkit-scrollbar { display: none; }
+    .account-menu ul li { flex-shrink: 0; }
+    .account-menu ul a, .account-menu ul button { 
+        white-space: nowrap; padding: 10px 12px; font-size: 0.8rem; 
+        border-radius: 6px; gap: 8px;
+    }
+    .account-menu ul i { display: none; }
+    
+    /* Formularios en cuenta */
+    .form-grid { gap: 12px; }
+    .grid-span-2 { grid-column: auto; }
+    .btn-cta { padding: 12px; font-size: 0.9rem; }
+    
+    /* Historial */
+    .history-list { gap: 10px; }
+    .history-card-item { padding: 12px; }
+    .bet-card-header { font-size: 0.75rem; }
+    .bet-selection-row { font-size: 0.85rem; }
+    .bet-card-footer { font-size: 0.8rem; }
+    
+    /* Match cards */
+    .match-card { padding: 12px; }
+    .team-avatar { width: 36px; height: 36px; font-size: 0.9rem; }
+    .team-name { font-size: 0.8rem; }
+    
+    /* Botones */
+    .btn { padding: 11px 15px; font-size: 0.9rem; }
+    .btn-sm { padding: 8px 12px; font-size: 0.8rem; }
+    
+    /* Bonos - OPTIMIZADO */
+    .bonus-claim-card { padding: 15px 12px; }
+    .bonus-claim-card h3 { font-size: 1rem; margin-bottom: 12px; }
+    .bonuses-grid { gap: 12px; }
+    .bonus-card { padding: 15px 12px; }
+    .bonus-card h4 { font-size: 1rem; }
+    .bonus-value { font-size: 1.3rem; }
+    .bonus-desc { font-size: 0.85rem; margin-bottom: 12px; }
+    .bonus-code { font-size: 0.75rem; padding: 6px 12px; }
+    .bonus-badge { font-size: 0.6rem; padding: 4px 30px; right: -25px; top: 12px; }
+    .bonus-form .input-group-inline { flex-direction: column; gap: 10px; }
+    .bonus-form input { width: 100%; padding: 12px; }
+    .bonus-form .btn { width: 100%; }
+    
+    /* Juego responsable - OPTIMIZADO */
+    .section-intro { font-size: 0.9rem; margin-bottom: 18px; }
+    .responsible-card { padding: 15px 12px; }
+    .responsible-card h3 { font-size: 1rem; margin-bottom: 8px; }
+    .responsible-card h3 i { font-size: 0.95rem; }
+    .card-desc { font-size: 0.85rem; margin-bottom: 15px; }
+    .limits-form { gap: 12px; }
+    .limit-row { flex-direction: column; align-items: stretch; gap: 6px; }
+    .limit-row label { min-width: auto; font-size: 0.9rem; }
+    .limit-row input, .limit-row select { width: 100%; max-width: none; padding: 12px; font-size: 16px; }
+    .limit-row span { display: none; }
+    .toggle-row { flex-direction: row; justify-content: space-between; align-items: center; }
+    .switch { width: 46px; height: 24px; }
+    .slider:before { height: 18px; width: 18px; }
+    input:checked + .slider:before { transform: translateX(20px); }
+    
+    /* Autoexclusión */
+    .exclusion-options { gap: 8px; justify-content: center; }
+    .exclusion-options .btn, .btn-outline, .btn-danger-outline { 
+        flex: 1 1 calc(33% - 8px); min-width: 80px; padding: 10px 8px; font-size: 0.75rem; text-align: center;
+    }
+    .exclusion-warning { font-size: 0.8rem; padding: 10px 8px; }
+    
+    /* Recursos ayuda */
+    .help-resources { padding: 15px 12px; }
+    .help-resources h3 { font-size: 1rem; }
+    .help-resources p { font-size: 0.85rem; }
+    .resources-list li { padding: 8px 0; font-size: 0.85rem; }
+    
+    /* 2FA Status */
+    .twofa-status { padding: 0; }
+    .status-header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 15px; }
+    .status-header i { font-size: 1.8rem; }
+    .status-header h4 { font-size: 0.95rem; margin-bottom: 3px; }
+    .status-header p { font-size: 0.8rem; }
+    .warning-msg { font-size: 0.8rem; padding: 10px; background: rgba(241,196,15,0.1); border-radius: 6px; }
+    
+    /* Seguridad */
+    .security-card { padding: 15px 12px; }
+    .input-wrapper { position: relative; }
+    .toggle-password { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-text-secondary); padding: 5px; }
 }
 
 /* --- ANIMACIONES & NOTIFICACIÓN MÓVIL --- */
@@ -1051,3 +1356,592 @@ body.user-logged-in .logged-out-only { display: none !important; }
 .category-title {
     justify-content: space-between; /* Separa el nombre de la flechita */
 }
+
+/* ==========================================================================
+   16. MEJORAS PREMIUM - EFECTOS VISUALES CASINO
+   ========================================================================== */
+
+/* Animaciones adicionales */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+@keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 5px var(--color-primary); }
+    50% { box-shadow: 0 0 25px var(--color-primary), 0 0 40px rgba(46, 204, 113, 0.3); }
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+@keyframes border-dance {
+    0% { border-color: var(--color-primary); }
+    33% { border-color: #3B82F6; }
+    66% { border-color: #8B5CF6; }
+    100% { border-color: var(--color-primary); }
+}
+@keyframes text-glow {
+    0%, 100% { text-shadow: 0 0 10px var(--color-primary-glow); }
+    50% { text-shadow: 0 0 20px var(--color-primary-glow), 0 0 30px var(--color-primary-glow); }
+}
+
+/* Efecto Glassmorphism premium */
+.glass-card {
+    background: rgba(26, 29, 36, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradiente animado de fondo para secciones especiales */
+.gradient-bg {
+    background: linear-gradient(135deg, 
+        rgba(46, 204, 113, 0.05) 0%, 
+        rgba(59, 130, 246, 0.05) 50%, 
+        rgba(139, 92, 246, 0.05) 100%
+    );
+}
+
+/* Toast mejorado con tipos */
+.toast-notification {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    border-radius: 12px;
+    border-left: 4px solid var(--color-primary);
+}
+.toast-notification i {
+    font-size: 1.2rem;
+}
+.toast-success, .toast-notification.toast-success {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.95), rgba(39, 174, 96, 0.95));
+    border-left-color: #1abc9c;
+}
+.toast-error, .toast-notification.toast-error {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.95), rgba(192, 57, 43, 0.95));
+    border-left-color: #c0392b;
+    color: #fff;
+}
+.toast-warning, .toast-notification.toast-warning {
+    background: linear-gradient(135deg, rgba(241, 196, 15, 0.95), rgba(243, 156, 18, 0.95));
+    border-left-color: #e67e22;
+    color: #000;
+}
+.toast-info, .toast-notification.toast-info {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.95), rgba(41, 128, 185, 0.95));
+    border-left-color: #2980b9;
+    color: #fff;
+}
+
+/* Header mejorado con gradiente sutil */
+.main-header {
+    background: linear-gradient(180deg, 
+        rgba(26, 29, 36, 0.98) 0%, 
+        rgba(26, 29, 36, 0.95) 100%
+    );
+    border-bottom: 1px solid rgba(46, 204, 113, 0.2);
+}
+
+/* Logo con efecto glow */
+.logo img {
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 0 5px rgba(46, 204, 113, 0.3));
+}
+.logo img:hover {
+    filter: drop-shadow(0 0 15px rgba(46, 204, 113, 0.6));
+    transform: scale(1.02);
+}
+
+/* Navegación mejorada */
+.main-nav ul a {
+    position: relative;
+    padding: 12px 0;
+}
+.main-nav ul a::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+.main-nav ul a:hover::before,
+.main-nav ul a.active::before {
+    width: 100%;
+}
+
+/* Botones con efecto premium */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--color-primary) 0%, #27ae60 100%);
+    transition: all 0.3s ease;
+}
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+.btn-primary:hover::before {
+    left: 100%;
+}
+.btn-primary:hover {
+    box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
+}
+
+/* Event cards mejoradas */
+.event-card {
+    position: relative;
+    overflow: hidden;
+}
+.event-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.03) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+.event-card:hover::before {
+    opacity: 1;
+}
+.event-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(46, 204, 113, 0.1);
+}
+
+/* Odds buttons con efecto mejorado */
+.odds-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+.odds-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(46, 204, 113, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.4s ease;
+}
+.odds-button:hover::after {
+    width: 150%;
+    height: 150%;
+    opacity: 0;
+}
+.odds-button.selected {
+    animation: glow-pulse 2s infinite;
+}
+.odds-button span {
+    position: relative;
+    z-index: 1;
+}
+
+/* Sports nav mejorada */
+.sports-nav {
+    background: linear-gradient(180deg, var(--color-surface-1) 0%, rgba(26, 29, 36, 0.95) 100%);
+}
+.sports-nav li a {
+    position: relative;
+    overflow: hidden;
+}
+.sports-nav li a::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, rgba(46, 204, 113, 0.1), transparent);
+    transition: width 0.3s ease;
+}
+.sports-nav li a:hover::before {
+    width: 100%;
+}
+
+/* Game cards premium */
+.game-card {
+    position: relative;
+}
+.game-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(135deg, transparent, rgba(46, 204, 113, 0.3), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.game-card:hover::before {
+    opacity: 1;
+}
+.game-card:hover {
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(46, 204, 113, 0.15);
+}
+
+/* Slider mejorado */
+.game-slider-container {
+    position: relative;
+}
+.game-slider-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background: linear-gradient(to top, var(--color-background), transparent);
+    pointer-events: none;
+    z-index: 3;
+}
+.slide-content h3 {
+    animation: text-glow 3s ease-in-out infinite;
+}
+.slider-btn {
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+.slider-btn:hover {
+    transform: scale(1.1);
+}
+.dot.active {
+    box-shadow: 0 0 15px var(--color-primary);
+}
+
+/* Account dashboard mejorado */
+.account-content {
+    position: relative;
+    overflow: hidden;
+}
+.account-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(46, 204, 113, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+}
+.account-menu ul a {
+    position: relative;
+    overflow: hidden;
+}
+.account-menu ul a::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, rgba(46, 204, 113, 0.15), transparent);
+    transition: width 0.3s ease;
+}
+.account-menu ul a:hover::before {
+    width: 100%;
+}
+
+/* Balance card con efecto especial */
+.balance-amount {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: text-glow 3s ease-in-out infinite;
+}
+
+/* Info cards con hover premium */
+.info-card {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.info-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(46, 204, 113, 0.1) 0%, transparent 50%);
+    transform: rotate(45deg);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.info-card:hover::before {
+    opacity: 1;
+}
+.info-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(46, 204, 113, 0.3);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Modal mejorado */
+.modal-overlay {
+    backdrop-filter: blur(8px);
+}
+.auth-container {
+    position: relative;
+    overflow: hidden;
+}
+.auth-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), #3B82F6, var(--color-primary));
+    background-size: 200% 100%;
+    animation: shimmer 2s ease infinite;
+}
+
+/* Footer mejorado */
+.main-footer {
+    background: linear-gradient(180deg, #0b0d10 0%, #050607 100%);
+    position: relative;
+    overflow: hidden;
+}
+.main-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+}
+.footer-col h3::after {
+    transition: width 0.3s ease;
+}
+.footer-col:hover h3::after {
+    width: 60px;
+}
+
+/* Help widget premium */
+.help-trigger-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s ease infinite;
+}
+.help-widget {
+    border: 1px solid rgba(46, 204, 113, 0.2);
+}
+.help-widget__header {
+    background: linear-gradient(90deg, rgba(46, 204, 113, 0.1), transparent);
+    border-left: 3px solid var(--color-primary);
+}
+
+/* Mobile menu mejorado */
+.mobile-menu {
+    background: linear-gradient(180deg, var(--color-surface-1) 0%, #0b0d10 100%);
+}
+.mobile-menu-links a {
+    position: relative;
+    overflow: hidden;
+}
+.mobile-menu-links a::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, rgba(46, 204, 113, 0.1), transparent);
+    transition: width 0.3s ease;
+}
+.mobile-menu-links a:hover::before {
+    width: 100%;
+}
+
+/* Skeleton loading */
+.skeleton-loading {
+    background: linear-gradient(90deg, 
+        var(--color-surface-2) 25%, 
+        var(--color-surface-1) 50%, 
+        var(--color-surface-2) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--border-radius-sm);
+}
+
+/* Page transitions */
+.page-transition-enter {
+    opacity: 0;
+    transform: translateY(20px);
+}
+.page-transition-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.4s ease;
+}
+
+/* Selection highlight */
+::selection {
+    background: rgba(46, 204, 113, 0.3);
+    color: #fff;
+}
+
+/* Focus states mejorados */
+:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+}
+
+/* Scrollbar premium */
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #3a3f51, #242833);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--color-primary), #27ae60);
+}
+
+/* Input fields premium */
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.15), 0 0 20px rgba(46, 204, 113, 0.1);
+}
+
+/* Live indicator mejorado */
+.live-indicator {
+    position: relative;
+    overflow: hidden;
+}
+.live-indicator::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    width: 6px;
+    height: 6px;
+    background: #fff;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    animation: pulse 1s infinite;
+}
+
+/* Feature items con hover */
+.feature-item {
+    position: relative;
+    overflow: hidden;
+}
+.feature-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(46, 204, 113, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.feature-item:hover::before {
+    opacity: 1;
+}
+.feature-item i {
+    transition: all 0.3s ease;
+}
+.feature-item:hover i {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0 0 10px var(--color-primary-glow));
+}
+
+/* ==========================================================================
+   BONOS Y PROMOCIONES
+   ========================================================================== */
+.bonus-claim-card { background: linear-gradient(135deg, rgba(46,204,113,0.1), transparent); border: 1px solid rgba(46,204,113,0.2); }
+.bonus-claim-card h3 { margin-bottom: 15px; color: var(--color-primary); }
+.bonus-form .input-group-inline { display: flex; gap: 10px; }
+.bonus-form input { flex: 1; padding: 12px 15px; background: var(--color-background); border: 1px solid var(--color-border); border-radius: var(--border-radius-sm); color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+.bonus-form input:focus { border-color: var(--color-primary); }
+
+.bonuses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.bonus-card { background: var(--color-surface-1); border: 1px solid var(--color-border); border-radius: var(--border-radius-md); padding: 25px; position: relative; overflow: hidden; transition: all 0.3s ease; }
+.bonus-card:hover { transform: translateY(-5px); border-color: var(--color-primary); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+.bonus-card.welcome-bonus { background: linear-gradient(135deg, rgba(46,204,113,0.15), var(--color-surface-1)); border-color: rgba(46,204,113,0.3); }
+.bonus-badge { position: absolute; top: 15px; right: -30px; background: var(--color-primary); color: #000; padding: 5px 40px; font-size: 0.7rem; font-weight: 700; transform: rotate(45deg); }
+.bonus-card h4 { font-size: 1.1rem; margin-bottom: 10px; }
+.bonus-value { font-size: 1.5rem; font-weight: 700; color: var(--color-primary); margin-bottom: 5px; }
+.bonus-desc { color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: 15px; }
+.bonus-code { display: inline-block; background: var(--color-background); padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; color: var(--color-primary); font-family: monospace; }
+
+/* ==========================================================================
+   JUEGO RESPONSABLE
+   ========================================================================== */
+.section-intro { color: var(--color-text-secondary); margin-bottom: 25px; line-height: 1.6; }
+.responsible-card { border-left: 4px solid var(--color-primary); }
+.responsible-card h3 { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.responsible-card h3 i { color: var(--color-primary); }
+.card-desc { color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: 20px; }
+
+.limits-form { display: flex; flex-direction: column; gap: 15px; }
+.limit-row { display: flex; align-items: center; gap: 15px; }
+.limit-row label { min-width: 100px; color: var(--color-text-secondary); }
+.limit-row input, .limit-row select { flex: 1; padding: 10px 15px; background: var(--color-background); border: 1px solid var(--color-border); border-radius: var(--border-radius-sm); color: #fff; max-width: 200px; }
+.limit-row span { color: var(--color-text-secondary); font-size: 0.9rem; }
+.limit-row input:focus, .limit-row select:focus { border-color: var(--color-primary); }
+
+/* Toggle Switch */
+.switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--color-surface-2); border: 1px solid var(--color-border); transition: 0.3s; border-radius: 26px; }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 2px; background: #fff; transition: 0.3s; border-radius: 50%; }
+input:checked + .slider { background: var(--color-primary); border-color: var(--color-primary); }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* Danger Card */
+.danger-card { border-left-color: var(--color-loss); }
+.danger-card h3 i { color: var(--color-loss); }
+.exclusion-options { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+.btn-outline { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-primary); padding: 10px 20px; border-radius: var(--border-radius-sm); cursor: pointer; transition: all 0.2s; }
+.btn-outline:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.btn-danger-outline { background: transparent; border: 1px solid var(--color-loss); color: var(--color-loss); padding: 10px 20px; border-radius: var(--border-radius-sm); cursor: pointer; transition: all 0.2s; }
+.btn-danger-outline:hover { background: var(--color-loss); color: #fff; }
+.exclusion-warning { display: flex; align-items: center; gap: 10px; color: var(--color-pending); font-size: 0.85rem; margin-top: 15px; padding: 10px; background: rgba(241,196,15,0.1); border-radius: var(--border-radius-sm); }
+
+/* Help Resources */
+.help-resources { background: linear-gradient(135deg, rgba(46,204,113,0.05), transparent); }
+.help-resources h3 { color: var(--color-primary); }
+.resources-list { list-style: none; margin-top: 15px; }
+.resources-list li { padding: 10px 0; border-bottom: 1px solid var(--color-border); }
+.resources-list li:last-child { border-bottom: none; }
+.resources-list a { display: flex; align-items: center; gap: 8px; color: var(--color-primary); }
+.resources-list a:hover { text-decoration: underline; }
+
+/* Utility Classes */
+.mt-20 { margin-top: 20px; }
+.mt-30 { margin-top: 30px; }
+.toggle-row { justify-content: space-between; }

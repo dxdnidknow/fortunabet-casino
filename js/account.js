@@ -4,6 +4,7 @@ import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
 import { openModal, closeModal } from './modal.js';
 import { fetchWithAuth } from './auth.js';
+import { initBonusSection, initResponsibleGaming, init2FASection } from './responsible-gaming.js';
 
 // =======================================================================
 //  0. UTILIDADES Y VALIDACIONES
@@ -120,24 +121,54 @@ export async function loadUserData() {
             renderPhoneVerificationStatus(userData.personalInfo.isPhoneVerified, userData.personalInfo.phone);
         }
 
-        // --- LÓGICA DE ADMIN (MOSTRAR BOTÓN EN PC CON LOGOUT) ---
+        // --- LÓGICA DE ADMIN (MOSTRAR BOTÓN EN PC CON MODAL BONITO) ---
         if (userData.role === 'admin') {
             const desktopAdminLink = document.querySelector('#admin-panel-link');
             if (desktopAdminLink) {
                 desktopAdminLink.style.display = 'block';
                 
-                // Interceptar click para hacer logout antes de ir
+                // Interceptar click para mostrar modal de confirmación
                 const link = desktopAdminLink.querySelector('a');
                 if(link) {
                     link.onclick = (e) => {
                         e.preventDefault();
-                        if(confirm("Serás desconectado de tu cuenta para acceder al Panel Admin. ¿Continuar?")) {
-                            localStorage.removeItem('fortunaToken');
-                            localStorage.removeItem('fortunaUser');
-                            window.location.href = '/admin/index.html';
+                        const modal = document.getElementById('admin-confirm-modal');
+                        if(modal) {
+                            modal.style.display = 'flex';
+                            document.body.style.overflow = 'hidden';
                         }
                     };
                 }
+            }
+            
+            // Configurar botones del modal
+            const modalCancel = document.getElementById('admin-modal-cancel');
+            const modalConfirm = document.getElementById('admin-modal-confirm');
+            const modal = document.getElementById('admin-confirm-modal');
+            
+            if(modalCancel && modal) {
+                modalCancel.onclick = () => {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = '';
+                };
+            }
+            
+            if(modalConfirm) {
+                modalConfirm.onclick = () => {
+                    localStorage.removeItem('fortunaToken');
+                    localStorage.removeItem('fortunaUser');
+                    window.location.href = '/admin/index.html';
+                };
+            }
+            
+            // Cerrar al hacer clic fuera
+            if(modal) {
+                modal.onclick = (e) => {
+                    if(e.target === modal) {
+                        modal.style.display = 'none';
+                        document.body.style.overflow = '';
+                    }
+                };
             }
         }
         
@@ -694,6 +725,11 @@ export async function initAccountDashboard() {
     handlePasswordChange();
     handlePayoutMethodChange();
     handle2FASetup();
+    
+    // 4. Inicializar secciones de Bonos y Juego Responsable
+    initBonusSection();
+    initResponsibleGaming();
+    init2FASection();
 
     // 4. Delegación de eventos para la lista de métodos
     document.getElementById('payout-methods-list')?.addEventListener('click', async (e) => {

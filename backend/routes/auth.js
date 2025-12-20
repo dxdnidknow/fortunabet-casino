@@ -1,4 +1,4 @@
-// Archivo: backend/routes/auth.js (VERSIÓN FINAL)
+// Archivo: backend/routes/auth.js (VERSIÓN SEGURA CON VALIDACIÓN)
 
 const express = require('express');
 const bcrypt = require('bcrypt');
@@ -6,12 +6,12 @@ const jwt = require('jsonwebtoken');
 const sgMail = require('@sendgrid/mail');
 const rateLimit = require('express-rate-limit');
 const { ObjectId } = require('mongodb');
+const { validate, validateParamId } = require('../validators');
+const { generateOtp, getOtpExpiration, log } = require('../utils/helpers');
 
 const router = express.Router();
 
-// --- Constantes y Middlewares ---
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
-const usernameRegex = /^[a-zA-Z]{4,20}$/; // 4-20 letras, sin números/espacios
+// --- Constantes ---
 const JWT_SECRET = process.env.JWT_SECRET;
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -31,10 +31,6 @@ const resendOtpLimiter = rateLimit({
 });
 
 // --- Funciones de Utilidad ---
-function generateOtp() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
 async function sendVerificationEmail(email, otp) {
     const msg = {
         to: email,
@@ -61,29 +57,28 @@ async function sendVerificationEmail(email, otp) {
 // =======================================================================
 
 // POST /api/register
-router.post('/register', authLimiter, async (req, res) => {
+router.post('/register', authLimiter, validate('register'), async (req, res) => {
     try {
         const { username, email, password } = req.body;
         const db = req.db;
 
-        if (!username || !email || !password) return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
-        if (!usernameRegex.test(username)) return res.status(400).json({ message: 'El usuario debe tener entre 4 y 20 letras, sin números ni espacios.' });
-        if (!passwordRegex.test(password)) return res.status(400).json({ message: 'La contraseña no cumple con los requisitos de seguridad.' });
-
         const usersCollection = db.collection('users');
-        const existingUser = await usersCollection.findOne({ $or: [{ email: email.toLowerCase() }, { username: username }] });
+        const existingUser = await usersCollection.findOne({ 
+            $or: [{ email: email }, { username: username }] 
+        });
+        
         if (existingUser) {
             return res.status(409).json({ message: 'Este correo electrónico o nombre de usuario ya está registrado.' });
         }
         
-        const salt = await bcrypt.genSalt(10);
+        const salt = await bcrypt.genSalt(12); // Aumentado a 12 rounds para mayor seguridad
         const hashedPassword = await bcrypt.hash(password, salt);
         const otp = generateOtp();
-        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+        const otpExpires = getOtpExpiration(10);
 
         await usersCollection.insertOne({
             username,
-            email: email.toLowerCase(),
+            email: email, // Ya viene en lowercase del validador
             password: hashedPassword,
             balance: 0,
             role: "user",
@@ -94,11 +89,12 @@ router.post('/register', authLimiter, async (req, res) => {
             personalInfo: {}, 
         });
 
-        await sendVerificationEmail(email.toLowerCase(), otp);
+        await sendVerificationEmail(email, otp);
+        log('info', 'AUTH', `Nuevo registro: ${username}`);
         res.status(200).json({ message: 'Registro exitoso. Se ha enviado un código de verificación a tu correo.' });
 
     } catch (error) {
-        console.error('[ERROR] en /api/register:', error);
+        log('error', 'AUTH', 'Error en registro', error.message);
         res.status(500).json({ message: 'Error interno del servidor al registrar.' });
     }
 });
@@ -184,11 +180,10 @@ router.post('/resend-otp', resendOtpLimiter, async (req, res) => {
 });
 
 // POST /api/login
-router.post('/login', authLimiter, async (req, res) => {
+router.post('/login', authLimiter, validate('login'), async (req, res) => {
     try {
         const { identifier, password } = req.body;
         const db = req.db;
-        if (!identifier || !password) return res.status(400).json({ message: 'El identificador y la contraseña son obligatorios.' });
 
         const user = await db.collection('users').findOne({
             $or: [{ email: identifier.toLowerCase() }, { username: identifier }]
@@ -199,7 +194,7 @@ router.post('/login', authLimiter, async (req, res) => {
         // Verificación de cuenta activada
         if (!user.isVerified) {
             const newOtp = generateOtp();
-            const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+            const otpExpires = getOtpExpiration(10);
             await db.collection('users').updateOne({ _id: user._id }, { $set: { otp: newOtp, otpExpires: otpExpires } });
             await sendVerificationEmail(user.email, newOtp);
             
@@ -216,13 +211,14 @@ router.post('/login', authLimiter, async (req, res) => {
         const payload = { id: user._id.toString(), username: user.username, email: user.email, role: user.role };
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
         
+        log('info', 'AUTH', `Login exitoso: ${user.username}`);
         res.status(200).json({
             message: 'Inicio de sesión exitoso.',
             token: token,
             user: { username: user.username, email: user.email, role: user.role }
         });
     } catch (error) {
-        console.error('[ERROR] en el inicio de sesión:', error);
+        log('error', 'AUTH', 'Error en login', error.message);
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
