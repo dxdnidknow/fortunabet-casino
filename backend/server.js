@@ -45,20 +45,24 @@ const allowedOrigins = [
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Permitir requests sin origin (como apps móviles o Postman en desarrollo)
-        if (!origin || allowedOrigins.includes(origin)) {
+        // Permitir solicitudes sin origen (como Postman o aplicaciones móviles)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
-            console.warn(`[CORS] Origen bloqueado: ${origin}`);
+            console.log(`[CORS BLOQUEADO] Origen intentando conectar: ${origin}`);
             callback(new Error('No permitido por CORS'));
         }
     },
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    // IMPORTANTE: Agregamos 'OPTIONS' aquí
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    credentials: true,
+    optionsSuccessStatus: 204 // Para navegadores antiguos/IE
 };
 app.use(cors(corsOptions));
-
+app.options('*', cors(corsOptions));
 // Parser JSON con límite de tamaño
 app.use(express.json({ limit: '10kb' }));
 
