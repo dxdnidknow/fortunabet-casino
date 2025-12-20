@@ -1,28 +1,34 @@
-// Archivo: js/help-widget.js (NUEVO)
+// Archivo: js/help-widget.js (VERSIÓN RECONSTRUIDA)
 
 function handleFaqAccordion(event) {
     const question = event.target.closest('.faq-question');
     if (!question) return;
 
-    const faqItem = question.parentElement;
     const answer = question.nextElementSibling;
     const isActive = question.classList.contains('active');
 
-    // Cierra todos los demás para que solo uno esté abierto a la vez
+    // Cierra todos los demás
     document.querySelectorAll('.faq-question.active').forEach(q => {
         if (q !== question) {
             q.classList.remove('active');
-            q.nextElementSibling.style.maxHeight = null;
+            const ans = q.nextElementSibling;
+            if (ans) {
+                ans.style.maxHeight = null;
+            }
         }
     });
 
     // Abre o cierra el actual
     if (!isActive) {
         question.classList.add('active');
-        answer.style.maxHeight = answer.scrollHeight + 'px';
+        if (answer) {
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+        }
     } else {
         question.classList.remove('active');
-        answer.style.maxHeight = null;
+        if (answer) {
+            answer.style.maxHeight = null;
+        }
     }
 }
 
@@ -43,27 +49,73 @@ function handleFaqSearch(event) {
 }
 
 export function initHelpWidget() {
-    const trigger = document.querySelector('.help-trigger-btn');
-    const widget = document.getElementById('help-widget');
-    const closeBtn = document.querySelector('.close-widget-btn');
-    const faqList = document.getElementById('faq-list');
-    const searchInput = document.getElementById('faq-search');
+    // Esperar a que el DOM esté listo
+    const init = () => {
+        const trigger = document.querySelector('.help-trigger-btn');
+        const widget = document.getElementById('help-widget');
+        const closeBtn = document.querySelector('.close-widget-btn');
+        const faqList = document.getElementById('faq-list');
+        const searchInput = document.getElementById('faq-search');
 
-    if (!trigger || !widget) return;
+        if (!trigger || !widget) {
+            setTimeout(init, 100);
+            return;
+        }
 
-    trigger.addEventListener('click', () => {
-        widget.classList.toggle('is-open');
-    });
-
-    closeBtn.addEventListener('click', () => {
+        // Estado inicial
         widget.classList.remove('is-open');
-    });
+        trigger.setAttribute('aria-expanded', 'false');
 
-    if (faqList) {
-        faqList.addEventListener('click', handleFaqAccordion);
-    }
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', handleFaqSearch);
-    }
+        const openWidget = () => {
+            widget.classList.add('is-open');
+            trigger.setAttribute('aria-expanded', 'true');
+        };
+
+        const closeWidget = () => {
+            widget.classList.remove('is-open');
+            trigger.setAttribute('aria-expanded', 'false');
+        };
+
+        // Event listeners
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            widget.classList.contains('is-open') ? closeWidget() : openWidget();
+        });
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeWidget();
+            });
+        }
+
+        if (faqList) {
+            faqList.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleFaqAccordion(e);
+            });
+        }
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', handleFaqSearch);
+        }
+
+        // Cerrar al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (widget.classList.contains('is-open') && 
+                !widget.contains(e.target) && 
+                !trigger.contains(e.target)) {
+                closeWidget();
+            }
+        });
+
+        // Cerrar con Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && widget.classList.contains('is-open')) {
+                closeWidget();
+            }
+        });
+    };
+
+    init();
 }

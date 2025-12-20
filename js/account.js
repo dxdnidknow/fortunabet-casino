@@ -23,6 +23,63 @@ function isOver18(dateString) {
     return age >= 18;
 }
 
+function initAccountMobileNav() {
+    const toggleBtn = document.querySelector('.account-mobile-toggle');
+    const menu = document.querySelector('.account-menu');
+    if (!toggleBtn || !menu) return;
+
+    const toggleMenu = () => {
+        const isOpen = menu.classList.toggle('is-open');
+        const sidebar = menu.closest('.account-sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('sidebar-open', isOpen);
+        }
+        toggleBtn.setAttribute('aria-expanded', String(isOpen));
+        
+        // Rotar el icono
+        const icon = toggleBtn.querySelector('.fa-chevron-down');
+        if (icon) {
+            icon.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0)';
+        }
+    };
+
+    toggleBtn.addEventListener('click', toggleMenu);
+
+    // Cerrar menú al hacer clic en un enlace
+    menu.addEventListener('click', (event) => {
+        if (window.innerWidth <= 768 && event.target.closest('.account-menu-link[data-target]')) {
+            menu.classList.remove('is-open');
+            const sidebar = menu.closest('.account-sidebar');
+            if (sidebar) {
+                sidebar.classList.remove('sidebar-open');
+            }
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            
+            const icon = toggleBtn.querySelector('.fa-chevron-down');
+            if (icon) {
+                icon.style.transform = 'rotate(0)';
+            }
+        }
+    });
+
+    // Asegurar que el menú esté cerrado en pantallas grandes
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            menu.classList.remove('is-open');
+            const sidebar = menu.closest('.account-sidebar');
+            if (sidebar) {
+                sidebar.classList.remove('sidebar-open');
+            }
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            
+            const icon = toggleBtn.querySelector('.fa-chevron-down');
+            if (icon) {
+                icon.style.transform = 'rotate(0)';
+            }
+        }
+    });
+}
+
 function formatPhoneNumber(event) {
     const input = event.target;
     let value = input.value.replace(/\D/g, '');
@@ -124,50 +181,31 @@ export async function loadUserData() {
         // --- LÓGICA DE ADMIN (MOSTRAR BOTÓN EN PC CON MODAL BONITO) ---
         if (userData.role === 'admin') {
             const desktopAdminLink = document.querySelector('#admin-panel-link');
+            const adminModal = document.getElementById('admin-confirm-modal');
             if (desktopAdminLink) {
                 desktopAdminLink.style.display = 'block';
-                
-                // Interceptar click para mostrar modal de confirmación
                 const link = desktopAdminLink.querySelector('a');
-                if(link) {
+                if(link && adminModal) {
                     link.onclick = (e) => {
                         e.preventDefault();
-                        const modal = document.getElementById('admin-confirm-modal');
-                        if(modal) {
-                            modal.style.display = 'flex';
-                            document.body.style.overflow = 'hidden';
-                        }
+                        openModal(adminModal);
                     };
                 }
             }
             
-            // Configurar botones del modal
             const modalCancel = document.getElementById('admin-modal-cancel');
             const modalConfirm = document.getElementById('admin-modal-confirm');
-            const modal = document.getElementById('admin-confirm-modal');
             
-            if(modalCancel && modal) {
-                modalCancel.onclick = () => {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = '';
-                };
+            if(modalCancel && adminModal) {
+                modalCancel.onclick = () => closeModal(adminModal);
             }
             
-            if(modalConfirm) {
+            if(modalConfirm && adminModal) {
                 modalConfirm.onclick = () => {
+                    closeModal(adminModal);
                     localStorage.removeItem('fortunaToken');
                     localStorage.removeItem('fortunaUser');
                     window.location.href = '/admin/index.html';
-                };
-            }
-            
-            // Cerrar al hacer clic fuera
-            if(modal) {
-                modal.onclick = (e) => {
-                    if(e.target === modal) {
-                        modal.style.display = 'none';
-                        document.body.style.overflow = '';
-                    }
                 };
             }
         }
@@ -712,6 +750,7 @@ export async function initAccountDashboard() {
     
     // 1. Iniciamos la lógica visual (Pestañas) PRIMERO
     initTabs();
+    initAccountMobileNav();
 
     // 2. Iniciamos la carga de datos (Asíncrona)
     loadUserData();

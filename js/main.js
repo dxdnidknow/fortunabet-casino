@@ -8,18 +8,69 @@ import { fetchLiveEvents, fetchEventDetails } from './api.js';
 import { initAuth } from './auth.js';
 import { initAccountDashboard } from './account.js';
 import { sportTranslations } from './translations.js';
-import { initPaymentModals } from './payments.js'; 
+import { initPaymentModals } from './payments.js';
 import { initHelpWidget } from './help-widget.js';
-import { showToast } from './ui.js'; 
+import { showToast } from './ui.js';
+
+// --- UTILIDADES GLOBALES ---
+const select = (selector, scope = document) => scope.querySelector(selector);
+const selectAll = (selector, scope = document) => scope.querySelectorAll(selector);
+const setHTML = (el, html) => {
+    if (el) el.innerHTML = html;
+};
+const toggleBodyState = (state, shouldEnable) => {
+    document.body.classList.toggle(state, shouldEnable);
+};
+const showErrorToast = (message, error, shouldToast = true) => {
+    console.error(message, error);
+    if (shouldToast) showToast(message, 'error');
+};
+const isOnPage = (name) => window.location.pathname.includes(name);
+const isUserLoggedIn = () => Boolean(localStorage.getItem('fortunaUser'));
+
+const CACHE_TTL_MS = 60 * 1000;
+const FAVORITES_STORAGE_KEY = 'fortunaFavorites';
+
+const LOADERS = {
+    spinner: '<div class="loader-container"><div class="spinner"></div></div>',
+    empty: (message) => `
+        <div class="initial-message">
+            <i class="fa-solid fa-circle-info"></i>
+            <p>${message}</p>
+        </div>
+    `
+};
+
+const state = {
+    eventsCache: new Map(),
+    currentSportKey: null,
+    isFetchingEvents: false,
+    isFetchingDetails: false
+};
+
+const safeJsonFetch = async (url, options = {}) => {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        throw new Error(errorText || `Error ${response.status}`);
+    }
+    return response.json();
+};
+
+const setLoader = (container, message = null) => {
+    if (!container) return;
+    container.innerHTML = message ? LOADERS.empty(message) : LOADERS.spinner;
+};
 
 // --- ESTADO GLOBAL Y UTILIDADES ---
-let favorites = JSON.parse(localStorage.getItem('fortunaFavorites')) || [];
+let favorites = JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY)) || [];
 
 function updateFavoritesUI() {
     document.querySelectorAll('.favorite-btn').forEach(btn => {
         const eventId = btn.dataset.eventId;
         const isFavorited = favorites.includes(eventId);
         btn.classList.toggle('favorited', isFavorited);
+        btn.setAttribute('aria-pressed', String(isFavorited));
         const icon = btn.querySelector('i');
         if (icon) {
             icon.classList.toggle('fa-solid', isFavorited);
@@ -27,6 +78,32 @@ function updateFavoritesUI() {
         }
     });
 }
+
+const persistFavorites = () => {
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+};
+
+const toggleFavorite = (eventId) => {
+    if (!eventId) return;
+    const alreadyExists = favorites.includes(eventId);
+    favorites = alreadyExists ? favorites.filter(id => id !== eventId) : [...favorites, eventId];
+    persistFavorites();
+    updateFavoritesUI();
+    showToast(
+        alreadyExists ? 'Evento eliminado de favoritos' : 'Evento agregado a favoritos',
+        alreadyExists ? 'info' : 'success'
+    );
+};
+
+const initFavorites = () => {
+    updateFavoritesUI();
+    window.addEventListener('storage', (event) => {
+        if (event.key === FAVORITES_STORAGE_KEY) {
+            favorites = JSON.parse(event.newValue) || [];
+            updateFavoritesUI();
+        }
+    });
+};
 
 function updateSelectedOddsUI() {
     const currentBets = getBets();
@@ -182,9 +259,22 @@ function switchView(viewToShow) {
 function handleActiveNav() {
     const navLinks = document.querySelectorAll('.main-nav ul a, #mobile-menu a');
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    
     navLinks.forEach(link => {
-        if (link.getAttribute('href')?.endsWith(currentPage)) {
+        const href = link.getAttribute('href');
+        
+        // Solo marcar como activo si el href coincide exactamente con la página actual
+        // Excluir enlaces externos, de admin, y otros especiales
+        if (href && 
+            href.endsWith(currentPage) && 
+            !href.includes('admin') && 
+            !href.includes('#') &&
+            !href.includes('http') &&
+            href !== '#' &&
+            currentPage !== 'index.html' || (currentPage === 'index.html' && href === './index.html' || href === '/index.html' || href === 'index.html')) {
             link.classList.add('active');
+        } else {
+            link.classList.remove('active');
         }
     });
 }
@@ -304,9 +394,11 @@ async function initSportsNav() {
         if (sportsPanelNav) {
             sportsPanelNav.innerHTML = content;
         }
-
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+        console.error(error); 
+    }
 }
+
 
 function handleSearch(searchTerm) {
     const term = searchTerm.toLowerCase().trim();
@@ -716,6 +808,17 @@ async function main() {
     document.body.classList.remove('modal-open', 'panel-open');
     
     await initSharedComponents();
+    handleActiveNav();
+    // Asegura que ningún modal quede abierto por defecto al cargar componentes
+    document.querySelectorAll('.modal-overlay')?.forEach(m => m.classList.remove('active'));
+    document.body.classList.remove('modal-open');
+    
+    // Asegurar específicamente que el modal de ayuda esté oculto
+    const helpModal = document.getElementById('help-modal');
+    if (helpModal) {
+        helpModal.classList.remove('active');
+        helpModal.style.display = 'none';
+    }
     
     initModals();
     initAuth();

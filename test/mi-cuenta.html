@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
 </head>
-<body class="account-page">
+<body>
     <div id="page-backdrop" class="page-backdrop"></div>
     <div id="page-wrapper">
         <div id="header-placeholder"></div>
@@ -26,11 +26,6 @@
                             <p class="user-balance">Balance Actual: <span class="data-balance">Bs. 0.00</span></p>
                         </div>
 
-                        <button class="account-mobile-toggle" type="button" aria-expanded="false">
-                            <span>Menú de mi cuenta</span>
-                            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-                        </button>
-
                         <nav class="account-menu">
                             <ul>
                                 <li><a href="#" class="account-menu-link active" data-target="mi-panel"><i class="fa-solid fa-gauge-high"></i> Mi Panel</a></li>
@@ -38,8 +33,6 @@
                                 <li><a href="#" class="account-menu-link" data-target="seguridad"><i class="fa-solid fa-lock"></i> Seguridad</a></li>
                                 <li><a href="#" class="account-menu-link" data-target="historial-transacciones"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transacciones</a></li>
                                 <li><a href="#" class="account-menu-link" data-target="historial-apuestas"><i class="fa-solid fa-dice"></i> Historial de Apuestas</a></li>
-                                <li><a href="#" class="account-menu-link" data-target="bonos"><i class="fa-solid fa-gift"></i> Mis Bonos</a></li>
-                                <li><a href="#" class="account-menu-link" data-target="juego-responsable"><i class="fa-solid fa-shield-heart"></i> Juego Responsable</a></li>
                                 <li id="admin-panel-link" style="display: none;"><a href="/admin/index.html" class="account-menu-link" target="_blank"><i class="fa-solid fa-gear"></i> Panel de Admin</a></li>
                                 <li><button id="logout-btn" class="account-menu-link"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</button></li>
                             </ul>
@@ -225,198 +218,12 @@
                                 <p class="empty-message empty-message-bets" style="display: block;">No tienes apuestas registradas.</p>
                             </div>
                         </div>
-
-                        <!-- SECCIÓN BONOS -->
-                        <div id="bonos" class="account-section">
-                            <h2><i class="fa-solid fa-gift"></i> Mis Bonos y Promociones</h2>
-                            
-                            <!-- Reclamar Código -->
-                            <div class="card bonus-claim-card">
-                                <h3>¿Tienes un código promocional?</h3>
-                                <form id="claim-bonus-form" class="bonus-form">
-                                    <div class="input-group-inline">
-                                        <input type="text" id="bonus-code-input" placeholder="Ingresa tu código" maxlength="20">
-                                        <button type="submit" class="btn btn-primary">Canjear</button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <!-- Bonos Activos -->
-                            <h3 class="mt-30">Bonos Activos</h3>
-                            <div id="active-bonuses" class="bonuses-grid">
-                                <p class="empty-message">No tienes bonos activos.</p>
-                            </div>
-
-                            <!-- Bonos Disponibles -->
-                            <h3 class="mt-30">Bonos Disponibles</h3>
-                            <div id="available-bonuses" class="bonuses-grid">
-                                <div class="bonus-card welcome-bonus">
-                                    <div class="bonus-badge">BIENVENIDA</div>
-                                    <h4>Bono de Bienvenida</h4>
-                                    <p class="bonus-value">100% hasta Bs. 500</p>
-                                    <p class="bonus-desc">En tu primer depósito</p>
-                                    <span class="bonus-code">Código: BIENVENIDO100</span>
-                                </div>
-                                <div class="bonus-card">
-                                    <div class="bonus-badge">RECARGA</div>
-                                    <h4>Recarga Semanal</h4>
-                                    <p class="bonus-value">50% hasta Bs. 200</p>
-                                    <p class="bonus-desc">Todos los lunes</p>
-                                    <span class="bonus-code">Código: LUNES50</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SECCIÓN JUEGO RESPONSABLE -->
-                        <div id="juego-responsable" class="account-section">
-                            <h2><i class="fa-solid fa-shield-heart"></i> Juego Responsable</h2>
-                            <p class="section-intro">En FortunaBet nos importa tu bienestar. Configura límites para mantener el control de tu actividad de juego.</p>
-
-                            <!-- Límites de Depósito -->
-                            <div class="card responsible-card">
-                                <h3><i class="fa-solid fa-wallet"></i> Límites de Depósito</h3>
-                                <p class="card-desc">Establece un máximo de dinero que puedes depositar en un período.</p>
-                                <form id="deposit-limits-form" class="limits-form">
-                                    <div class="limit-row">
-                                        <label>Diario</label>
-                                        <input type="number" id="deposit-daily" placeholder="Sin límite" min="0" step="10">
-                                        <span>Bs.</span>
-                                    </div>
-                                    <div class="limit-row">
-                                        <label>Semanal</label>
-                                        <input type="number" id="deposit-weekly" placeholder="Sin límite" min="0" step="10">
-                                        <span>Bs.</span>
-                                    </div>
-                                    <div class="limit-row">
-                                        <label>Mensual</label>
-                                        <input type="number" id="deposit-monthly" placeholder="Sin límite" min="0" step="10">
-                                        <span>Bs.</span>
-                                    </div>
-                                    <button type="submit" class="btn btn-secondary">Guardar Límites</button>
-                                </form>
-                            </div>
-
-                            <!-- Límites de Pérdida -->
-                            <div class="card responsible-card mt-20">
-                                <h3><i class="fa-solid fa-chart-line"></i> Límites de Pérdida</h3>
-                                <p class="card-desc">Define cuánto estás dispuesto a perder antes de pausar.</p>
-                                <form id="loss-limits-form" class="limits-form">
-                                    <div class="limit-row">
-                                        <label>Diario</label>
-                                        <input type="number" id="loss-daily" placeholder="Sin límite" min="0" step="10">
-                                        <span>Bs.</span>
-                                    </div>
-                                    <div class="limit-row">
-                                        <label>Semanal</label>
-                                        <input type="number" id="loss-weekly" placeholder="Sin límite" min="0" step="10">
-                                        <span>Bs.</span>
-                                    </div>
-                                    <div class="limit-row">
-                                        <label>Mensual</label>
-                                        <input type="number" id="loss-monthly" placeholder="Sin límite" min="0" step="10">
-                                        <span>Bs.</span>
-                                    </div>
-                                    <button type="submit" class="btn btn-secondary">Guardar Límites</button>
-                                </form>
-                            </div>
-
-                            <!-- Límite de Sesión -->
-                            <div class="card responsible-card mt-20">
-                                <h3><i class="fa-solid fa-clock"></i> Límite de Tiempo de Sesión</h3>
-                                <p class="card-desc">Recibe un aviso cuando hayas estado jugando mucho tiempo.</p>
-                                <form id="session-limit-form" class="limits-form">
-                                    <div class="limit-row">
-                                        <label>Tiempo máximo</label>
-                                        <select id="session-limit-select">
-                                            <option value="">Sin límite</option>
-                                            <option value="30">30 minutos</option>
-                                            <option value="60">1 hora</option>
-                                            <option value="120">2 horas</option>
-                                            <option value="240">4 horas</option>
-                                            <option value="480">8 horas</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit" class="btn btn-secondary">Guardar</button>
-                                </form>
-                            </div>
-
-                            <!-- Reality Check -->
-                            <div class="card responsible-card mt-20">
-                                <h3><i class="fa-solid fa-bell"></i> Reality Check</h3>
-                                <p class="card-desc">Recibe recordatorios periódicos del tiempo que llevas jugando.</p>
-                                <form id="reality-check-form" class="limits-form">
-                                    <div class="limit-row toggle-row">
-                                        <label>Activar recordatorios</label>
-                                        <label class="switch">
-                                            <input type="checkbox" id="reality-check-toggle">
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-                                    <div class="limit-row" id="reality-interval-row" style="display:none;">
-                                        <label>Cada</label>
-                                        <select id="reality-check-interval">
-                                            <option value="30">30 minutos</option>
-                                            <option value="60" selected>1 hora</option>
-                                            <option value="120">2 horas</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit" class="btn btn-secondary">Guardar</button>
-                                </form>
-                            </div>
-
-                            <!-- Autoexclusión -->
-                            <div class="card responsible-card danger-card mt-20">
-                                <h3><i class="fa-solid fa-ban"></i> Autoexclusión</h3>
-                                <p class="card-desc">Si sientes que necesitas un descanso, puedes excluirte temporalmente de la plataforma.</p>
-                                <div class="exclusion-options">
-                                    <button class="btn btn-outline" data-duration="1">24 horas</button>
-                                    <button class="btn btn-outline" data-duration="7">7 días</button>
-                                    <button class="btn btn-outline" data-duration="30">30 días</button>
-                                    <button class="btn btn-outline" data-duration="90">3 meses</button>
-                                    <button class="btn btn-outline" data-duration="180">6 meses</button>
-                                    <button class="btn btn-danger-outline" data-duration="permanent">Permanente</button>
-                                </div>
-                                <p class="exclusion-warning"><i class="fa-solid fa-exclamation-triangle"></i> La autoexclusión no puede revertirse hasta que expire el período seleccionado.</p>
-                            </div>
-
-                            <!-- Recursos de Ayuda -->
-                            <div class="card help-resources mt-20">
-                                <h3><i class="fa-solid fa-hands-holding-heart"></i> ¿Necesitas Ayuda?</h3>
-                                <p>Si tú o alguien que conoces tiene problemas con el juego, estos recursos pueden ayudar:</p>
-                                <ul class="resources-list">
-                                    <li><a href="https://www.jugarbien.es" target="_blank"><i class="fa-solid fa-external-link"></i> Jugar Bien</a></li>
-                                    <li><a href="https://www.gamblingtherapy.org/es/" target="_blank"><i class="fa-solid fa-external-link"></i> Gambling Therapy</a></li>
-                                    <li><strong>Línea de Ayuda:</strong> 0800-XXX-XXXX (24/7)</li>
-                                </ul>
-                            </div>
-                        </div>
                     </section>
                 </div>
             </div>
         </div>
 
         <div id="footer-placeholder"></div>
-    </div>
-
-    <!-- Modal Admin Confirmación -->
-    <div id="admin-confirm-modal" class="modal-overlay" style="display:none;">
-        <div class="modal-content admin-modal">
-            <div class="modal-icon">
-                <i class="fa-solid fa-shield-halved"></i>
-            </div>
-            <h3>Acceder al Panel de Administración</h3>
-            <p>Por seguridad, serás desconectado de tu cuenta de usuario para acceder al Panel de Administración.</p>
-            <div class="modal-info">
-                <i class="fa-solid fa-info-circle"></i>
-                <span>Tus datos de sesión actual se cerrarán.</span>
-            </div>
-            <div class="modal-actions">
-                <button id="admin-modal-cancel" class="btn btn-secondary">Cancelar</button>
-                <button id="admin-modal-confirm" class="btn btn-primary">
-                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Ir al Panel
-                </button>
-            </div>
-        </div>
     </div>
 
     <!-- Placeholders -->
