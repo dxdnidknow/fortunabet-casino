@@ -844,18 +844,16 @@ body.account-page .page-title::after {
 }
 
 /* ENCABEZADO DE TARJETA */
-.event-card__header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: flex-start; 
-    gap: var(--spacing-lg); 
-    width: 100%; 
-}
+ .event-card__header {
+        flex-direction: column-reverse !important; /* Pone la hora ARRIBA y equipos ABAJO */
+        align-items: flex-start !important;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
 
-.event-card__teams-container { 
-    flex: 1; 
-    min-width: 0;
-}
+.event-card__teams-container {
+        width: 100%;
+    }
 
 .event-card__teams { 
     font-size: var(--font-size-lg); 
@@ -864,20 +862,30 @@ body.account-page .page-title::after {
     line-height: var(--line-height-tight);
 }
 
-.event-card__actions { 
-    display: flex; 
-    align-items: center; 
-    gap: var(--spacing-md); 
-    flex-shrink: 0; 
-}
+.event-card__actions {
+        width: 100%;
+        margin-top: 0 !important;
+        display: flex;
+        justify-content: flex-start !important; /* Alinear a la izquierda */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 8px;
+        margin-bottom: 5px;
+    }
+    .event-card__actions span, 
+    .event-card__time {
+        font-size: 0.85rem !important;
+        color: var(--color-primary); /* Color verde para la hora/fecha */
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
 
 /* INDICADOR LIVE MEJORADO */
 .live-indicator { 
     background: linear-gradient(135deg, var(--color-error) 0%, var(--color-accent-dark) 100%); 
     color: var(--color-text-primary); 
-    font-size: var(--font-size-xs); 
+    font-size: 0.75rem !important;
     font-weight: var(--font-weight-bold); 
-    padding: var(--spacing-xs) var(--spacing-sm); 
+    padding: 2px 8px !important; 
     border-radius: var(--border-radius-full); 
     animation: pulse-live 2s ease-in-out infinite;
     text-transform: uppercase;

@@ -381,25 +381,26 @@ export async function fetchWithAuth(url, options = {}) {
 
     try {
         const response = await fetch(url, options);
-
-        // CAMBIO: Solo cerramos sesión si es 401 (Token inválido/expirado).
-        // El 403 (Prohibido) lo dejamos pasar para que el frontend muestre el mensaje de "Debes verificar tus datos".
         if (response.status === 401) {
             handleLogout();
             throw new Error('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
         }
+        const contentType = response.headers.get("content-type");
+        let responseData;
+if (contentType && contentType.indexOf("application/json") !== -1) {
+            responseData = await response.json();
+        } else {
+         const text = await response.text();
+            responseData = { message: text || `Error ${response.status}` };
+        }
+        // ----------------------------------------------------
 
-        const responseData = await response.json();
-        
         if (!response.ok) {
-            // Si es 403 u otro error, lanzamos el error con el mensaje del servidor
-            // para que account.js pueda mostrarlo en un Toast en lugar de cerrar la sesión.
             throw new Error(responseData.message || `Error: ${response.status}`);
         }
-
         return responseData; 
+        } catch (error) {
 
-    } catch (error) {
         console.error('Error en fetchWithAuth:', error);
         // Si el error es de parseo JSON (404 HTML), mostrar mensaje más claro
         if (error.message.includes('Unexpected token')) {

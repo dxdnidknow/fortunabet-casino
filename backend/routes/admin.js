@@ -7,7 +7,7 @@ const rateLimit = require('express-rate-limit');
 const authAdmin = require('../middleware/authAdmin');
 
 const router = express.Router();
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 50 });
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 1000 });
 
 router.use(authLimiter);
 router.use(authAdmin);
