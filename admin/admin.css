@@ -213,33 +213,103 @@ body {
 }
 
 /* Footer Sidebar */
-.sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-light); }
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 .user-card {
-    display: flex; align-items: center;
-    background: rgba(255, 255, 255, 0.03);
-    padding: 12px; border-radius: 12px; border: 1px solid var(--border-light);
-    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    gap: 15px; /* Espacio entre avatar, texto y botón */
 }
-.user-card:hover { background: rgba(255, 255, 255, 0.06); transform: translateY(-2px); }
+.user-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(46, 204, 113, 0.3); /* Borde verde sutil al pasar el mouse */
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
 .user-avatar-mini {
-    width: 38px; height: 38px; margin-right: 12px;
-    background: linear-gradient(135deg, #F59E0B, #D97706);
-    color: #fff; border-radius: 10px;
-    display: flex; justify-content: center; align-items: center;
-    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    color: #fff;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0; /* Evita que se aplaste */
 }
-.user-info-mini { flex-grow: 1; display: flex; flex-direction: column; }
-.role-text { font-weight: 700; font-size: 0.9rem; }
-.status-text { color: var(--primary); font-size: 0.75rem; display: flex; align-items: center; gap: 5px; }
-.dot-online { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
+.user-info-mini {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+}
+.role-text {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #fff;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    margin-bottom: 2px;
+}
 
+.status-text {
+    color: var(--primary); /* Verde */
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+.dot-online {
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--primary);
+    animation: pulseUser 2s infinite;
+}
+
+@keyframes pulseUser {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+}
 .btn-mini-logout {
-    background: transparent; border: none; color: var(--text-muted);
-    width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
-    display: flex; justify-content: center; align-items: center; transition: 0.2s;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
 }
-.btn-mini-logout:hover { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
-
+.btn-mini-logout:hover {
+    background: rgba(239, 68, 68, 0.15); /* Fondo rojo suave */
+    color: #EF4444; /* Ícono rojo */
+    border-color: rgba(239, 68, 68, 0.3);
+    transform: rotate(90deg); /* Pequeña animación al pasar el mouse */
+}
 /* --- MAIN CONTENT --- */
 .main-content { padding: 40px 50px; overflow-y: auto; background: var(--bg-body); height: 100vh; }
 
