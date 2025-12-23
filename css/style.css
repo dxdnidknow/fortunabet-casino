@@ -1474,7 +1474,7 @@ body.user-logged-in div.mobile-menu-auth-fixed.logged-in-only {
     background-color: #0b0d10; 
     background-color: var(--color-surface-1); 
     border-top: 1px solid var(--color-border);
-    padding: 60px 0 30px;
+    padding: 60px 0 0px;
     margin-top: auto;
     font-size: 0.9rem;
     position: relative;

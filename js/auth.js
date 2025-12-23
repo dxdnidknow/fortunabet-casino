@@ -39,8 +39,20 @@ function updateLoginState(user) {
     // Admin check
     if (user.role === 'admin') {
         document.body.classList.add('role-admin');
+        
+        // Inyectar enlace de Admin en el menú móvil (Hamburguesa)
+        const mobileMenuLinks = document.querySelector('.mobile-menu-links');
+        if (mobileMenuLinks && !document.getElementById('mobile-admin-link')) {
+            const li = document.createElement('li');
+            li.id = 'mobile-admin-link';
+            li.innerHTML = `<a href="/admin/index.html"><i class="fa-solid fa-user-shield" style="color: var(--color-primary);"></i> Panel de Admin</a>`;
+            // Insertar al principio de la lista
+            mobileMenuLinks.insertBefore(li, mobileMenuLinks.firstChild);
+        }
     } else {
         document.body.classList.remove('role-admin');
+        const mobileAdminLink = document.getElementById('mobile-admin-link');
+        if (mobileAdminLink) mobileAdminLink.remove();
     }
 
     // Desktop Header
