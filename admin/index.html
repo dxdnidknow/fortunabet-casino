@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <!-- IMPORTANTE: Esta etiqueta es vital para que el CSS móvil funcione -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FortunaBet Admin</title>
     
@@ -12,19 +11,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
-    <!-- ESTILOS (Asegúrate de que el archivo se llame admin.css y esté en la carpeta admin) -->
+    <!-- ESTILOS -->
     <link rel="stylesheet" href="admin.css">
     
     <!-- CHART.JS -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
 
-    <!-- BARRA MÓVIL (Solo visible en pantallas pequeñas) -->
+    <!-- BARRA MÓVIL -->
     <div class="mobile-nav-bar">
         <button id="admin-mobile-toggle"><i class="fa-solid fa-bars"></i></button>
         <div class="mobile-brand">Fortuna<span>Bet</span> Admin</div>
-        <!-- Espaciador para centrar el logo -->
         <div style="width: 40px;"></div>
     </div>
 
@@ -32,7 +30,6 @@
     <div id="login-view" class="login-container">
         <div class="login-card">
             <div class="login-header">
-                <!-- Asegúrate de tener la imagen en /images/ -->
                 <img src="/images/logo-fortuna.png" alt="FortunaBet" class="login-logo">
                 <h2>Panel de Administración</h2>
                 <p>Acceso exclusivo para administradores</p>
@@ -81,15 +78,9 @@
                 <button class="nav-link" onclick="switchTab('users')">
                     <i class="fa-solid fa-users"></i> Usuarios
                 </button>
-                
-                <div class="external-link">
-                    <a href="/" class="nav-link">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Ir a la Web
-                    </a>
-                </div>
             </nav>
 
-            <!-- TARJETA DE PERFIL (MEJORADA PARA COINCIDIR CON CSS) -->
+            <!-- TARJETA DE PERFIL -->
             <div class="sidebar-footer">
                 <div class="user-card">
                     <div class="user-avatar-mini">
@@ -106,10 +97,10 @@
             </div>
         </aside>
 
-        <!-- CONTENIDO PRINCIPAL -->
+        <!-- CONTENIDO -->
         <main class="main-content">
             
-            <!-- 1. SECCIÓN: RESUMEN -->
+            <!-- 1. RESUMEN -->
             <section id="section-overview" class="content-section active">
                 <header class="top-bar">
                     <h1>Visión General</h1> 
@@ -148,10 +139,10 @@
                 </div>
             </section>
 
-            <!-- 2. SECCIÓN: DEPÓSITOS -->
+            <!-- 2. DEPÓSITOS -->
             <section id="section-deposits" class="content-section" style="display: none;">
                 <header class="top-bar">
-                    <h1>Depósitos Pendientes</h1> 
+                    <h1>Depósitos</h1> 
                     <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button>
                 </header>
                 <div class="panel">
@@ -162,10 +153,10 @@
                 </div>
             </section>
             
-            <!-- 3. SECCIÓN: RETIROS -->
+            <!-- 3. RETIROS -->
             <section id="section-withdrawals" class="content-section" style="display: none;">
                 <header class="top-bar">
-                    <h1>Solicitudes de Retiro</h1> 
+                    <h1>Retiros</h1> 
                     <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button>
                 </header>
                 <div class="panel">
@@ -176,14 +167,14 @@
                 </div>
             </section>
 
-            <!-- 4. SECCIÓN: USUARIOS -->
+            <!-- 4. USUARIOS -->
             <section id="section-users" class="content-section" style="display: none;">
                 <header class="top-bar">
-                    <h1>Gestión de Usuarios</h1> 
+                    <h1>Usuarios</h1> 
                     <div class="action-group">
                         <div class="search-box">
                             <i class="fa-solid fa-search"></i>
-                            <input type="text" id="user-search-input" placeholder="Buscar por nombre, email...">
+                            <input type="text" id="user-search-input" placeholder="Buscar usuario...">
                         </div>
                         <button class="btn btn-secondary btn-refresh"><i class="fa-solid fa-rotate"></i></button>
                     </div>
@@ -196,7 +187,7 @@
                 </div>
             </section>
 
-            <!-- 5. SECCIÓN: HISTORIAL DE USUARIO (DETALLE) -->
+            <!-- 5. HISTORIAL DE USUARIO (MODAL PANEL) -->
             <section id="section-user-history" class="content-section" style="display: none;">
                 <header class="top-bar">
                     <h1>Historial de Usuario</h1>
@@ -272,7 +263,7 @@
                 <p id="confirm-message">¿Estás seguro?</p>
             </div>
             
-            <textarea id="confirm-input" class="modal-input" style="display: none;" placeholder="Escribe el motivo (opcional)..."></textarea>
+            <textarea id="confirm-input" class="modal-input" style="display: none;" placeholder="Escribe el motivo..."></textarea>
             
             <div class="modal-actions">
                 <button id="btn-cancel-action" class="btn btn-secondary">Cancelar</button>
@@ -281,8 +272,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL -->
-    <!-- Nota: 'type="module"' es importante para que funcione el import en el JS -->
+    <!-- LÓGICA JS -->
     <script src="/js/admin-app.js" type="module"></script>
 </body>
 </html>

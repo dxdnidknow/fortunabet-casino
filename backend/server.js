@@ -1,4 +1,4 @@
-// Archivo: backend/server.js (VERSIÓN SEGURA)
+// Archivo: backend/server.js (VERSIÓN CORREGIDA PARA CORS)
 
 require('dotenv').config();
 
@@ -29,40 +29,41 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false
 }));
 
-// CORS - Configuración segura para producción
+// CORS - Configuración dinámica para Local y Producción
 const allowedOrigins = [
-    process.env.FRONTEND_URL,
-    'https://fortunabetve.netlify.app',
+    process.env.FRONTEND_URL, // Tu URL de Netlify configurada en Render
+    'https://fortunabet.netlify.app',
     'http://localhost:5500',
     'http://127.0.0.1:5500',
-    // Permitir entorno local con Live Server en 5501
     'http://localhost:5501',
     'http://127.0.0.1:5501',
-    // Permitir entorno local con Live Server en 5502
     'http://localhost:5502',
-    'http://127.0.0.1:5502'
+    'http://127.0.0.1:5502',
+    'http://localhost:5503', // <--- Agregado para tu caso actual
+    'http://127.0.0.1:5503'  // <--- Agregado para tu caso actual
 ].filter(Boolean);
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Permitir solicitudes sin origen (como Postman o aplicaciones móviles)
+        // 1. Permitir peticiones sin 'origin' (como Postman o Insomnia)
+        // 2. En DESARROLLO (si no hay FRONTEND_URL), permitir cualquier localhost/127.0.0.1
         if (!origin) return callback(null, true);
         
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        const isLocal = origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1');
+        
+        if (allowedOrigins.includes(origin) || isLocal) {
             callback(null, true);
         } else {
-            console.log(`[CORS BLOQUEADO] Origen intentando conectar: ${origin}`);
+            console.warn(`[CORS] Origen bloqueado: ${origin}`);
             callback(new Error('No permitido por CORS'));
         }
     },
-    // IMPORTANTE: Agregamos 'OPTIONS' aquí
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    credentials: true,
-    optionsSuccessStatus: 204 // Para navegadores antiguos/IE
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+
 // Parser JSON con límite de tamaño
 app.use(express.json({ limit: '10kb' }));
 
@@ -82,7 +83,7 @@ if (!API_KEY) { console.error('❌ Error: Falta ODDS_API_KEY.'); process.exit(1)
 // Middleware Global: Inyectar DB y Caché en cada petición
 app.use((req, res, next) => {
     req.db = getDb();
-    req.eventsCache = eventsCache; // Compartimos la caché con las rutas (user.js, etc.)
+    req.eventsCache = eventsCache; 
     next();
 });
 
@@ -114,33 +115,23 @@ app.get('/api/sports', sportsApiLimiter, async (req, res) => {
 app.get('/api/events/:sportKey', sportsApiLimiter, async (req, res) => {
     try {
         const { sportKey } = req.params;
-        
-        // 1. Revisar Caché
         const cachedEvents = eventsCache.get(sportKey);
         if (cachedEvents) { return res.json(cachedEvents); }
 
-        // 2. Determinar mercados según el deporte
-        // Por defecto pedimos h2h (ganador) y totals (altas/bajas)
         let markets = 'h2h,totals';
-        
-        // Si es un deporte "Outright" (ganador de torneo futuro, como World Series), solo pedimos 'outrights'
         if (sportKey.includes('winner') || sportKey.includes('championship') || sportKey.includes('outright')) {
             markets = 'outrights';
         }
 
-        console.log(`Pidiendo deporte: ${sportKey} con mercados: ${markets}`);
-
-        // 3. Petición a la API con los mercados correctos
         const response = await axios.get(`https://api.the-odds-api.com/v4/sports/${sportKey}/odds`, {
             params: { 
                 apiKey: API_KEY, 
                 regions: 'us,eu,uk', 
-                markets: markets, // Usamos la variable dinámica
+                markets: markets,
                 oddsFormat: 'decimal' 
             }
         });
 
-        // 4. Guardar en caché y responder
         eventsCache.set(sportKey, response.data);
         res.json(response.data);
 
@@ -149,15 +140,11 @@ app.get('/api/events/:sportKey', sportsApiLimiter, async (req, res) => {
     }
 }); 
 
-// CORRECCIÓN IMPORTANTE EN ESTA RUTA:
 app.get('/api/event/:sportKey/:eventId', sportsApiLimiter, async (req, res) => {
     try {
         const { sportKey, eventId } = req.params;
-        
-        // 1. Intentar obtener de caché
         let sportEventsList = eventsCache.get(sportKey);
 
-        // 2. Si no está en caché, buscar en la API externa y guardar
         if (!sportEventsList) {
             const response = await axios.get(`https://api.the-odds-api.com/v4/sports/${sportKey}/odds`, {
                 params: { apiKey: API_KEY, regions: 'us,eu,uk', markets: 'h2h,totals', oddsFormat: 'decimal' }
@@ -166,7 +153,6 @@ app.get('/api/event/:sportKey/:eventId', sportsApiLimiter, async (req, res) => {
             eventsCache.set(sportKey, sportEventsList);
         }
 
-        // 3. Buscar el evento específico
         if (sportEventsList) {
             const event = sportEventsList.find(e => e.id === eventId);
             if (event) { return res.json(event); }

@@ -1,8 +1,27 @@
-// Archivo: js/admin-app.js (VERSIÓN FINAL ESTABLE)
-
 import { API_BASE_URL } from './config.js';
 import { fetchWithAuth } from './auth.js';
-import { showToast } from './ui.js';
+
+// --- CONTROL DE TOAST (Definido localmente para corregir duración) ---
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    
+    // Icono según tipo
+    let icon = 'fa-check-circle';
+    if(type === 'error') icon = 'fa-exclamation-circle';
+    if(type === 'warning') icon = 'fa-triangle-exclamation';
+
+    toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+    document.body.appendChild(toast);
+
+    // Duración de solo 2 segundos (antes era demasiado largo)
+    setTimeout(() => {
+        toast.classList.add('toast-out'); // Activar animación de salida CSS
+        toast.addEventListener('animationend', () => {
+            if(toast.parentElement) toast.remove();
+        });
+    }, 2000);
+}
 
 // --- CONTROL DE VISTAS ---
 function showLogin() {
@@ -16,7 +35,11 @@ function showLogin() {
 function showDashboard(user) {
     document.body.classList.remove('login-mode');
     document.getElementById('login-view').style.display = 'none';
-    document.getElementById('dashboard-view').style.display = 'grid';
+    
+    // CORRECCIÓN: Eliminar estilo inline para permitir que CSS controle Grid (Desktop) vs Block (Mobile)
+    document.getElementById('dashboard-view').style.display = ''; 
+    document.getElementById('dashboard-view').classList.remove('hidden');
+
     refreshAllData();
 }
 
@@ -257,33 +280,15 @@ async function loadUserHistory(userId) {
         } else {
             betsBody.innerHTML = data.bets.map(bet => {
                 const statusColor = bet.status === 'won' ? '#10B981' : bet.status === 'pending' ? '#F59E0B' : '#EF4444';
-                let eventDisplay = '';
-    let selectionDisplay = '';
-    
-    if (bet.selections && bet.selections.length > 1) {
-        eventDisplay = `<span style="color:#A0AEC0">Parley (${bet.selections.length})</span>`;
-        selectionDisplay = 'Múltiple';
-    } else if (bet.selections && bet.selections.length === 1) {
-        // Apuesta simple
-        const sel = bet.selections[0];
-        // Intentamos limpiar el nombre (ej: "Real Madrid vs Barca - 1")
-        const parts = sel.team.split(' - ');
-        eventDisplay = parts[0] || sel.team;
-        selectionDisplay = parts[1] || 'Ganador';
-    } else {
-        eventDisplay = 'Desconocido';
-    }
-                    return `
-    <tr>
-        <td style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-            ${eventDisplay}
-        </td>
-        <td>${selectionDisplay}</td>
-        <td style="color:#10B981; font-weight:600;">${bet.totalOdds?.toFixed(2) || '-'}</td>
-        <td style="font-weight:600;">Bs. ${bet.stake?.toFixed(2) || '0.00'}</td>
-        <td><span style="background:${statusColor}20; color:${statusColor}; padding:4px 8px; border-radius:20px; font-size:0.7rem; font-weight:700;">${(bet.status || 'pending').toUpperCase()}</span></td>
-        <td style="font-size:0.75rem; color:#9CA3AF;">${new Date(bet.createdAt).toLocaleDateString()}</td>
-    </tr>`;
+                return `
+                <tr>
+                    <td style="max-width:150px; overflow:hidden; text-overflow:ellipsis;">${bet.eventName || bet.selection || 'Evento'}</td>
+                    <td>${bet.selectionName || bet.outcome || '-'}</td>
+                    <td style="color:#10B981; font-weight:600;">${bet.odds?.toFixed(2) || '-'}</td>
+                    <td style="font-weight:600;">Bs. ${bet.stake?.toFixed(2) || bet.amount?.toFixed(2) || '0.00'}</td>
+                    <td><span style="background:${statusColor}20; color:${statusColor}; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;">${(bet.status || 'pending').toUpperCase()}</span></td>
+                    <td>${new Date(bet.placedAt || bet.createdAt).toLocaleString('es-VE')}</td>
+                </tr>`;
             }).join('');
         }
         
@@ -578,16 +583,4 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(`history-${tab}`).style.display = 'block';
         });
     });
-
-    const webLink = document.querySelector('.external-link');
-    if (webLink) {
-        webLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            if(confirm('¿Cerrar sesión de administrador e ir a la web pública?')) {
-                localStorage.removeItem('fortunaToken');
-                localStorage.removeItem('fortunaUser');
-                window.location.href = '/index.html';
-            }
-        });
-    }
 });
