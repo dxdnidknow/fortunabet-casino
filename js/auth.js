@@ -46,8 +46,16 @@ function updateLoginState(user) {
             const li = document.createElement('li');
             li.id = 'mobile-admin-link';
             li.innerHTML = `<a href="/admin/index.html"><i class="fa-solid fa-user-shield" style="color: var(--color-primary);"></i> Panel de Admin</a>`;
-            // Insertar al principio de la lista
-            mobileMenuLinks.insertBefore(li, mobileMenuLinks.firstChild);
+            
+            // Buscar enlace "Mi Cuenta" para insertar debajo
+            const myAccountLi = Array.from(mobileMenuLinks.children).find(child => 
+                child.textContent.toLowerCase().includes('mi cuenta') || 
+                (child.querySelector('a') && child.querySelector('a').href.includes('mi-cuenta'))
+            );
+
+            // Insertar después de Mi Cuenta si existe, sino al principio
+            if (myAccountLi) myAccountLi.after(li);
+            else mobileMenuLinks.insertBefore(li, mobileMenuLinks.firstChild);
         }
     } else {
         document.body.classList.remove('role-admin');
