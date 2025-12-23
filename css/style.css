@@ -2415,7 +2415,7 @@ body.user-logged-in .logged-out-only { display: none !important; }
     
     .account-menu.is-open {
         display: block;
-        max-height: 500px;
+        max-height: 1000px;
         opacity: 1;
         padding: 10px 0;
     }
@@ -2714,19 +2714,18 @@ body.user-logged-in .logged-out-only { display: none !important; }
     .mt-30 { margin-top: 20px !important; }
     .mt-20 { margin-top: 15px !important; }
     
-    /* Menú cuenta scroll horizontal */
+    /* Menú cuenta vertical (Dropdown) */
     .account-menu ul { 
-        flex-direction: row; overflow-x: auto; 
-        gap: 4px; padding: 6px; -webkit-overflow-scrolling: touch;
-        scrollbar-width: none; background: var(--color-surface-2); border-radius: 8px;
+        flex-direction: column; overflow: visible; 
+        gap: 8px; padding: 10px; background: var(--color-surface-2); border-radius: 8px;
     }
     .account-menu ul::-webkit-scrollbar { display: none; }
-    .account-menu ul li { flex-shrink: 0; }
+    .account-menu ul li { width: 100%; }
     .account-menu ul a, .account-menu ul button { 
-        white-space: nowrap; padding: 10px 12px; font-size: 0.8rem; 
-        border-radius: 6px; gap: 8px;
+        white-space: normal; padding: 12px 15px; font-size: 0.95rem; 
+        border-radius: 6px; gap: 12px; width: 100%; justify-content: flex-start;
     }
-    .account-menu ul i { display: none; }
+    .account-menu ul i { display: inline-block; width: 20px; text-align: center; color: var(--color-primary); }
     
     /* Formularios en cuenta */
     .form-grid { 
