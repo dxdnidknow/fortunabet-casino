@@ -1,4 +1,4 @@
-// Archivo: backend/server.js
+// Archivo: backend/server.js (VERSIÓN CORREGIDA Y UNIFICADA)
 require('dotenv').config();
 
 const express = require('express');
@@ -22,16 +22,15 @@ const port = process.env.PORT || 3001;
 //  MIDDLEWARES DE SEGURIDAD
 // ==========================================
 
-// Helmet - Headers de seguridad HTTP
 app.use(helmet({
-    contentSecurityPolicy: false, // Deshabilitado para permitir iframes de juegos
+    contentSecurityPolicy: false, 
     crossOriginEmbedderPolicy: false
 }));
 
-// CORS - Configuración actualizada para tu nueva URL de Netlify
+// CORS - Configuración para producción y local
 const allowedOrigins = [
     process.env.FRONTEND_URL,
-    'https://fortunabetve.netlify.app', // TU NUEVA URL ACTUALIZADA
+    'https://fortunabetve.netlify.app', // Nueva URL agregada
     'https://fortunabet.netlify.app',
     'http://localhost:5500',
     'http://127.0.0.1:5500',
@@ -44,11 +43,10 @@ const allowedOrigins = [
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Permitir requests sin origin (como apps móviles o Postman)
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            console.warn(`[CORS] Origen bloqueado por política: ${origin}`);
+            console.warn(`[CORS] Origen bloqueado: ${origin}`);
             callback(new Error('No permitido por CORS'));
         }
     },
@@ -58,33 +56,28 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Parser JSON con límite de tamaño
 app.use(express.json({ limit: '10kb' }));
-
-// Sanitización contra NoSQL Injection
 app.use(mongoSanitize());
-
-// Trust proxy para rate limiting correcto en Render
 app.set('trust proxy', 1);
 
-// --- ÚNICA DECLARACIÓN DE CACHÉ (SOLUCIÓN AL SYNTAXERROR) ---
+// --- SOLUCIÓN: Única declaración de Caché ---
 const eventsCache = new NodeCache({ stdTTL: 600 });
 
 // API KEY
 const API_KEY = process.env.ODDS_API_KEY;
 if (!API_KEY) { 
-    console.error('❌ Error: Falta la variable ODDS_API_KEY en el entorno.'); 
+    console.error('❌ Error: Falta ODDS_API_KEY.'); 
     process.exit(1); 
 }
 
-// Middleware Global: Inyectar DB y Caché en cada petición
+// Middleware Global
 app.use((req, res, next) => {
     req.db = getDb();
     req.eventsCache = eventsCache; 
     next();
 });
 
-// Rate Limiter para la API de deportes
+// Rate Limiter
 const sportsApiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -93,7 +86,7 @@ const sportsApiLimiter = rateLimit({
     message: { message: 'Demasiadas peticiones a la API de deportes.' }
 });
 
-// Rutas de Salud y Bienvenida
+// Rutas de Salud
 app.get('/', (req, res) => { res.status(200).send('Backend de FortunaBet está en línea 🟢'); });
 app.get('/health', (req, res) => { res.status(200).json({ status: 'ok', timestamp: new Date() }); });
 
@@ -165,7 +158,6 @@ app.use('/api', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Manejador de errores centralizado
 function handleApiError(error, res) {
     if (error.response) {
         console.error(`[ERROR API]: ${error.response.status}`, error.response.data);
@@ -176,7 +168,6 @@ function handleApiError(error, res) {
     }
 }
 
-// Conexión a Base de Datos y Arranque
 connectDB().then(() => {
     app.listen(port, '0.0.0.0', () => {
         console.log(`🚀 Servidor FortunaBet corriendo en puerto: ${port}`);
