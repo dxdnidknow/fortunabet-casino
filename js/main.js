@@ -825,7 +825,13 @@ async function main() {
     initGameSlider();
     initCasinoFilters();
     initBetSlip();
-    initHelpWidget();
+    // Oculta el widget de ayuda en contacto.html
+    if (!window.location.pathname.includes('contacto.html')) {
+        initHelpWidget();
+    } else {
+        const helpWidget = document.getElementById('help-widget-placeholder');
+        if (helpWidget) helpWidget.style.display = 'none';
+    }
     initPaymentModals();    
     initContactForm(); // <-- AHORA SÍ ESTÁ DEFINIDA
     loadHomeFeaturedEvents(); 

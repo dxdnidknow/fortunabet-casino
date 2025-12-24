@@ -1,3 +1,278 @@
+/* CONTACTO PREMIUM PROFESIONAL */
+.contact-premium-layout {
+    display: flex;
+    gap: 36px;
+    margin-top: 32px;
+    justify-content: center;
+}
+.contact-premium-left {
+    flex: 1 1 380px;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.contact-premium-right {
+    flex: 1 1 340px;
+    min-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.contact-premium-card {
+    background: var(--color-surface-2);
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+    padding: 28px 28px;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.contact-premium-card h2 {
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.contact-premium-form h2 {
+    color: var(--color-secondary);
+}
+.contact-premium-card ul {
+    margin: 0; padding: 0; list-style: none;
+}
+.contact-premium-card li {
+    margin-bottom: 12px; font-size: 0.98rem;
+}
+.contact-premium-card strong {
+    color: var(--color-primary);
+}
+.contact-premium-card .contact-link {
+    background: var(--color-surface-3);
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+.contact-premium-card .contact-link.whatsapp { color: #25D366; }
+.contact-premium-card .contact-link.telegram { color: #0088cc; }
+.contact-premium-card .contact-link.instagram { color: #e1306c; }
+.contact-premium-card .contact-link.email { color: var(--color-primary); }
+.contact-premium-card .contact-link:hover {
+    background: var(--color-primary-light);
+    color: #fff;
+}
+.contact-premium-hours .contact-status.online {
+    background: rgba(46, 204, 113, 0.1);
+    color: var(--color-primary-light);
+    font-weight: 700;
+    border-radius: var(--border-radius-full);
+    padding: 6px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 0.95rem;
+    border: 1px solid rgba(46, 204, 113, 0.2);
+    text-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
+}
+
+.contact-premium-hours .contact-status.online i {
+    color: var(--color-primary-light);
+    font-size: 0.7em;
+    animation: pulse-live-dot 1.5s infinite;
+}
+
+/* Animación para el punto de 'en línea' */
+@keyframes pulse-live-dot {
+    0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 2px var(--color-primary-light));
+    }
+    50% {
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 5px var(--color-primary-light));
+    }
+}
+@media (max-width: 900px) {
+            .contact-premium-layout {
+                align-items: center;
+            }
+            .contact-premium-card {
+                margin-left: auto;
+                margin-right: auto;
+            }
+        .contact-section {
+            padding-left: 12px;
+            padding-right: 12px;
+            padding-top: 18px;
+            padding-bottom: 18px;
+        }
+        .contact-premium-card {
+            margin-bottom: 18px;
+            padding: 20px 10px;
+        }
+        .contact-premium-card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 14px;
+        }
+        .contact-form .btn-cta {
+            width: 100%;
+            font-size: 1.08rem;
+            padding: 14px 0;
+            margin-top: 10px;
+            border-radius: 10px;
+        }
+        .contact-premium-left, .contact-premium-right {
+            gap: 18px;
+        }
+    .contact-premium-layout {
+        flex-direction: column;
+        gap: 0;
+    }
+    .contact-premium-left, .contact-premium-right {
+        max-width: 100%;
+        min-width: unset;
+        gap: 18px;
+    }
+    .contact-section {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    .contact-section h1 {
+        font-size: 1.25rem;
+        margin-top: 18px;
+        margin-bottom: 12px;
+        padding: 0;
+    }
+    .contact-premium-layout {
+        flex-direction: column;
+        gap: 0;
+        padding-left: 0;
+        padding-right: 0;
+        padding-bottom: 18px;
+    
+        max-width: 100vw;
+    }
+    .contact-premium-left, .contact-premium-right {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        gap: 12px;
+    }
+    .contact-premium-card {
+        width: 100%;
+        padding: 18px 10px;
+    }
+}
+/* CONTACTO EXTRA */
+.contact-extra {
+    margin-top: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.contact-hours, .contact-social, .contact-faq {
+    background: var(--color-surface-2);
+    border-radius: 10px;
+    padding: 18px 16px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+}
+.contact-hours h4, .contact-social h4, .contact-faq h4 {
+    margin-bottom: 10px;
+    font-size: 1.05rem;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.contact-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95rem;
+    margin-top: 8px;
+    padding: 3px 10px;
+    border-radius: 8px;
+    background: #e8f8ee;
+    color: #2ecc71;
+    font-weight: 600;
+}
+.contact-status.online i { color: #2ecc71; font-size: 0.8em; }
+.contact-social .contact-link.instagram { color: #e1306c; }
+.contact-faq ul { margin: 0; padding: 0; list-style: none; }
+.contact-faq li { margin-bottom: 12px; font-size: 0.98rem; }
+.contact-faq strong { color: var(--color-primary); }
+/* CONTACTO MODERNO Y RESPONSIVO */
+.contact-section {
+    /* El diseño premium ya cubre el ancho y alto, no se necesita limitar ni centrar aquí */
+}
+.contact-section h1 {
+    /* El diseño premium ya define el estilo del título */
+}
+.contact-card {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+.contact-form {
+    flex: 1 1 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+.contact-info {
+    flex: 1 1 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    justify-content: flex-start;
+    margin-top: 12px;
+}
+.contact-info h3 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+.contact-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    color: var(--color-primary);
+    background: var(--color-surface-2);
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+.contact-link.whatsapp { color: #25D366; }
+.contact-link.telegram { color: #0088cc; }
+.contact-link.email { color: var(--color-primary); }
+.contact-link:hover {
+    background: var(--color-primary-light);
+    color: #fff;
+}
+@media (max-width: 700px) {
+    .contact-card {
+        flex-direction: column;
+        gap: 24px;
+    }
+    .contact-section {
+        padding: 18px 4vw;
+        margin: 24px 0;
+    }
+}
 /* ==========================================================================
    style.css (VERSIÓN FINAL COMPLETA - FORTUNABET)
    ========================================================================== */
@@ -2099,7 +2374,12 @@ body.user-logged-in .logged-out-only { display: none !important; }
         max-width: 500px;
         width: 100%;
         margin-left: auto;
-        margin-right: auto;
+            background: var(--color-surface-2);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         padding: 0 20px;
     }
 
@@ -2541,9 +2821,9 @@ body.user-logged-in .logged-out-only { display: none !important; }
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
-    }
-    
-    .card-actions .btn {
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1200px;
         flex: 1;
         min-width: 120px;
         padding: 12px 16px;
