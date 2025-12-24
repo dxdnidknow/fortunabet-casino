@@ -1,4 +1,4 @@
-// Archivo: backend/server.js (VERSIÓN CORREGIDA PARA CORS)
+// Archivo: backend/server.js (VERSIÓN CORREGIDA)
 
 require('dotenv').config();
 
@@ -29,39 +29,36 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false
 }));
 
-// CORS - Configuración dinámica para Local y Producción
+// CORS - Configuración segura para producción
 const allowedOrigins = [
-    process.env.FRONTEND_URL, // Tu URL de Netlify configurada en Render
-    'https://fortunabet.netlify.app',
+    process.env.FRONTEND_URL,           // URL definida en variables de entorno de Render
+    'https://fortunabetve.netlify.app', // TU NUEVA URL (Agregada)
     'http://localhost:5500',
     'http://127.0.0.1:5500',
     'http://localhost:5501',
     'http://127.0.0.1:5501',
     'http://localhost:5502',
     'http://127.0.0.1:5502',
-    'http://localhost:5503', // <--- Agregado para tu caso actual
-    'http://127.0.0.1:5503'  // <--- Agregado para tu caso actual
+    'http://localhost:3000'             // Común si usas React/Vue local
 ].filter(Boolean);
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // 1. Permitir peticiones sin 'origin' (como Postman o Insomnia)
-        // 2. En DESARROLLO (si no hay FRONTEND_URL), permitir cualquier localhost/127.0.0.1
-        if (!origin) return callback(null, true);
-        
-        const isLocal = origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1');
-        
-        if (allowedOrigins.includes(origin) || isLocal) {
+        // Permitir requests sin origin (como apps móviles o Postman)
+        // O si el origen está en nuestra lista blanca
+        if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            console.warn(`[CORS] Origen bloqueado: ${origin}`);
+            console.error(`[CORS] Bloqueado: El origen ${origin} no está autorizado.`);
             callback(new Error('No permitido por CORS'));
         }
     },
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    credentials: true,
+    optionsSuccessStatus: 200
 };
+
 app.use(cors(corsOptions));
 
 // Parser JSON con límite de tamaño
@@ -70,7 +67,7 @@ app.use(express.json({ limit: '10kb' }));
 // Sanitización contra NoSQL Injection
 app.use(mongoSanitize());
 
-// Trust proxy para rate limiting correcto en Render/Heroku
+// Trust proxy para rate limiting correcto en Render
 app.set('trust proxy', 1);
 
 // Inicializar Caché
@@ -78,12 +75,15 @@ const eventsCache = new NodeCache({ stdTTL: 600 });
 
 // API KEY
 const API_KEY = process.env.ODDS_API_KEY;
-if (!API_KEY) { console.error('❌ Error: Falta ODDS_API_KEY.'); process.exit(1); }
+if (!API_KEY) { 
+    console.error('❌ Error: Falta ODDS_API_KEY en las variables de entorno.'); 
+    process.exit(1); 
+}
 
 // Middleware Global: Inyectar DB y Caché en cada petición
 app.use((req, res, next) => {
     req.db = getDb();
-    req.eventsCache = eventsCache; 
+    req.eventsCache = eventsCache;
     next();
 });
 
@@ -134,7 +134,6 @@ app.get('/api/events/:sportKey', sportsApiLimiter, async (req, res) => {
 
         eventsCache.set(sportKey, response.data);
         res.json(response.data);
-
     } catch (error) { 
         handleApiError(error, res); 
     }
