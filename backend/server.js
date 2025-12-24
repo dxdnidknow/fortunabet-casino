@@ -1,4 +1,4 @@
-// Archivo: backend/server.js (VERSIÓN CORREGIDA Y UNIFICADA)
+// Archivo: backend/server.js (VERSIÓN CORREGIDA)
 require('dotenv').config();
 
 const express = require('express');
@@ -30,7 +30,7 @@ app.use(helmet({
 // CORS - Configuración para producción y local
 const allowedOrigins = [
     process.env.FRONTEND_URL,
-    'https://fortunabetve.netlify.app', // Nueva URL agregada
+    'https://fortunabetve.netlify.app', // URL actualizada para tu nuevo dominio
     'https://fortunabet.netlify.app',
     'http://localhost:5500',
     'http://127.0.0.1:5500',
@@ -60,13 +60,13 @@ app.use(express.json({ limit: '10kb' }));
 app.use(mongoSanitize());
 app.set('trust proxy', 1);
 
-// --- SOLUCIÓN: Única declaración de Caché ---
+// --- ÚNICA DECLARACIÓN DE CACHÉ (Corrección de SyntaxError) ---
 const eventsCache = new NodeCache({ stdTTL: 600 });
 
 // API KEY
 const API_KEY = process.env.ODDS_API_KEY;
 if (!API_KEY) { 
-    console.error('❌ Error: Falta ODDS_API_KEY.'); 
+    console.error('❌ Error: Falta ODDS_API_KEY en las variables de entorno.'); 
     process.exit(1); 
 }
 

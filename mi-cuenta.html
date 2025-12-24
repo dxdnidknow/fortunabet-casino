@@ -40,7 +40,6 @@
                                 <li><a href="#" class="account-menu-link" data-target="seguridad"><i class="fa-solid fa-lock"></i> Seguridad</a></li>
                                 <li><a href="#" class="account-menu-link" data-target="historial-transacciones"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transacciones</a></li>
                                 <li><a href="#" class="account-menu-link" data-target="historial-apuestas"><i class="fa-solid fa-dice"></i> Historial de Apuestas</a></li>
-                                <li><a href="#" class="account-menu-link" data-target="bonos"><i class="fa-solid fa-gift"></i> Mis Bonos</a></li>
                                 <li><a href="#" class="account-menu-link" data-target="juego-responsable"><i class="fa-solid fa-shield-heart"></i> Juego Responsable</a></li>
                                 <li id="admin-panel-link" style="display: none;"><a href="/admin/index.html" class="account-menu-link" target="_blank"><i class="fa-solid fa-gear"></i> Panel de Admin</a></li>
                                 <li><button id="logout-btn" class="account-menu-link"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</button></li>
@@ -228,46 +227,6 @@
                             </div>
                         </div>
 
-                        <!-- SECCIÓN BONOS -->
-                        <div id="bonos" class="account-section">
-                            <h2><i class="fa-solid fa-gift"></i> Mis Bonos y Promociones</h2>
-                            
-                            <!-- Reclamar Código -->
-                            <div class="card bonus-claim-card">
-                                <h3>¿Tienes un código promocional?</h3>
-                                <form id="claim-bonus-form" class="bonus-form">
-                                    <div class="input-group-inline">
-                                        <input type="text" id="bonus-code-input" placeholder="Ingresa tu código" maxlength="20">
-                                        <button type="submit" class="btn btn-primary">Canjear</button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <!-- Bonos Activos -->
-                            <h3 class="mt-30">Bonos Activos</h3>
-                            <div id="active-bonuses" class="bonuses-grid">
-                                <p class="empty-message">No tienes bonos activos.</p>
-                            </div>
-
-                            <!-- Bonos Disponibles -->
-                            <h3 class="mt-30">Bonos Disponibles</h3>
-                            <div id="available-bonuses" class="bonuses-grid">
-                                <div class="bonus-card welcome-bonus">
-                                    <div class="bonus-badge">BIENVENIDA</div>
-                                    <h4>Bono de Bienvenida</h4>
-                                    <p class="bonus-value">100% hasta Bs. 500</p>
-                                    <p class="bonus-desc">En tu primer depósito</p>
-                                    <span class="bonus-code">Código: BIENVENIDO100</span>
-                                </div>
-                                <div class="bonus-card">
-                                    <div class="bonus-badge">RECARGA</div>
-                                    <h4>Recarga Semanal</h4>
-                                    <p class="bonus-value">50% hasta Bs. 200</p>
-                                    <p class="bonus-desc">Todos los lunes</p>
-                                    <span class="bonus-code">Código: LUNES50</span>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- SECCIÓN JUEGO RESPONSABLE -->
                         <div id="juego-responsable" class="account-section">

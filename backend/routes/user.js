@@ -491,7 +491,6 @@ router.get('/get-bets', async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(50)
             .toArray();
-            
         res.status(200).json(betHistory);
     } catch (error) {
         console.error('[ERROR] Obteniendo historial de apuestas:', error);

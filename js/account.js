@@ -4,7 +4,7 @@ import { showToast } from './ui.js';
 import { API_BASE_URL } from './config.js';
 import { openModal, closeModal } from './modal.js';
 import { fetchWithAuth } from './auth.js';
-import { initBonusSection, initResponsibleGaming, init2FASection } from './responsible-gaming.js';
+import { initResponsibleGaming, init2FASection } from './responsible-gaming.js';
 
 // =======================================================================
 //  0. UTILIDADES Y VALIDACIONES
@@ -344,32 +344,29 @@ export async function renderBetHistory() {
     try {
         const betHistory = await fetchWithAuth(`${API_BASE_URL}/user/get-bets`);
 
-        // Manejo visual si está vacío
-        if (betHistory.length === 0) {
+        // Si no hay apuestas
+        if (!Array.isArray(betHistory) || betHistory.length === 0) {
             if (emptyMsgRecent) emptyMsgRecent.style.display = 'block';
             if (emptyMsgFull) emptyMsgFull.style.display = 'block';
             return;
         }
-        
+
         if (emptyMsgRecent) emptyMsgRecent.style.display = 'none';
         if (emptyMsgFull) emptyMsgFull.style.display = 'none';
 
         historyLists.forEach(list => {
             list.innerHTML = '';
-            // Si es la lista del dashboard ("recent-bets"), mostramos solo 3 o 5
             const isDashboard = list.classList.contains('recent-bets');
-            const historyToShow = isDashboard ? betHistory.slice(0, 3) : betHistory; 
+            // Solo 1 en el panel, todas en historial
+            const historyToShow = isDashboard ? [betHistory[0]] : betHistory;
 
             historyToShow.forEach(record => {
-                // LÓGICA DE DISEÑO DE TARJETA
-                const statusClass = record.status.toLowerCase(); // 'pending', 'won', 'lost'
+                const statusClass = record.status.toLowerCase();
                 const winnings = record.potentialWinnings;
-                
                 let iconHtml = '<i class="fa-solid fa-hourglass-half"></i>';
                 if (statusClass === 'won') iconHtml = '<i class="fa-solid fa-trophy"></i>';
                 if (statusClass === 'lost') iconHtml = '<i class="fa-solid fa-xmark"></i>';
 
-                // Renderizar selecciones
                 const selectionsHtml = record.selections.map(sel => 
                     `<div class="bet-selection-row">
                         <span>${sel.team}</span>
@@ -379,7 +376,6 @@ export async function renderBetHistory() {
 
                 const listItem = document.createElement('li');
                 listItem.className = `history-card-item ${statusClass}`;
-                
                 listItem.innerHTML = `
                     <div class="bet-card-header">
                         <span class="bet-date">${new Date(record.createdAt).toLocaleDateString()}</span>
@@ -765,8 +761,7 @@ export async function initAccountDashboard() {
     handlePayoutMethodChange();
     handle2FASetup();
     
-    // 4. Inicializar secciones de Bonos y Juego Responsable
-    initBonusSection();
+    // 4. Inicializar sección de Juego Responsable
     initResponsibleGaming();
     init2FASection();
 
