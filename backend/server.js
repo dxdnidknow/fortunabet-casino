@@ -1,5 +1,3 @@
-// Archivo: backend/server.js (VERSIÓN CORREGIDA)
-
 require('dotenv').config();
 
 const express = require('express');
@@ -10,54 +8,66 @@ const axios = require('axios');
 const NodeCache = require('node-cache');
 const { connectDB, getDb } = require('./db');
 const rateLimit = require('express-rate-limit');
-
-// Importación de Rutas
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
-
 const app = express();
 const port = process.env.PORT || 3001; 
 
-// ==========================================
-//  MIDDLEWARES DE SEGURIDAD
-// ==========================================
-
-// Helmet - Headers de seguridad HTTP
 app.use(helmet({
-    contentSecurityPolicy: false, // Deshabilitado para permitir iframes de juegos
+    contentSecurityPolicy: false, 
     crossOriginEmbedderPolicy: false
 }));
 
-// CORS - Configuración segura para producción
 const allowedOrigins = [
-    process.env.FRONTEND_URL,           // URL definida en variables de entorno de Render
-    'https://fortunabetve.netlify.app', // TU NUEVA URL (Agregada)
+    process.env.FRONTEND_URL,           
+    'https://fortunabetve.netlify.app', 
     'http://localhost:5500',
     'http://127.0.0.1:5500',
     'http://localhost:5501',
     'http://127.0.0.1:5501',
     'http://localhost:5502',
     'http://127.0.0.1:5502',
-    'http://localhost:3000'             // Común si usas React/Vue local
+    'http://localhost:3000'            
 ].filter(Boolean);
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Permitir requests sin origin (como apps móviles o Postman)
-        // O si el origen está en nuestra lista blanca
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            console.error(`[CORS] Bloqueado: El origen ${origin} no está autorizado.`);
+            console.warn(`[CORS] Origen bloqueado: ${origin}`);
             callback(new Error('No permitido por CORS'));
         }
     },
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    optionsSuccessStatus: 200
+    credentials: true
 };
+app.use(cors(corsOptions));
+
+app.use(express.json({ limit: '10kb' }));
+app.use(mongoSanitize());
+app.set('trust proxy', 1);
+
+const eventsCache = new NodeCache({ stdTTL: 600 });
+const API_KEY = process.env.ODDS_API_KEY;
+
+app.use((req, res, next) => {
+    req.db = getDb();
+    req.eventsCache = eventsCache;
+    next();
+});
+
+app.use('/api', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/admin', adminRoutes);
+
+connectDB().then(() => {
+    app.listen(port, '0.0.0.0', () => {
+        console.log(`🚀 Servidor FortunaBet corriendo en puerto: ${port}`);
+    });
+});
 
 app.use(cors(corsOptions));
 
