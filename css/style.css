@@ -4226,3 +4226,31 @@ input:checked + .slider:before { transform: translateX(22px); }
 .mt-30 { margin-top: 30px; }
 .toggle-row { justify-content: space-between; } 
 .toggle-row label { margin: 0; }
+.team-avatar {
+    width: 48px;
+    height: 48px;
+    background: #ffffff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.team-avatar img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.match-card {
+    transition: transform 0.2s ease;
+}
+
+.match-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--color-primary);
+}

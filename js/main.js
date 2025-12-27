@@ -733,7 +733,7 @@ async function loadHomeFeaturedEvents() {
     if (!container) return;
 
     try {
-        const events = await fetchLiveEvents('soccer_uefa_champs_league'); //
+        const events = await fetchLiveEvents('soccer_uefa_champs_league');
         if (loader) loader.style.display = 'none';
 
         if (!events || events.length === 0) {
@@ -744,14 +744,21 @@ async function loadHomeFeaturedEvents() {
         const featured = events.slice(0, 3);
 
         container.innerHTML = featured.map((event) => {
-            // Extraer equipos de la cadena "Home vs Away" si api.js no los separa
+            // 1. Extraer nombres de equipos
             const teamNames = event.teams.split(' vs ');
             const home = teamNames[0];
             const away = teamNames[1] || '';
             
-            // URLs dinámicas para logos
-            const homeLogo = `https://logo.clearbit.com/${home.toLowerCase().replace(/\s+/g, '')}.com?size=100`;
-            const awayLogo = `https://logo.clearbit.com/${away.toLowerCase().replace(/\s+/g, '')}.com?size=100`;
+            // 2. Sistema de Logos Robusto:
+            // Usamos un proxy (weserv.nl) para intentar Clearbit, y si falla redirige a un Avatar con iniciales
+            const getLogoUrl = (name) => {
+                const clearbitUrl = `https://logo.clearbit.com/${name.toLowerCase().replace(/\s+/g, '')}.com`;
+                const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00ff00&color=000&bold=true`;
+                return `https://images.weserv.nl/?url=${clearbitUrl}&errorredirect=${encodeURIComponent(fallbackUrl)}`;
+            };
+
+            const homeLogo = getLogoUrl(home);
+            const awayLogo = getLogoUrl(away);
 
             return `
             <div class="match-card">
@@ -762,15 +769,15 @@ async function loadHomeFeaturedEvents() {
 
                 <div class="match-teams">
                     <div class="team">
-                        <div class="team-avatar" style="background: #fff; border: 1px solid #333;">
-                            <img src="${homeLogo}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/33/33736.png';" style="width:80%; object-fit:contain;">
+                        <div class="team-avatar">
+                            <img src="${homeLogo}" alt="${home}">
                         </div>
                         <span class="team-name">${home}</span>
                     </div>
                     <div class="vs-badge">VS</div>
                     <div class="team">
-                        <div class="team-avatar" style="background: #fff; border: 1px solid #333;">
-                            <img src="${awayLogo}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/33/33736.png';" style="width:80%; object-fit:contain;">
+                        <div class="team-avatar">
+                            <img src="${awayLogo}" alt="${away}">
                         </div>
                         <span class="team-name">${away}</span>
                     </div>
@@ -835,9 +842,8 @@ async function loadSportsNews(sportKey = 'soccer') {
                     
                     <div style="width: 55px; height: 55px; background: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 5px; flex-shrink: 0; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
                         <img src="${logoUrl}" 
-                             alt="Logo" 
-                             style="max-width: 100%; max-height: 100%; object-fit: contain;"
-                             onerror="this.src='https://cdn-icons-png.flaticon.com/512/33/33736.png';"> 
+     onerror="this.src='https://cdn-icons-png.flaticon.com/512/33/33736.png';" 
+     style="width:100%; height:100%; object-fit:contain;">
                     </div>
 
                     <div style="flex: 1;">
