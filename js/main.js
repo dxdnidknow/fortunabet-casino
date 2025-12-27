@@ -1,7 +1,8 @@
 // Archivo: js/main.js
 
 import { API_BASE_URL } from './config.js';
-import { addBet, initBetSlip, subscribe, getBets } from './bet.js';
+// Aquí ya está addBet, así que no hace falta abajo
+import { addBet, initBetSlip, subscribe, getBets } from './bet.js'; 
 import { initModals, openModal } from './modal.js';
 import { initSharedComponents } from './loader.js';
 import { fetchLiveEvents, fetchEventDetails, fetchSportsNews } from './api.js';
@@ -11,7 +12,7 @@ import { sportTranslations } from './translations.js';
 import { initPaymentModals } from './payments.js';
 import { initHelpWidget } from './help-widget.js';
 import { showToast } from './ui.js';
-import { addBet } from './bet.js';
+// ELIMINA LA LÍNEA REPETIDA DE ABAJO
 
 // --- UTILIDADES GLOBALES ---
 const select = (selector, scope = document) => scope.querySelector(selector);
@@ -732,7 +733,7 @@ async function loadHomeFeaturedEvents() {
     if (!container) return;
 
     try {
-        const events = await fetchLiveEvents('soccer_uefa_champs_league');
+        const events = await fetchLiveEvents('soccer_uefa_champs_league'); //
         if (loader) loader.style.display = 'none';
 
         if (!events || events.length === 0) {
@@ -743,38 +744,33 @@ async function loadHomeFeaturedEvents() {
         const featured = events.slice(0, 3);
 
         container.innerHTML = featured.map((event) => {
-            // Usamos home_team y away_team que vienen de api.js
-            const home = event.home_team || event.teams.split(' vs ')[0];
-            const away = event.away_team || event.teams.split(' vs ')[1];
+            // Extraer equipos de la cadena "Home vs Away" si api.js no los separa
+            const teamNames = event.teams.split(' vs ');
+            const home = teamNames[0];
+            const away = teamNames[1] || '';
             
-            // Generamos las URLs de logos usando el nombre (limpiando espacios)
+            // URLs dinámicas para logos
             const homeLogo = `https://logo.clearbit.com/${home.toLowerCase().replace(/\s+/g, '')}.com?size=100`;
             const awayLogo = `https://logo.clearbit.com/${away.toLowerCase().replace(/\s+/g, '')}.com?size=100`;
-
-            const date = new Date(event.commence_time).toLocaleDateString('es-ES', {weekday:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
 
             return `
             <div class="match-card">
                 <div class="match-header">
                     <span><i class="fa-solid fa-futbol"></i> Champions League</span>
-                    ${event.is_live ? '<span class="live-badge">● EN VIVO</span>' : `<span>${date}</span>`}
+                    ${event.is_live ? '<span class="live-badge">● EN VIVO</span>' : '<span>Próximamente</span>'}
                 </div>
 
                 <div class="match-teams">
                     <div class="team">
-                        <div class="team-avatar" style="background: #fff; overflow:hidden;">
-                            <img src="${homeLogo}" 
-                                 style="width:100%; height:100%; object-fit:contain;" 
-                                 onerror="this.parentElement.innerHTML='${home[0]}';">
+                        <div class="team-avatar" style="background: #fff; border: 1px solid #333;">
+                            <img src="${homeLogo}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/33/33736.png';" style="width:80%; object-fit:contain;">
                         </div>
                         <span class="team-name">${home}</span>
                     </div>
                     <div class="vs-badge">VS</div>
                     <div class="team">
-                        <div class="team-avatar" style="background: #fff; overflow:hidden;">
-                            <img src="${awayLogo}" 
-                                 style="width:100%; height:100%; object-fit:contain;" 
-                                 onerror="this.parentElement.innerHTML='${away[0]}';">
+                        <div class="team-avatar" style="background: #fff; border: 1px solid #333;">
+                            <img src="${awayLogo}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/33/33736.png';" style="width:80%; object-fit:contain;">
                         </div>
                         <span class="team-name">${away}</span>
                     </div>
@@ -799,7 +795,7 @@ async function loadHomeFeaturedEvents() {
         }).join('');
 
     } catch (error) {
-        console.error("Error home events:", error);
+        console.error("Error al cargar eventos destacados:", error);
         if(loader) loader.style.display = 'none';
     }
 }
