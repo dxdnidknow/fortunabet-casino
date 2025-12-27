@@ -21,6 +21,11 @@ router.get('/news', async (req, res) => {
         res.json(response.data);
 
     } catch (error) {
+        if (error.response && error.response.headers['content-type']?.includes('text/html')) {
+            const specificError = 'Authentication with Sportradar failed. The API returned an HTML page, which usually indicates a wrong API key or an incorrect API endpoint for your plan. Please verify your key and subscription.';
+            console.error(specificError);
+            return res.status(500).json({ message: 'Error de autenticación con el proveedor de datos deportivos.' });
+        }
         console.error('Error al contactar la API de Sportradar:', error.response ? error.response.data : error.message);
         res.status(500).json({ message: 'Error al obtener los datos de deportes.' });
     }
