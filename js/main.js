@@ -815,33 +815,38 @@ async function loadSportsNews(sportKey = 'soccer') {
         
         if (loader) loader.style.display = 'none';
 
-        // Reuters y AP guardan los artículos en la propiedad .news
-        // Usamos un fallback por si acaso (newsData.news o newsData)
-        const articles = newsData.news || (Array.isArray(newsData) ? newsData : []);
+        // Validamos que newsData traiga las competiciones que viste en el navegador
+        const items = newsData.competitions || [];
 
-        if (articles.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#777; width:100%;">No hay noticias de Reuters disponibles en este momento.</p>';
+        if (items.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#777; width:100%;">No hay eventos disponibles en este momento.</p>';
             return;
         }
 
-        container.innerHTML = articles.slice(0, 5).map(item => `
-            <div class="news-card" style="background: var(--color-background-secondary); padding: 15px; border-radius: 8px; width: 100%; margin-bottom: 12px; border-left: 4px solid var(--color-primary);">
+        // Tomamos las primeras 5 ligas para mostrar como "Novedades"
+        container.innerHTML = items.slice(0, 5).map(item => `
+            <div class="news-card" style="background: var(--color-background-secondary); padding: 15px; border-radius: 8px; width: 100%; margin-bottom: 12px; border-left: 4px solid var(--color-primary); box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <small style="color: var(--color-primary); font-weight: bold;">REUTERS</small>
-                    <small style="color: #888;">${new Date(item.published || Date.now()).toLocaleDateString()}</small>
+                    <small style="color: var(--color-primary); font-weight: bold; text-transform: uppercase;">Fútbol Profesional</small>
+                    <small style="color: #888;"><i class="fa-solid fa-circle-check"></i> Verificado</small>
                 </div>
-                <h4 style="margin: 0 0 10px 0; font-size: 1.05rem; color: var(--color-text-primary); line-height: 1.4;">${item.headline || item.title}</h4>
-                <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5;">
-                    ${item.content ? item.content.substring(0, 120) + '...' : 'Haz clic para ver los detalles de esta noticia deportiva.'}
+                <h4 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--color-text-primary);">${item.name}</h4>
+                <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: var(--color-text-secondary);">
+                    Ya puedes realizar tus apuestas para la categoría: <strong>${item.category.name}</strong>. Revisa las cuotas actualizadas.
                 </p>
-                <a href="#" class="btn-link" style="font-weight: bold; font-size: 0.85rem; text-decoration: none; color: var(--color-primary);">LEER MÁS <i class="fa-solid fa-arrow-right"></i></a>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-size: 0.75rem; color: #aaa;">ID: ${item.id.substring(0,8)}</span>
+                    <a href="/deportes.html" class="btn-link" style="font-weight: bold; color: var(--color-primary); text-decoration: none; font-size: 0.9rem;">
+                        APOSTAR <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
             </div>
         `).join('');
 
     } catch (error) {
-        console.error("Error cargando noticias deportivas:", error);
+        console.error("Error al renderizar los datos de Sportradar:", error);
         if (loader) loader.style.display = 'none';
-        container.innerHTML = '<p style="text-align:center; color:red; width:100%;">Error al conectar con el servicio de noticias.</p>';
+        container.innerHTML = '<p style="text-align:center; color:red; width:100%;">Error al conectar con el servidor de deportes.</p>';
     }
 }
 
