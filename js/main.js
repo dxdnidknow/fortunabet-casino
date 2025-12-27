@@ -815,7 +815,7 @@ async function loadSportsNews(sportKey = 'soccer') {
         
         if (loader) loader.style.display = 'none';
 
-        // Validamos que newsData traiga las competiciones que viste en el navegador
+        // Validamos que newsData traiga las competiciones
         const items = newsData.competitions || [];
 
         if (items.length === 0) {
@@ -823,25 +823,42 @@ async function loadSportsNews(sportKey = 'soccer') {
             return;
         }
 
-        // Tomamos las primeras 5 ligas para mostrar como "Novedades"
-        container.innerHTML = items.slice(0, 5).map(item => `
-            <div class="news-card" style="background: var(--color-background-secondary); padding: 15px; border-radius: 8px; width: 100%; margin-bottom: 12px; border-left: 4px solid var(--color-primary); box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <small style="color: var(--color-primary); font-weight: bold; text-transform: uppercase;">Fútbol Profesional</small>
-                    <small style="color: #888;"><i class="fa-solid fa-circle-check"></i> Verificado</small>
+        // Tomamos las primeras 5 ligas para mostrar
+        container.innerHTML = items.slice(0, 5).map(item => {
+            const title = item.name || "Evento";
+            const category = item.category ? item.category.name : "Fútbol";
+            
+            // Extraemos el ID numérico (de "sr:competition:17" sacamos "17")
+            const numericId = item.id.split(':').pop();
+            
+            // URL del logo de la liga desde API-Sports
+            const logoUrl = `https://media.api-sports.io/football/leagues/${numericId}.png`;
+
+            return `
+                <div class="news-card" style="background: #1a1d23; padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #2d323a; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                    
+                    <div style="width: 55px; height: 55px; background: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 5px; flex-shrink: 0; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
+                        <img src="${logoUrl}" 
+                             alt="Logo" 
+                             style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                             onerror="this.src='https://cdn-icons-png.flaticon.com/512/33/33736.png';"> 
+                    </div>
+
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="color: #00ff00; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">${category}</span>
+                            <span style="background: rgba(0,255,0,0.1); color: #00ff00; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; border: 1px solid #00ff00;">EN VIVO</span>
+                        </div>
+                        <h4 style="margin: 0; color: #ffffff; font-size: 1.05rem; font-weight: 600;">${title}</h4>
+                        <div style="margin-top: 8px; display: flex; align-items: center; gap: 5px;">
+                            <a href="/deportes.html" style="color: #00ff00; text-decoration: none; font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+                                APOSTAR AHORA <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <h4 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--color-text-primary);">${item.name}</h4>
-                <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: var(--color-text-secondary);">
-                    Ya puedes realizar tus apuestas para la categoría: <strong>${item.category.name}</strong>. Revisa las cuotas actualizadas.
-                </p>
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <span style="font-size: 0.75rem; color: #aaa;">ID: ${item.id.substring(0,8)}</span>
-                    <a href="/deportes.html" class="btn-link" style="font-weight: bold; color: var(--color-primary); text-decoration: none; font-size: 0.9rem;">
-                        APOSTAR <i class="fa-solid fa-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
     } catch (error) {
         console.error("Error al renderizar los datos de Sportradar:", error);
