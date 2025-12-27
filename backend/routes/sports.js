@@ -21,7 +21,7 @@ router.get('/:sport', async (req, res) => {
             return res.status(500).json({ message: `Error de configuración del servidor para el deporte: ${sport}.` });
         }
 
-        const apiUrl = `${apiUrlBase}?api_key=${apiKey}`;
+        const apiUrl = `${apiUrlBase.trim()}?api_key=${apiKey.trim()}`;
 
         const response = await axios.get(apiUrl);
         

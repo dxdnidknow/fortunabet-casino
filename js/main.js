@@ -815,24 +815,27 @@ async function loadSportsNews(sportKey = 'soccer') {
         
         if (loader) loader.style.display = 'none';
 
-        if (!newsData || !newsData.competitions || newsData.competitions.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#777; width:100%;">No hay noticias disponibles en este momento.</p>';
+        // Reuters/AP guardan los artículos en 'news'
+        const articles = newsData.news || [];
+
+        if (articles.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#777; width:100%;">No hay noticias de Reuters disponibles ahora.</p>';
             return;
         }
 
-        // Como usamos el endpoint de competiciones, las mostraremos como si fueran noticias.
-        container.innerHTML = newsData.competitions.slice(0, 5).map(item => `
-            <div class="news-card" style="background: var(--color-background-secondary); padding: 15px; border-radius: 8px; width: 100%;">
-                <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: var(--color-text-primary);">${item.name}</h4>
-                <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: var(--color-text-secondary);">Categoría: ${item.category.name}</p>
-                <a href="#" class="btn-link" style="font-weight: bold;">Leer más <i class="fa-solid fa-arrow-right"></i></a>
+        container.innerHTML = articles.slice(0, 5).map(item => `
+            <div class="news-card" style="background: var(--color-background-secondary); padding: 15px; border-radius: 8px; width: 100%; margin-bottom: 10px; border-left: 4px solid var(--color-primary);">
+                <small style="color: var(--color-primary); font-weight: bold;">REUTERS / ${new Date(item.published).toLocaleDateString()}</small>
+                <h4 style="margin: 5px 0 10px 0; font-size: 1.1rem; color: var(--color-text-primary); line-height: 1.3;">${item.headline}</h4>
+                <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: var(--color-text-secondary);">${item.content.substring(0, 150)}...</p>
+                <a href="#" class="btn-link" style="font-weight: bold; color: var(--color-primary); text-decoration: none;">Leer noticia completa <i class="fa-solid fa-arrow-right"></i></a>
             </div>
         `).join('');
 
     } catch (error) {
         console.error("Error cargando noticias deportivas:", error);
         if (loader) loader.style.display = 'none';
-        container.innerHTML = '<p style="text-align:center; color:red; width:100%;">Error al cargar las noticias.</p>';
+        container.innerHTML = '<p style="text-align:center; color:red; width:100%;">Error al conectar con el servicio de noticias.</p>';
     }
 }
 
