@@ -111,19 +111,23 @@
 		<div id="deposit-flow-container">
 			<div id="deposit-step-1" class="deposit-step active">
 				<div class="payment-methods-grid">
-					<button class="payment-method-btn" data-method="pago-movil"><i class="fa-solid fa-mobile-screen-button"></i><span>Pago Móvil</span></button>
-					<button class="payment-method-btn" data-method="transferencia"><i class="fa-solid fa-building-columns"></i><span>Transferencia</span></button>
+					<button class="payment-method-btn" data-method="pago_movil"><i class="fa-solid fa-mobile-screen-button"></i><span>Pago Móvil</span></button>
+					<button class="payment-method-btn" data-method="zelle"><i class="fa-solid fa-dollar-sign"></i><span>Zelle</span></button>
+					<button class="payment-method-btn" data-method="binance"><i class="fa-solid fa-bold"></i><span>Binance</span></button>
 					<button class="payment-method-btn" data-method="usdt"><i class="fa-brands fa-bitcoin"></i><span>USDT</span></button>
 				</div>
 			</div>
 			<div id="deposit-step-2" class="deposit-step">
-				<button class="back-to-methods btn btn-secondary" style="margin-bottom: 20px;">&lt; Volver</button>
-				<div id="instructions-pago-movil" class="payment-instructions">
+				<button class="back-to-methods btn-back"><i class="fa-solid fa-arrow-left"></i> Volver a métodos</button>
+				<div id="instructions-pago_movil" class="payment-instructions">
 					<h4>Pago Móvil</h4><ul class="payment-details"><li><strong>Banco:</strong> 0102 - Venezuela</li><li><strong>CI:</strong> V-12.345.678</li><li><strong>Tlf:</strong> 0414-1234567</li></ul>
 				</div>
-				<div id="instructions-transferencia" class="payment-instructions">
-					<h4>Transferencia</h4><ul class="payment-details"><li><strong>Banco:</strong> 0102 - Venezuela</li><li><strong>Cuenta:</strong> 01020123456789012345</li></ul>
-				</div>
+				<div id="instructions-zelle" class="payment-instructions">
+                    <h4>Zelle</h4><ul class="payment-details"><li><strong>Correo:</strong> pagos@fortuna.bet</li><li><strong>Nombre:</strong> FortunaBet LLC</li></ul>
+                </div>
+                <div id="instructions-binance" class="payment-instructions">
+                    <h4>Binance Pay</h4><ul class="payment-details"><li><strong>Pay ID:</strong> 123456789</li><li><strong>Nombre:</strong> FortunaBet</li></ul>
+                </div>
 				<div id="instructions-usdt" class="payment-instructions">
 					<h4>USDT (TRC20)</h4><div class="wallet-address"><span>TAbcDEfgHiJkLMnOpqRSTuvwxyz12345</span><button class="copy-btn"><i class="fa-solid fa-copy"></i></button></div>
 				</div>

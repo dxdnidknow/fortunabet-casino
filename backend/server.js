@@ -14,6 +14,7 @@ const rateLimit = require('express-rate-limit');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
+const sportsRoutes = require('./routes/sports');
 
 const app = express();
 const port = process.env.PORT || 3001; 
@@ -38,6 +39,7 @@ const allowedOrigins = [
     'http://127.0.0.1:5501',
     'http://localhost:5502',
     'http://127.0.0.1:5502',
+    'http://127.0.0.1:5503',
     'http://localhost:3000'
 ].filter(Boolean);
 
@@ -157,6 +159,7 @@ app.get('/api/event/:sportKey/:eventId', sportsApiLimiter, async (req, res) => {
 app.use('/api', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/sports-news', sportsRoutes);
 
 function handleApiError(error, res) {
     if (error.response) {

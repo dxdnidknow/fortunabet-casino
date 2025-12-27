@@ -322,9 +322,11 @@ router.post('/request-deposit', authLimiter, validate('requestDeposit'), async (
         const isVerified = user?.personalInfo?.isPhoneVerified;
         const hasData = user?.personalInfo?.fullName && user?.personalInfo?.cedula;
 
+        /* Verificación de perfil completo - Desactivado para desarrollo
         if (!isVerified || !hasData) {
             return res.status(403).json({ message: "Debes completar tus datos personales y verificar tu teléfono en 'Mi Cuenta' para poder depositar." });
         }
+        */
 
         const { amount, method, reference } = req.body;
 
@@ -622,106 +624,7 @@ router.post('/2fa/verify', authLimiter, async (req, res) => {
     }
 });
 
-// =======================================================================
-//  8. SISTEMA DE BONOS
-// =======================================================================
 
-// Obtener bonos del usuario
-router.get('/bonuses', async (req, res) => {
-    const userId = new ObjectId(req.user.id);
-    const db = req.db;
-
-    try {
-        const bonuses = await db.collection('bonuses')
-            .find({ userId })
-            .sort({ createdAt: -1 })
-            .toArray();
-
-        // Obtener bonos disponibles globales
-        const availableBonuses = await db.collection('bonusTemplates')
-            .find({ isActive: true })
-            .toArray();
-
-        res.status(200).json({ userBonuses: bonuses, availableBonuses });
-    } catch (error) {
-        console.error('[ERROR] Obtener bonos:', error);
-        res.status(500).json({ message: 'Error al obtener bonos.' });
-    }
-});
-
-// Reclamar bono
-router.post('/bonuses/claim', authLimiter, async (req, res) => {
-    const userId = new ObjectId(req.user.id);
-    const { bonusCode } = req.body;
-    const db = req.db;
-
-    try {
-        const user = await db.collection('users').findOne({ _id: userId });
-        
-        // Buscar plantilla de bono
-        const bonusTemplate = await db.collection('bonusTemplates').findOne({ 
-            code: bonusCode.toUpperCase(),
-            isActive: true
-        });
-
-        if (!bonusTemplate) {
-            return res.status(404).json({ message: 'Código de bono inválido o expirado.' });
-        }
-
-        // Verificar si ya reclamó este bono
-        const existingBonus = await db.collection('bonuses').findOne({
-            userId,
-            templateId: bonusTemplate._id
-        });
-
-        if (existingBonus) {
-            return res.status(400).json({ message: 'Ya has reclamado este bono.' });
-        }
-
-        // Verificar requisitos
-        if (bonusTemplate.type === 'welcome' && user.bonuses?.welcomeClaimed) {
-            return res.status(400).json({ message: 'Ya reclamaste el bono de bienvenida.' });
-        }
-
-        // Crear bono para el usuario
-        const newBonus = {
-            userId,
-            templateId: bonusTemplate._id,
-            code: bonusTemplate.code,
-            name: bonusTemplate.name,
-            type: bonusTemplate.type,
-            amount: bonusTemplate.amount,
-            percentage: bonusTemplate.percentage || null,
-            maxBonus: bonusTemplate.maxBonus || null,
-            wageringRequirement: bonusTemplate.wageringRequirement || 1,
-            wageringProgress: 0,
-            status: 'active',
-            expiresAt: new Date(Date.now() + (bonusTemplate.validDays || 30) * 24 * 60 * 60 * 1000),
-            createdAt: new Date()
-        };
-
-        await db.collection('bonuses').insertOne(newBonus);
-
-        // Si es bono de dinero directo, agregar al balance
-        if (bonusTemplate.type === 'fixed') {
-            await db.collection('users').updateOne(
-                { _id: userId },
-                { 
-                    $inc: { 'bonusBalance': bonusTemplate.amount },
-                    $set: { 'bonuses.welcomeClaimed': bonusTemplate.type === 'welcome' }
-                }
-            );
-        }
-
-        res.status(200).json({ 
-            message: `¡Bono "${bonusTemplate.name}" reclamado con éxito!`,
-            bonus: newBonus
-        });
-    } catch (error) {
-        console.error('[ERROR] Reclamar bono:', error);
-        res.status(500).json({ message: 'Error al reclamar bono.' });
-    }
-});
 
 // =======================================================================
 //  9. JUEGO RESPONSABLE

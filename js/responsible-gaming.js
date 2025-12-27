@@ -5,78 +5,7 @@ import { API_BASE_URL } from './config.js';
 import { fetchWithAuth } from './auth.js';
 import { showToast } from './ui.js';
 
-// =======================================================================
-//  BONOS
-// =======================================================================
 
-export async function initBonusSection() {
-    const claimForm = document.getElementById('claim-bonus-form');
-    if (claimForm) {
-        claimForm.addEventListener('submit', handleClaimBonus);
-    }
-    await loadUserBonuses();
-}
-
-async function handleClaimBonus(e) {
-    e.preventDefault();
-    const codeInput = document.getElementById('bonus-code-input');
-    const code = codeInput?.value.trim();
-    
-    if (!code) {
-        showToast('Ingresa un código de bono', 'error');
-        return;
-    }
-
-    try {
-        const result = await fetchWithAuth(`${API_BASE_URL}/user/bonuses/claim`, {
-            method: 'POST',
-            body: JSON.stringify({ bonusCode: code })
-        });
-        
-        showToast(result.message, 'success');
-        codeInput.value = '';
-        await loadUserBonuses();
-    } catch (error) {
-        showToast(error.message || 'Error al canjear bono', 'error');
-    }
-}
-
-async function loadUserBonuses() {
-    try {
-        const data = await fetchWithAuth(`${API_BASE_URL}/user/bonuses`);
-        renderActiveBonuses(data.userBonuses || []);
-    } catch (error) {
-        // Silenciar error si la ruta no existe
-        console.log('Bonos API no disponible:', error.message);
-    }
-}
-
-function renderActiveBonuses(bonuses) {
-    const container = document.getElementById('active-bonuses');
-    if (!container) return;
-
-    const activeBonuses = bonuses.filter(b => b.status === 'active');
-    
-    if (activeBonuses.length === 0) {
-        container.innerHTML = '<p class="empty-message">No tienes bonos activos.</p>';
-        return;
-    }
-
-    container.innerHTML = activeBonuses.map(bonus => `
-        <div class="bonus-card active-bonus">
-            <div class="bonus-badge">${bonus.type?.toUpperCase() || 'BONO'}</div>
-            <h4>${bonus.name}</h4>
-            <p class="bonus-value">${bonus.percentage ? `${bonus.percentage}%` : `Bs. ${bonus.amount?.toFixed(2)}`}</p>
-            <div class="bonus-progress">
-                <span>Rollover: ${bonus.wageringProgress || 0}x / ${bonus.wageringRequirement}x</span>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${Math.min(100, (bonus.wageringProgress / bonus.wageringRequirement) * 100)}%"></div>
-                </div>
-            </div>
-            <p class="bonus-expiry">Expira: ${new Date(bonus.expiresAt).toLocaleDateString('es-VE')}</p>
-        </div>
-    `).join('');
-}
 
 // =======================================================================
 //  JUEGO RESPONSABLE

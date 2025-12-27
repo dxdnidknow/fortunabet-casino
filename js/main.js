@@ -4,7 +4,7 @@ import { API_BASE_URL } from './config.js';
 import { addBet, initBetSlip, subscribe, getBets } from './bet.js';
 import { initModals, openModal } from './modal.js';
 import { initSharedComponents } from './loader.js';
-import { fetchLiveEvents, fetchEventDetails } from './api.js';
+import { fetchLiveEvents, fetchEventDetails, fetchSportsNews } from './api.js';
 import { initAuth } from './auth.js';
 import { initAccountDashboard } from './account.js';
 import { sportTranslations } from './translations.js';
@@ -803,6 +803,39 @@ async function loadHomeFeaturedEvents() {
         if(loader) loader.style.display = 'none';
     }
 }
+
+async function loadSportsNews() {
+    const container = document.getElementById('sports-news-container');
+    const loader = document.getElementById('loader-sports-news');
+
+    if (!container) return;
+
+    try {
+        const newsData = await fetchSportsNews();
+        
+        if (loader) loader.style.display = 'none';
+
+        if (!newsData || !newsData.competitions || newsData.competitions.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#777; width:100%;">No hay noticias disponibles en este momento.</p>';
+            return;
+        }
+
+        // Como usamos el endpoint de competiciones, las mostraremos como si fueran noticias.
+        container.innerHTML = newsData.competitions.slice(0, 5).map(item => `
+            <div class="news-card" style="background: var(--color-background-secondary); padding: 15px; border-radius: 8px; width: 100%;">
+                <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: var(--color-text-primary);">${item.name}</h4>
+                <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: var(--color-text-secondary);">Categoría: ${item.category.name}</p>
+                <a href="#" class="btn-link" style="font-weight: bold;">Leer más <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error("Error cargando noticias deportivas:", error);
+        if (loader) loader.style.display = 'none';
+        container.innerHTML = '<p style="text-align:center; color:red; width:100%;">Error al cargar las noticias.</p>';
+    }
+}
+
 // --- MAIN ---
 async function main() {
     document.body.classList.remove('modal-open', 'panel-open');
@@ -835,6 +868,7 @@ async function main() {
     initPaymentModals();    
     initContactForm(); // <-- AHORA SÍ ESTÁ DEFINIDA
     loadHomeFeaturedEvents(); 
+    loadSportsNews();
     await initSportsNav();
     setupEventListeners();
     subscribe(updateSelectedOddsUI);

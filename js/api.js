@@ -87,3 +87,17 @@ export async function fetchEventDetails(sportKey, eventId) {
         return null; 
     }
 }
+
+export async function fetchSportsNews() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/sports-news/news`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'No se pudieron obtener las noticias deportivas');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error al obtener noticias deportivas desde el backend:", error);
+        return [];
+    }
+}
