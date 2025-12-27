@@ -11,6 +11,7 @@ import { sportTranslations } from './translations.js';
 import { initPaymentModals } from './payments.js';
 import { initHelpWidget } from './help-widget.js';
 import { showToast } from './ui.js';
+import { addBet } from './bet.js';
 
 // --- UTILIDADES GLOBALES ---
 const select = (selector, scope = document) => scope.querySelector(selector);
@@ -731,35 +732,26 @@ async function loadHomeFeaturedEvents() {
     if (!container) return;
 
     try {
-        // Pedimos una liga popular
-        const events = await fetchLiveEvents('soccer_uefa_champs_league'); // O 'soccer_spain_la_liga'
-        
+        const events = await fetchLiveEvents('soccer_uefa_champs_league');
         if (loader) loader.style.display = 'none';
 
         if (!events || events.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#777; width:100%;">No hay eventos destacados en este momento.</p>';
+            container.innerHTML = '<p style="text-align:center; color:#777; width:100%;">No hay eventos destacados.</p>';
             return;
         }
 
-        // Función para obtener iniciales (Ej: "Real Madrid" -> "RM")
-        const getInitials = (name) => {
-            return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        };
+        const featured = events.slice(0, 3);
 
-        // Generar colores aleatorios fijos para avatares (opcional)
-        const colors = ['#e74c3c', '#3498db', '#9b59b6', '#f1c40f', '#2ecc71', '#e67e22'];
-        
-        const featured = events.slice(0, 3); // Solo 3 tarjetas
-
-        container.innerHTML = featured.map((event, index) => {
-            const teamNames = event.teams.split(' vs ');
-            const home = teamNames[0];
-            const away = teamNames[1] || '';
-            const date = new Date(event.commence_time).toLocaleDateString('es-ES', {weekday:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+        container.innerHTML = featured.map((event) => {
+            // Usamos home_team y away_team que vienen de api.js
+            const home = event.home_team || event.teams.split(' vs ')[0];
+            const away = event.away_team || event.teams.split(' vs ')[1];
             
-            // Color aleatorio basado en el nombre
-            const color1 = colors[home.length % colors.length];
-            const color2 = colors[away.length % colors.length];
+            // Generamos las URLs de logos usando el nombre (limpiando espacios)
+            const homeLogo = `https://logo.clearbit.com/${home.toLowerCase().replace(/\s+/g, '')}.com?size=100`;
+            const awayLogo = `https://logo.clearbit.com/${away.toLowerCase().replace(/\s+/g, '')}.com?size=100`;
+
+            const date = new Date(event.commence_time).toLocaleDateString('es-ES', {weekday:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
 
             return `
             <div class="match-card">
@@ -770,26 +762,34 @@ async function loadHomeFeaturedEvents() {
 
                 <div class="match-teams">
                     <div class="team">
-                        <div class="team-avatar" style="background: linear-gradient(135deg, ${color1}, #222);">${getInitials(home)}</div>
+                        <div class="team-avatar" style="background: #fff; overflow:hidden;">
+                            <img src="${homeLogo}" 
+                                 style="width:100%; height:100%; object-fit:contain;" 
+                                 onerror="this.parentElement.innerHTML='${home[0]}';">
+                        </div>
                         <span class="team-name">${home}</span>
                     </div>
                     <div class="vs-badge">VS</div>
                     <div class="team">
-                        <div class="team-avatar" style="background: linear-gradient(135deg, ${color2}, #222);">${getInitials(away)}</div>
+                        <div class="team-avatar" style="background: #fff; overflow:hidden;">
+                            <img src="${awayLogo}" 
+                                 style="width:100%; height:100%; object-fit:contain;" 
+                                 onerror="this.parentElement.innerHTML='${away[0]}';">
+                        </div>
                         <span class="team-name">${away}</span>
                     </div>
                 </div>
 
                 <div class="match-odds">
-                    <div class="odd-btn odds-button" data-team="${home}" data-odds="${event.odds.home}">
+                    <div class="odd-btn" onclick="window.quickBet('${event.id}', '${home}', ${event.odds.home})">
                         <span class="odd-label">1</span>
                         <span class="odd-value">${event.odds.home}</span>
                     </div>
-                    <div class="odd-btn odds-button" data-team="Empate" data-odds="${event.odds.draw}">
+                    <div class="odd-btn" onclick="window.quickBet('${event.id}', 'Empate', ${event.odds.draw})">
                         <span class="odd-label">X</span>
                         <span class="odd-value">${event.odds.draw}</span>
                     </div>
-                    <div class="odd-btn odds-button" data-team="${away}" data-odds="${event.odds.away}">
+                    <div class="odd-btn" onclick="window.quickBet('${event.id}', '${away}', ${event.odds.away})">
                         <span class="odd-label">2</span>
                         <span class="odd-value">${event.odds.away}</span>
                     </div>
@@ -851,9 +851,9 @@ async function loadSportsNews(sportKey = 'soccer') {
                         </div>
                         <h4 style="margin: 0; color: #ffffff; font-size: 1.05rem; font-weight: 600;">${title}</h4>
                         <div style="margin-top: 8px; display: flex; align-items: center; gap: 5px;">
-                            <a href="/deportes.html" style="color: #00ff00; text-decoration: none; font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; gap: 5px;">
-                                APOSTAR AHORA <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i>
-                            </a>
+                           <button onclick="quickBet('${item.id}', '${title}')" style="background: #00ff00; color: #000; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem;">
+    APOSTAR AHORA <i class="fa-solid fa-arrow-right"></i>
+</button>
                         </div>
                     </div>
                 </div>
@@ -943,3 +943,21 @@ async function main() {
     }
 }
 document.addEventListener('DOMContentLoaded', main);
+
+window.quickBet = function(id, name, odds = 1.90) {
+    console.log("Añadiendo apuesta rápida:", name);
+    
+    // Estructura compatible con tu función addBet en bet.js
+    addBet({
+        id: id,
+        team: name, // Nombre de la liga o equipo
+        odds: parseFloat(odds),
+        market: 'Ganador Final'
+    });
+
+    // Opcional: Si estás en móvil, esto ayuda a que el usuario vea que se añadió
+    const mobileBar = document.getElementById('mobile-bet-notification');
+    if (mobileBar) {
+        mobileBar.classList.add('active'); // Asegura que la barra brille o se muestre
+    }
+};
