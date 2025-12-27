@@ -3,21 +3,28 @@ const axios = require('axios');
 const router = express.Router();
 
 // Endpoint para obtener datos de deportes (ej: noticias o competiciones)
-router.get('/news', async (req, res) => {
+// Ruta dinámica que acepta un deporte, ej: /api/sports-news/soccer
+router.get('/:sport', async (req, res) => {
     try {
-        const apiKey = process.env.SPORTRADAR_API_KEY;
-        if (!apiKey) {
-            console.error('La API Key de Sportradar no está configurada en las variables de entorno.');
-            return res.status(500).json({ message: 'Error de configuración del servidor.' });
+        const { sport } = req.params;
+        if (!sport) {
+            return res.status(400).json({ message: 'No se especificó un deporte.' });
         }
 
-        // Ejemplo de URL para la API de prueba de Fútbol de Sportradar (listar competiciones)
-        // Asegúrate de que tu suscripción en Sportradar coincida con este endpoint.
-        const apiUrl = `https://api.sportradar.com/soccer/trial/v4/en/competitions.json?api_key=${apiKey}`;
+        const apiKey = process.env.SPORTRADAR_API_KEY;
+        // Construimos dinámicamente el nombre de la variable de entorno para la URL
+        const urlVarName = `SPORTRADAR_URL_${sport.toUpperCase()}`;
+        const apiUrlBase = process.env[urlVarName];
+
+        if (!apiKey || !apiUrlBase) {
+            console.error(`Variable de entorno ${urlVarName} o SPORTRADAR_API_KEY no configurada.`);
+            return res.status(500).json({ message: `Error de configuración del servidor para el deporte: ${sport}.` });
+        }
+
+        const apiUrl = `${apiUrlBase}?api_key=${apiKey}`;
 
         const response = await axios.get(apiUrl);
         
-        // Devolvemos los datos obtenidos de la API de Sportradar
         res.json(response.data);
 
     } catch (error) {

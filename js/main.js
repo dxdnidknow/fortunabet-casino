@@ -804,14 +804,14 @@ async function loadHomeFeaturedEvents() {
     }
 }
 
-async function loadSportsNews() {
+async function loadSportsNews(sportKey = 'soccer') {
     const container = document.getElementById('sports-news-container');
     const loader = document.getElementById('loader-sports-news');
 
     if (!container) return;
 
     try {
-        const newsData = await fetchSportsNews();
+        const newsData = await fetchSportsNews(sportKey);
         
         if (loader) loader.style.display = 'none';
 

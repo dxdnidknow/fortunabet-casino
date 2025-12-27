@@ -88,9 +88,9 @@ export async function fetchEventDetails(sportKey, eventId) {
     }
 }
 
-export async function fetchSportsNews() {
+export async function fetchSportsNews(sport) {
     try {
-        const response = await fetch(`${API_BASE_URL}/sports-news/news`);
+        const response = await fetch(`${API_BASE_URL}/sports-news/${sport}`);
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'No se pudieron obtener las noticias deportivas');
