@@ -68,7 +68,13 @@ const validEvents = formattedEvents.filter(event => {
         return validEvents;
         
     } catch (error) {
-        console.error("Error al obtener la lista de eventos desde el backend:", error);
+        console.error("Error al obtener eventos:", error);
+        
+        // Si el error es de cuota, podrías retornar un array vacío para que la app no falle
+        if (error.message.includes('Usage quota') || error.message.includes('401')) {
+            console.warn("⚠️ La cuota de la API de deportes se ha agotado.");
+            // Opcional: Podrías retornar datos de prueba (mock data) aquí si quisieras
+        }
         return [];
     }
 }
