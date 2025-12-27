@@ -815,20 +815,26 @@ async function loadSportsNews(sportKey = 'soccer') {
         
         if (loader) loader.style.display = 'none';
 
-        // Reuters/AP guardan los artículos en 'news'
-        const articles = newsData.news || [];
+        // Reuters y AP guardan los artículos en la propiedad .news
+        // Usamos un fallback por si acaso (newsData.news o newsData)
+        const articles = newsData.news || (Array.isArray(newsData) ? newsData : []);
 
         if (articles.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#777; width:100%;">No hay noticias de Reuters disponibles ahora.</p>';
+            container.innerHTML = '<p style="text-align:center; color:#777; width:100%;">No hay noticias de Reuters disponibles en este momento.</p>';
             return;
         }
 
         container.innerHTML = articles.slice(0, 5).map(item => `
-            <div class="news-card" style="background: var(--color-background-secondary); padding: 15px; border-radius: 8px; width: 100%; margin-bottom: 10px; border-left: 4px solid var(--color-primary);">
-                <small style="color: var(--color-primary); font-weight: bold;">REUTERS / ${new Date(item.published).toLocaleDateString()}</small>
-                <h4 style="margin: 5px 0 10px 0; font-size: 1.1rem; color: var(--color-text-primary); line-height: 1.3;">${item.headline}</h4>
-                <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: var(--color-text-secondary);">${item.content.substring(0, 150)}...</p>
-                <a href="#" class="btn-link" style="font-weight: bold; color: var(--color-primary); text-decoration: none;">Leer noticia completa <i class="fa-solid fa-arrow-right"></i></a>
+            <div class="news-card" style="background: var(--color-background-secondary); padding: 15px; border-radius: 8px; width: 100%; margin-bottom: 12px; border-left: 4px solid var(--color-primary);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <small style="color: var(--color-primary); font-weight: bold;">REUTERS</small>
+                    <small style="color: #888;">${new Date(item.published || Date.now()).toLocaleDateString()}</small>
+                </div>
+                <h4 style="margin: 0 0 10px 0; font-size: 1.05rem; color: var(--color-text-primary); line-height: 1.4;">${item.headline || item.title}</h4>
+                <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.5;">
+                    ${item.content ? item.content.substring(0, 120) + '...' : 'Haz clic para ver los detalles de esta noticia deportiva.'}
+                </p>
+                <a href="#" class="btn-link" style="font-weight: bold; font-size: 0.85rem; text-decoration: none; color: var(--color-primary);">LEER MÁS <i class="fa-solid fa-arrow-right"></i></a>
             </div>
         `).join('');
 
